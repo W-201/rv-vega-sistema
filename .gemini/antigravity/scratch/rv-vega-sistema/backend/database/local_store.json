@@ -1,0 +1,564 @@
+{
+  "usuarios": [
+    {
+      "id": 1,
+      "nombre": "Ing. Roberto Vega",
+      "email": "admin@rvvega.com",
+      "password_hash": "",
+      "rol": "admin",
+      "activo": true,
+      "creado_en": "2026-08-01"
+    },
+    {
+      "id": 2,
+      "nombre": "Carlos Mendoza",
+      "email": "produccion@rvvega.com",
+      "password_hash": "",
+      "rol": "jefe_produccion",
+      "activo": true,
+      "creado_en": "2026-08-01"
+    },
+    {
+      "id": 3,
+      "nombre": "Juan Pérez T.",
+      "email": "operario1@rvvega.com",
+      "password_hash": "",
+      "rol": "operario",
+      "activo": true,
+      "creado_en": "2026-08-01"
+    },
+    {
+      "id": 4,
+      "nombre": "Lucía Ramírez",
+      "email": "ventas@rvvega.com",
+      "password_hash": "",
+      "rol": "ventas",
+      "activo": true,
+      "creado_en": "2026-08-01"
+    }
+  ],
+  "clientes": [
+    {
+      "id": 1,
+      "tipo_documento": "RUC",
+      "numero_documento": "20518923411",
+      "razon_social": "CONSTRUCTORA E INMOBILIARIA DEL SUR S.A.C.",
+      "contacto": "Arq. Miguel Ángel Torres",
+      "telefono": "987654321",
+      "email": "compras@inmodelsur.pe",
+      "direccion": "Av. Javier Prado Este 2450, San Borja",
+      "ciudad": "Lima",
+      "activo": true
+    },
+    {
+      "id": 2,
+      "tipo_documento": "RUC",
+      "numero_documento": "20492817293",
+      "razon_social": "AGROINDUSTRIAS DEL VALLE S.A.",
+      "contacto": "Ing. Carmen Salazar",
+      "telefono": "998112233",
+      "email": "csalazar@agrovalle.com.pe",
+      "direccion": "Carretera Central Km 18, Ate",
+      "ciudad": "Lima",
+      "activo": true
+    },
+    {
+      "id": 3,
+      "tipo_documento": "RUC",
+      "numero_documento": "20601284751",
+      "razon_social": "LOGÍSTICA INTEGRAL PERUANA S.A.C.",
+      "contacto": "Sr. Jorge Valdivia",
+      "telefono": "976543120",
+      "email": "operaciones@logiperu.com",
+      "direccion": "Av. Néstor Gambetta 4500, Callao",
+      "ciudad": "Callao",
+      "activo": true
+    },
+    {
+      "id": 4,
+      "tipo_documento": "RUC",
+      "numero_documento": "20100239482",
+      "razon_social": "INDUSTRIAS METALMECÁNICAS LIMA S.A.",
+      "contacto": "Lic. Patricia Vega",
+      "telefono": "954321876",
+      "email": "pvega@metalima.pe",
+      "direccion": "Av. Argentina 1920, Cercado de Lima",
+      "ciudad": "Lima",
+      "activo": true
+    },
+    {
+      "id": 5,
+      "tipo_documento": "DNI",
+      "numero_documento": "42819204",
+      "razon_social": "FERNANDO ALARCÓN RÍOS",
+      "contacto": "Fernando Alarcón",
+      "telefono": "943210987",
+      "email": "f.alarcon@gmail.com",
+      "direccion": "Calle Los Sauces 142, Surco",
+      "ciudad": "Lima",
+      "activo": true
+    }
+  ],
+  "materiales": [
+    {
+      "id": 1,
+      "codigo_sku": "MP-MET-001",
+      "nombre": "Plancha de Acero LAC 1/4\" x 1.20m x 2.40m",
+      "categoria": "Metales/Perfiles",
+      "unidad_medida": "plancha",
+      "stock_actual": 35,
+      "stock_minimo": 10,
+      "costo_unitario": 245,
+      "ubicacion_almacen": "Nave A - Racks Metálicos",
+      "activo": true
+    },
+    {
+      "id": 2,
+      "codigo_sku": "MP-MET-002",
+      "nombre": "Tubo Cuadrado Estructural 2\" x 2\" x 2mm",
+      "categoria": "Metales/Perfiles",
+      "unidad_medida": "tubo",
+      "stock_actual": 52,
+      "stock_minimo": 15,
+      "costo_unitario": 68.5,
+      "ubicacion_almacen": "Nave A - Caballete 3",
+      "activo": true
+    },
+    {
+      "id": 3,
+      "codigo_sku": "MP-MET-003",
+      "nombre": "Ángulo Estructural 1 1/2\" x 3/16\" x 6m",
+      "categoria": "Metales/Perfiles",
+      "unidad_medida": "tubo",
+      "stock_actual": 18,
+      "stock_minimo": 20,
+      "costo_unitario": 52,
+      "ubicacion_almacen": "Nave A - Caballete 1",
+      "activo": true
+    },
+    {
+      "id": 4,
+      "codigo_sku": "MP-SOL-001",
+      "nombre": "Electrodo de Soldadura Cellocord E6011 (Caja 20kg)",
+      "categoria": "Soldadura/Consumibles",
+      "unidad_medida": "kg",
+      "stock_actual": 85,
+      "stock_minimo": 25,
+      "costo_unitario": 14.5,
+      "ubicacion_almacen": "Estantería B - Insumos",
+      "activo": true
+    },
+    {
+      "id": 5,
+      "codigo_sku": "MP-SOL-002",
+      "nombre": "Alambre Tubular MIG ER70S-6 (Carrete 15kg)",
+      "categoria": "Soldadura/Consumibles",
+      "unidad_medida": "kg",
+      "stock_actual": 12,
+      "stock_minimo": 15,
+      "costo_unitario": 19.8,
+      "ubicacion_almacen": "Estantería B - Insumos",
+      "activo": true
+    },
+    {
+      "id": 6,
+      "codigo_sku": "MP-PIN-001",
+      "nombre": "Pintura Anticorrosiva Epóxica Gris (Galón)",
+      "categoria": "Pinturas/Acabados",
+      "unidad_medida": "galón",
+      "stock_actual": 28,
+      "stock_minimo": 10,
+      "costo_unitario": 95,
+      "ubicacion_almacen": "Zona Química - Pinturas",
+      "activo": true
+    },
+    {
+      "id": 7,
+      "codigo_sku": "MP-PIN-002",
+      "nombre": "Esmalte Poliuretano Industrial Blanco (Galón)",
+      "categoria": "Pinturas/Acabados",
+      "unidad_medida": "galón",
+      "stock_actual": 8,
+      "stock_minimo": 12,
+      "costo_unitario": 120,
+      "ubicacion_almacen": "Zona Química - Pinturas",
+      "activo": true
+    },
+    {
+      "id": 8,
+      "codigo_sku": "MP-FIJ-001",
+      "nombre": "Perno Hexagonal Grado 5 con Tuerca 1/2\" x 2\"",
+      "categoria": "Fijaciones/Tornillería",
+      "unidad_medida": "und",
+      "stock_actual": 340,
+      "stock_minimo": 100,
+      "costo_unitario": 3.2,
+      "ubicacion_almacen": "Gaveta C-12",
+      "activo": true
+    },
+    {
+      "id": 9,
+      "codigo_sku": "MP-DIS-001",
+      "nombre": "Disco de Corte 7\" x 1/8\" Dewalt",
+      "categoria": "Soldadura/Consumibles",
+      "unidad_medida": "und",
+      "stock_actual": 45,
+      "stock_minimo": 20,
+      "costo_unitario": 8.5,
+      "ubicacion_almacen": "Gaveta C-05",
+      "activo": true
+    }
+  ],
+  "pedidos": [
+    {
+      "id": 1,
+      "codigo_pedido": "PED-2026-0001",
+      "cliente_id": 1,
+      "fecha_pedido": "2026-08-10",
+      "fecha_entrega_prometida": "2026-08-25",
+      "fecha_entrega_real": "2026-08-25",
+      "estado": "Entregado",
+      "prioridad": "Alta",
+      "subtotal": 8500,
+      "igv": 1530,
+      "total": 10030,
+      "observaciones": "Fabricación de 10 barandas metálicas de seguridad para obra San Borja",
+      "creado_por": 1
+    },
+    {
+      "id": 2,
+      "codigo_pedido": "PED-2026-0002",
+      "cliente_id": 2,
+      "fecha_pedido": "2026-08-15",
+      "fecha_entrega_prometida": "2026-09-02",
+      "fecha_entrega_real": "2026-09-03",
+      "estado": "Entregado",
+      "prioridad": "Media",
+      "subtotal": 12400,
+      "igv": 2232,
+      "total": 14632,
+      "observaciones": "Tolva metálica para descarga de granos con recubrimiento epóxico",
+      "creado_por": 1
+    },
+    {
+      "id": 3,
+      "codigo_pedido": "PED-2026-0003",
+      "cliente_id": 3,
+      "fecha_pedido": "2026-09-01",
+      "fecha_entrega_prometida": "2026-09-18",
+      "fecha_entrega_real": null,
+      "estado": "En Producción",
+      "prioridad": "Urgente",
+      "subtotal": 15800,
+      "igv": 2844,
+      "total": 18644,
+      "observaciones": "Estructura soporte para faja transportadora de 12 metros",
+      "creado_por": 1
+    },
+    {
+      "id": 4,
+      "codigo_pedido": "PED-2026-0004",
+      "cliente_id": 4,
+      "fecha_pedido": "2026-09-05",
+      "fecha_entrega_prometida": "2026-09-22",
+      "fecha_entrega_real": null,
+      "estado": "En Planificación",
+      "prioridad": "Media",
+      "subtotal": 6200,
+      "igv": 1116,
+      "total": 7316,
+      "observaciones": "Fabricación de 4 portones corredizos industriales",
+      "creado_por": 4
+    },
+    {
+      "id": 5,
+      "codigo_pedido": "PED-2026-0005",
+      "cliente_id": 1,
+      "fecha_pedido": "2026-09-10",
+      "fecha_entrega_prometida": "2026-09-30",
+      "fecha_entrega_real": null,
+      "estado": "Pendiente",
+      "prioridad": "Baja",
+      "subtotal": 4900,
+      "igv": 882,
+      "total": 5782,
+      "observaciones": "Mantenimiento preventivo y repuestos para cerco perimétrico",
+      "creado_por": 4
+    }
+  ],
+  "pedido_detalles": [
+    {
+      "id": 1,
+      "pedido_id": 1,
+      "descripcion_producto": "Baranda de seguridad modular 2m",
+      "especificaciones": "Tubo de 2\" con pintura epóxica amarillo tránsito",
+      "cantidad": 10,
+      "precio_unitario": 850,
+      "total_linea": 8500
+    },
+    {
+      "id": 2,
+      "pedido_id": 2,
+      "descripcion_producto": "Tolva receptora de acero LAC 1/4\"",
+      "especificaciones": "Capacidad 1.5m3 con refuerzos en ángulo de 2\"",
+      "cantidad": 1,
+      "precio_unitario": 12400,
+      "total_linea": 12400
+    },
+    {
+      "id": 3,
+      "pedido_id": 3,
+      "descripcion_producto": "Bastidor de faja transportadora 12m",
+      "especificaciones": "Perfiles U y ángulos estructurales ensamblados",
+      "cantidad": 1,
+      "precio_unitario": 15800,
+      "total_linea": 15800
+    },
+    {
+      "id": 4,
+      "pedido_id": 4,
+      "descripcion_producto": "Portón industrial corredizo 3m x 2.5m",
+      "especificaciones": "Estructura tubular con riel inferior y rodamientos pesados",
+      "cantidad": 4,
+      "precio_unitario": 1550,
+      "total_linea": 6200
+    },
+    {
+      "id": 5,
+      "pedido_id": 5,
+      "descripcion_producto": "Paquete de postes y refuerzos de anclaje",
+      "especificaciones": "Acero galvanizado con platina base",
+      "cantidad": 20,
+      "precio_unitario": 245,
+      "total_linea": 4900
+    }
+  ],
+  "ordenes_produccion": [
+    {
+      "id": 1,
+      "codigo_op": "OP-2026-001",
+      "pedido_id": 1,
+      "estado": "Completada",
+      "prioridad": "Alta",
+      "fecha_inicio_programada": "2026-08-11",
+      "fecha_fin_programada": "2026-08-24",
+      "fecha_inicio_real": "2026-08-11 08:30:00",
+      "fecha_fin_real": "2026-08-24 17:00:00",
+      "porcentaje_avance": 100,
+      "costo_estimado": 5200,
+      "costo_real": 5350,
+      "responsable_id": 2,
+      "observaciones": "Entregado a tiempo sin no conformidades"
+    },
+    {
+      "id": 2,
+      "codigo_op": "OP-2026-002",
+      "pedido_id": 2,
+      "estado": "Completada",
+      "prioridad": "Media",
+      "fecha_inicio_programada": "2026-08-16",
+      "fecha_fin_programada": "2026-09-01",
+      "fecha_inicio_real": "2026-08-16 08:00:00",
+      "fecha_fin_real": "2026-09-02 11:30:00",
+      "porcentaje_avance": 100,
+      "costo_estimado": 7800,
+      "costo_real": 8100,
+      "responsable_id": 2,
+      "observaciones": "Ligero retraso por secado de pintura epóxica"
+    },
+    {
+      "id": 3,
+      "codigo_op": "OP-2026-003",
+      "pedido_id": 3,
+      "estado": "En Proceso",
+      "prioridad": "Urgente",
+      "fecha_inicio_programada": "2026-09-02",
+      "fecha_fin_programada": "2026-09-17",
+      "fecha_inicio_real": "2026-09-02 08:15:00",
+      "fecha_fin_real": null,
+      "porcentaje_avance": 70,
+      "costo_estimado": 9400,
+      "costo_real": 6800,
+      "responsable_id": 2,
+      "observaciones": "Fase de soldadura completada; en proceso de tratamiento y pintura"
+    }
+  ],
+  "etapas_produccion": [
+    {
+      "id": 1,
+      "orden_produccion_id": 3,
+      "numero_fase": 1,
+      "nombre_etapa": "Habilitado y Corte",
+      "descripcion": "Trazado, oxicorte y corte por sierra de perfiles y platinas",
+      "operario_asignado": "Juan Pérez T.",
+      "horas_estimadas": 16,
+      "horas_reales": 15.5,
+      "estado": "Finalizada",
+      "fecha_inicio": "2026-09-02 08:30:00",
+      "fecha_fin": "2026-09-04 17:00:00"
+    },
+    {
+      "id": 2,
+      "orden_produccion_id": 3,
+      "numero_fase": 2,
+      "nombre_etapa": "Mecanizado y Perforado",
+      "descripcion": "Taladrado de agujeros para anclajes y empalmes de pernos",
+      "operario_asignado": "Marcos Quispe",
+      "horas_estimadas": 12,
+      "horas_reales": 13,
+      "estado": "Finalizada",
+      "fecha_inicio": "2026-09-05 08:00:00",
+      "fecha_fin": "2026-09-06 18:00:00"
+    },
+    {
+      "id": 3,
+      "orden_produccion_id": 3,
+      "numero_fase": 3,
+      "nombre_etapa": "Armado y Soldadura",
+      "descripcion": "Ensamble de bastidores en mesa y soldadura MIG continua",
+      "operario_asignado": "Juan Pérez T.",
+      "horas_estimadas": 32,
+      "horas_reales": 34,
+      "estado": "Finalizada",
+      "fecha_inicio": "2026-09-08 08:00:00",
+      "fecha_fin": "2026-09-12 17:30:00"
+    },
+    {
+      "id": 4,
+      "orden_produccion_id": 3,
+      "numero_fase": 4,
+      "nombre_etapa": "Tratamiento y Pintura",
+      "descripcion": "Limpieza mecánica y aplicación de dos manos de epóxico",
+      "operario_asignado": "Raúl Gómez",
+      "horas_estimadas": 20,
+      "horas_reales": 8,
+      "estado": "En Proceso",
+      "fecha_inicio": "2026-09-14 08:30:00",
+      "fecha_fin": null
+    },
+    {
+      "id": 5,
+      "orden_produccion_id": 3,
+      "numero_fase": 5,
+      "nombre_etapa": "Control de Calidad y Embalaje",
+      "descripcion": "Inspección dimensional, espesor de pintura y embalaje",
+      "operario_asignado": "Carlos Mendoza",
+      "horas_estimadas": 8,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
+    }
+  ],
+  "movimientos_inventario": [
+    {
+      "id": 1,
+      "material_id": 1,
+      "tipo_movimiento": "ENTRADA",
+      "cantidad": 40,
+      "costo_unitario": 245,
+      "referencia_documento": "F001-9821",
+      "motivo": "Compra mensual a Aceros Arequipa",
+      "registrado_por": 1,
+      "fecha": "2026-08-01 09:00:00"
+    },
+    {
+      "id": 2,
+      "material_id": 1,
+      "tipo_movimiento": "SALIDA_PRODUCCION",
+      "cantidad": 5,
+      "costo_unitario": 245,
+      "referencia_documento": "OP-2026-001",
+      "motivo": "Consumo para barandas",
+      "registrado_por": 2,
+      "fecha": "2026-08-12 10:00:00"
+    },
+    {
+      "id": 3,
+      "material_id": 2,
+      "tipo_movimiento": "SALIDA_PRODUCCION",
+      "cantidad": 14,
+      "costo_unitario": 68.5,
+      "referencia_documento": "OP-2026-003",
+      "motivo": "Consumo para bastidor de faja",
+      "registrado_por": 2,
+      "fecha": "2026-09-03 08:30:00"
+    }
+  ],
+  "control_calidad": [
+    {
+      "id": 1,
+      "orden_produccion_id": 1,
+      "inspector_id": 2,
+      "resultado": "Aprobado",
+      "defectos_encontrados": "Ninguno crítico",
+      "acciones_correctivas": "Ninguna",
+      "merma_porcentaje": 1.2,
+      "fecha_inspeccion": "2026-08-24 16:30:00"
+    },
+    {
+      "id": 2,
+      "orden_produccion_id": 2,
+      "inspector_id": 2,
+      "resultado": "Aprobado con Observaciones",
+      "defectos_encontrados": "Porosidad leve en cordón secundario de base",
+      "acciones_correctivas": "Resanado y aplicación de cordón de refuerzo",
+      "merma_porcentaje": 2.8,
+      "fecha_inspeccion": "2026-09-02 10:00:00"
+    }
+  ],
+  "paradas_produccion": [
+    {
+      "id": 1,
+      "orden_produccion_id": 3,
+      "etapa_id": 3,
+      "motivo": "Falta de Material",
+      "minutos_parada": 90,
+      "descripcion": "Espera de reposición de alambre MIG en almacén central",
+      "fecha": "2026-09-09 11:00:00"
+    },
+    {
+      "id": 2,
+      "orden_produccion_id": 2,
+      "etapa_id": 4,
+      "motivo": "Humedad Ambiental",
+      "minutos_parada": 180,
+      "descripcion": "Retraso de secado por humedad en cabina de pintura",
+      "fecha": "2026-08-28 08:00:00"
+    }
+  ],
+  "ai_logs": [
+    {
+      "id": 1,
+      "tipo": "chat_advisor",
+      "consulta": "¿Cuál es el cuello de botella actual en el taller?",
+      "respuesta": "🔍 **Análisis de Cuellos de Botella y Riesgos en RV Vega**:\n\n1. **Estación Crítica**: La fase de **Tratamiento y Pintura** presenta la mayor acumulación de tiempos de ciclo debido a tiempos de curado y secado ambiental de la pintura epóxica (se registraron demoras de hasta 180 min por humedad).\n2. **Orden de Mayor Riesgo**: La orden **OP-2026-003** (Bastidor de faja transportadora para Logística Integral Peruana S.A.C.) se encuentra al 70% con fecha límite el 18 de Setiembre. Requiere culminar aplicación de pintura hoy para iniciar control de calidad mañana a primera hora.\n3. **Recomendación Operativa**: Asignar un reflector térmico o ventilador industrial en cabina de pintura para acelerar el secado y programar la inspección dimensional de calidad a las 08:30 AM.",
+      "usuario_id": 1,
+      "fecha": "2026-09-15T21:43:32.762Z"
+    },
+    {
+      "id": 2,
+      "tipo": "chat_advisor",
+      "consulta": "¿Cuál es el cuello de botella actual en el taller?",
+      "respuesta": "🔍 **Análisis de Cuellos de Botella y Riesgos en RV Vega**:\n\n1. **Estación Crítica**: La fase de **Tratamiento y Pintura** presenta la mayor acumulación de tiempos de ciclo debido a tiempos de curado y secado ambiental de la pintura epóxica (se registraron demoras de hasta 180 min por humedad).\n2. **Orden de Mayor Riesgo**: La orden **OP-2026-003** (Bastidor de faja transportadora para Logística Integral Peruana S.A.C.) se encuentra al 70% con fecha límite el 18 de Setiembre. Requiere culminar aplicación de pintura hoy para iniciar control de calidad mañana a primera hora.\n3. **Recomendación Operativa**: Asignar un reflector térmico o ventilador industrial en cabina de pintura para acelerar el secado y programar la inspección dimensional de calidad a las 08:30 AM.",
+      "usuario_id": 1,
+      "fecha": "2026-09-15T21:54:56.489Z"
+    },
+    {
+      "id": 3,
+      "tipo": "chat_advisor",
+      "consulta": "help",
+      "respuesta": "👋 **Hola, soy el Copiloto de Inteligencia Artificial de RV Vega Servicios Generales E.I.R.L.**\n\nEstoy monitoreando en tiempo real los 5 pedidos en cartera y las órdenes de producción en taller.\n\n📌 **Puntos clave de hoy**:\n- Tenemos 1 Orden de Producción activa (**OP-2026-003**) al 70% de avance.\n- Se detectaron 2 insumos con stock por debajo del mínimo de seguridad (Alambre MIG y Esmalte Poliuretano).\n- La tasa de entregas a tiempo (OTIF) del último mes se mantiene en **91.4%**.\n\n¿Deseas que analice la asignación de operarios, genere una predicción de retrasos o detalle el plan de compras de insumos?",
+      "usuario_id": 1,
+      "fecha": "2026-09-15T22:50:35.296Z"
+    },
+    {
+      "id": 4,
+      "tipo": "chat_advisor",
+      "consulta": "si",
+      "respuesta": "👋 **Hola, soy el Copiloto de Inteligencia Artificial de RV Vega Servicios Generales E.I.R.L.**\n\nEstoy monitoreando en tiempo real los 5 pedidos en cartera y las órdenes de producción en taller.\n\n📌 **Puntos clave de hoy**:\n- Tenemos 1 Orden de Producción activa (**OP-2026-003**) al 70% de avance.\n- Se detectaron 2 insumos con stock por debajo del mínimo de seguridad (Alambre MIG y Esmalte Poliuretano).\n- La tasa de entregas a tiempo (OTIF) del último mes se mantiene en **91.4%**.\n\n¿Deseas que analice la asignación de operarios, genere una predicción de retrasos o detalle el plan de compras de insumos?",
+      "usuario_id": 1,
+      "fecha": "2026-09-15T22:50:46.866Z"
+    }
+  ]
+}
