@@ -30,13 +30,13 @@ function MainLayout() {
 
   const titles = {
     dashboard: { title: 'Panel Principal de Control', subtitle: 'Vista ejecutiva general y operaciones en curso' },
-    clientes: { title: '1. Gestión de Clientes', subtitle: 'Padrón de empresas, RUCs y contactos comerciales' },
-    pedidos: { title: '2. Gestión de Pedidos', subtitle: 'Recepción, cotizaciones y compromisos de entrega (SLA)' },
-    produccion: { title: '3. Planificación y Seguimiento de Producción', subtitle: 'Control de Órdenes de Trabajo, etapas y tiempos de ciclo' },
-    inventario: { title: '4. Control de Inventario de Materia Prima', subtitle: 'Catálogo de insumos, stock de seguridad y Kardex' },
-    reportes: { title: '5. Reportes Gerenciales', subtitle: 'Cumplimiento OTIF, rentabilidad de órdenes y productividad' },
-    bi: { title: '6. Inteligencia de Negocios (BI)', subtitle: 'Indicadores clave de rendimiento (OEE) y analítica de planta' },
-    ai: { title: '7. Asistencia y Análisis con Inteligencia Artificial', subtitle: 'Copiloto de planta, detección de riesgos y compras inteligentes' }
+    clientes: { title: 'Gestión de Clientes', subtitle: 'Padrón de empresas, RUCs y contactos comerciales' },
+    pedidos: { title: 'Gestión de Pedidos', subtitle: 'Recepción, cotizaciones y compromisos de entrega (SLA)' },
+    produccion: { title: 'Planificación y Seguimiento de Producción', subtitle: 'Control de Órdenes de Trabajo, etapas y tiempos de ciclo' },
+    inventario: { title: 'Control de Inventario de Materia Prima', subtitle: 'Catálogo de insumos, stock de seguridad y Kardex' },
+    reportes: { title: 'Reportes Gerenciales', subtitle: 'Cumplimiento OTIF, rentabilidad de órdenes y productividad' },
+    bi: { title: 'Inteligencia de Negocios (BI)', subtitle: 'Indicadores clave de rendimiento (OEE) y analítica de planta' },
+    ai: { title: 'Asistencia y Análisis con Inteligencia Artificial', subtitle: 'Copiloto de planta, detección de riesgos y compras inteligentes' }
   };
 
   const currentInfo = titles[activeTab] || titles.dashboard;

@@ -19,13 +19,13 @@ export default function Sidebar({ activeTab, setActiveTab }) {
 
   const menuItems = [
     { id: 'dashboard', label: 'Panel Principal', icon: LayoutDashboard },
-    { id: 'clientes', label: '1. Gestión de Clientes', icon: Users },
-    { id: 'pedidos', label: '2. Gestión de Pedidos', icon: ShoppingBag },
-    { id: 'produccion', label: '3. Planificación / Producción', icon: Hammer },
-    { id: 'inventario', label: '4. Control de Inventario', icon: Boxes },
-    { id: 'reportes', label: '5. Reportes Gerenciales', icon: FileSpreadsheet },
-    { id: 'bi', label: '6. Inteligencia de Negocios (BI)', icon: LineChart },
-    { id: 'ai', label: '7. Módulo Asistencia con IA', icon: Bot, highlight: true }
+    { id: 'clientes', label: 'Gestión de Clientes', icon: Users },
+    { id: 'pedidos', label: 'Gestión de Pedidos', icon: ShoppingBag },
+    { id: 'produccion', label: 'Planificación / Producción', icon: Hammer },
+    { id: 'inventario', label: 'Control de Inventario', icon: Boxes },
+    { id: 'reportes', label: 'Reportes Gerenciales', icon: FileSpreadsheet },
+    { id: 'bi', label: 'Inteligencia de Negocios (BI)', icon: LineChart },
+    { id: 'ai', label: 'Módulo Asistencia con IA', icon: Bot, highlight: true }
   ];
 
   return (
