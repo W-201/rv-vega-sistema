@@ -1,0 +1,179 @@
+-- Esquema de Base de Datos - PostgreSQL 16.0
+-- Empresa: RV Vega Servicios Generales E.I.R.L.
+-- Sistema de Gestión de Producción y Pedidos
+
+DROP TABLE IF EXISTS ai_logs CASCADE;
+DROP TABLE IF EXISTS kpi_records CASCADE;
+DROP TABLE IF EXISTS control_calidad CASCADE;
+DROP TABLE IF EXISTS paradas_produccion CASCADE;
+DROP TABLE IF EXISTS etapas_produccion CASCADE;
+DROP TABLE IF EXISTS consumo_materiales CASCADE;
+DROP TABLE IF EXISTS bom_detalles CASCADE;
+DROP TABLE IF EXISTS ordenes_produccion CASCADE;
+DROP TABLE IF EXISTS movimientos_inventario CASCADE;
+DROP TABLE IF EXISTS materiales CASCADE;
+DROP TABLE IF EXISTS pedido_detalles CASCADE;
+DROP TABLE IF EXISTS pedidos CASCADE;
+DROP TABLE IF EXISTS clientes CASCADE;
+DROP TABLE IF EXISTS usuarios CASCADE;
+
+-- 1. Tabla de Usuarios (Seguridad RBAC)
+CREATE TABLE usuarios (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    rol VARCHAR(30) NOT NULL DEFAULT 'operario', -- 'admin', 'jefe_produccion', 'operario', 'ventas'
+    activo BOOLEAN DEFAULT TRUE,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Tabla de Clientes
+CREATE TABLE clientes (
+    id SERIAL PRIMARY KEY,
+    tipo_documento VARCHAR(10) NOT NULL DEFAULT 'RUC', -- 'RUC', 'DNI'
+    numero_documento VARCHAR(20) UNIQUE NOT NULL,
+    razon_social VARCHAR(150) NOT NULL,
+    contacto VARCHAR(100),
+    telefono VARCHAR(30),
+    email VARCHAR(100),
+    direccion TEXT,
+    ciudad VARCHAR(50) DEFAULT 'Lima',
+    activo BOOLEAN DEFAULT TRUE,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Tabla de Pedidos
+CREATE TABLE pedidos (
+    id SERIAL PRIMARY KEY,
+    codigo_pedido VARCHAR(30) UNIQUE NOT NULL,
+    cliente_id INT REFERENCES clientes(id) ON DELETE RESTRICT,
+    fecha_pedido DATE NOT NULL DEFAULT CURRENT_DATE,
+    fecha_entrega_prometida DATE NOT NULL,
+    estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente', 
+    -- 'Pendiente', 'En Planificación', 'En Producción', 'Control de Calidad', 'Listo para Entrega', 'Entregado', 'Cancelado'
+    prioridad VARCHAR(20) NOT NULL DEFAULT 'Media', -- 'Baja', 'Media', 'Alta', 'Urgente'
+    subtotal NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    igv NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    total NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    observaciones TEXT,
+    creado_por INT REFERENCES usuarios(id),
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Detalle de Pedidos
+CREATE TABLE pedido_detalles (
+    id SERIAL PRIMARY KEY,
+    pedido_id INT REFERENCES pedidos(id) ON DELETE CASCADE,
+    descripcion_producto VARCHAR(200) NOT NULL,
+    especificaciones TEXT,
+    cantidad INT NOT NULL CHECK (cantidad > 0),
+    precio_unitario NUMERIC(12, 2) NOT NULL,
+    total_linea NUMERIC(12, 2) NOT NULL
+);
+
+-- 5. Catálogo de Materia Prima e Insumos
+CREATE TABLE materiales (
+    id SERIAL PRIMARY KEY,
+    codigo_sku VARCHAR(30) UNIQUE NOT NULL,
+    nombre VARCHAR(120) NOT NULL,
+    categoria VARCHAR(50) NOT NULL, -- 'Metales/Perfiles', 'Pinturas/Acabados', 'Fijaciones/Tornillería', 'Soldadura/Consumibles', 'Eléctricos'
+    unidad_medida VARCHAR(20) NOT NULL, -- 'kg', 'm', 'plancha', 'galón', 'tubo', 'und'
+    stock_actual NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    stock_minimo NUMERIC(12, 2) NOT NULL DEFAULT 5.00,
+    costo_unitario NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    ubicacion_almacen VARCHAR(50) DEFAULT 'Almacén Central',
+    activo BOOLEAN DEFAULT TRUE,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. Movimientos de Inventario (Kardex)
+CREATE TABLE movimientos_inventario (
+    id SERIAL PRIMARY KEY,
+    material_id INT REFERENCES materiales(id) ON DELETE RESTRICT,
+    tipo_movimiento VARCHAR(20) NOT NULL, -- 'ENTRADA', 'SALIDA_PRODUCCION', 'AJUSTE_POSITIVO', 'AJUSTE_NEGATIVO'
+    cantidad NUMERIC(12, 2) NOT NULL,
+    costo_unitario NUMERIC(12, 2) NOT NULL,
+    referencia_documento VARCHAR(50), -- Nro Factura Proveedor, Nro OP
+    motivo TEXT,
+    registrado_por INT REFERENCES usuarios(id),
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 7. Órdenes de Producción (OP)
+CREATE TABLE ordenes_produccion (
+    id SERIAL PRIMARY KEY,
+    codigo_op VARCHAR(30) UNIQUE NOT NULL,
+    pedido_id INT REFERENCES pedidos(id) ON DELETE RESTRICT,
+    estado VARCHAR(30) NOT NULL DEFAULT 'Planificada', -- 'Planificada', 'En Proceso', 'Pausada', 'Completada', 'Cancelada'
+    prioridad VARCHAR(20) NOT NULL DEFAULT 'Media',
+    fecha_inicio_programada DATE NOT NULL,
+    fecha_fin_programada DATE NOT NULL,
+    fecha_inicio_real TIMESTAMP,
+    fecha_fin_real TIMESTAMP,
+    porcentaje_avance INT NOT NULL DEFAULT 0 CHECK (porcentaje_avance BETWEEN 0 AND 100),
+    costo_estimado NUMERIC(12, 2) DEFAULT 0.00,
+    costo_real NUMERIC(12, 2) DEFAULT 0.00,
+    responsable_id INT REFERENCES usuarios(id),
+    observaciones TEXT,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 8. Etapas del Proceso Productivo por Orden de Producción
+CREATE TABLE etapas_produccion (
+    id SERIAL PRIMARY KEY,
+    orden_produccion_id INT REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
+    numero_fase INT NOT NULL,
+    nombre_etapa VARCHAR(80) NOT NULL, -- 'Habilitado y Corte', 'Mecanizado y Ensamble', 'Soldadura/Estructura', 'Acabado y Pintura', 'Control de Calidad'
+    descripcion TEXT,
+    operario_asignado VARCHAR(100),
+    horas_estimadas NUMERIC(6, 2) NOT NULL DEFAULT 1.00,
+    horas_reales NUMERIC(6, 2) NOT NULL DEFAULT 0.00,
+    estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente', -- 'Pendiente', 'En Proceso', 'Finalizada', 'Detenida'
+    fecha_inicio TIMESTAMP,
+    fecha_fin TIMESTAMP
+);
+
+-- 9. Lista de Materiales (BOM) y Consumos por Orden
+CREATE TABLE consumo_materiales (
+    id SERIAL PRIMARY KEY,
+    orden_produccion_id INT REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
+    material_id INT REFERENCES materiales(id) ON DELETE RESTRICT,
+    cantidad_requerida NUMERIC(12, 2) NOT NULL,
+    cantidad_consumida NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    cantidad_merma NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    costo_total NUMERIC(12, 2) NOT NULL DEFAULT 0.00
+);
+
+-- 10. Control de Calidad e Inspección
+CREATE TABLE control_calidad (
+    id SERIAL PRIMARY KEY,
+    orden_produccion_id INT REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
+    inspector_id INT REFERENCES usuarios(id),
+    resultado VARCHAR(30) NOT NULL, -- 'Aprobado', 'Rechazado', 'Aprobado con Observaciones'
+    defectos_encontrados TEXT,
+    acciones_correctivas TEXT,
+    merma_porcentaje NUMERIC(5, 2) DEFAULT 0.00,
+    fecha_inspeccion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 11. Registro de Paradas / Incidencias
+CREATE TABLE paradas_produccion (
+    id SERIAL PRIMARY KEY,
+    orden_produccion_id INT REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
+    etapa_id INT REFERENCES etapas_produccion(id) ON DELETE SET NULL,
+    motivo VARCHAR(100) NOT NULL, -- 'Falla de Máquina', 'Falta de Material', 'Corte de Fluido Eléctrico', 'Reproceso', 'Otro'
+    minutos_parada INT NOT NULL DEFAULT 0,
+    descripcion TEXT,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 12. Historial de Consultas y Predicciones de IA
+CREATE TABLE ai_logs (
+    id SERIAL PRIMARY KEY,
+    tipo VARCHAR(50) NOT NULL, -- 'prediccion_retraso', 'optimizacion_secuencia', 'chat_advisor'
+    consulta TEXT,
+    respuesta TEXT,
+    metadata JSONB,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
