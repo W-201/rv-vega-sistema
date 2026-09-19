@@ -35,9 +35,9 @@ export default function Sidebar({ activeTab, setActiveTab }) {
     const menuItems = allMenuItems.filter(item => item.roles.includes(rol));
 
     return (
-        <aside className="w-72 bg-slate-900 text-slate-200 flex flex-col flex-shrink-0 shadow-2xl z-20 min-h-screen">
+        <aside className="w-72 bg-slate-900 text-slate-200 flex flex-col flex-shrink-0 shadow-2xl z-20 h-screen sticky top-0">
             {/* Brand Header */}
-            <div className="p-5 border-b border-slate-800 flex items-center gap-3">
+            <div className="p-5 border-b border-slate-800 flex items-center gap-3 flex-shrink-0">
                 <div className="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
                     <Building2 className="w-6 h-6" />
                 </div>
@@ -79,7 +79,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             </div>
 
             {/* User Footer */}
-            <div className="p-4 border-t border-slate-800 bg-slate-950/60">
+            <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5 overflow-hidden">
                         <div className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 font-semibold text-sm">

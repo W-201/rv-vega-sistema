@@ -61,12 +61,12 @@ function MainLayout() {
   const currentInfo = titles[activeTab] || titles.dashboard;
 
   return (
-    <div className="flex min-h-screen bg-slate-100 font-sans text-slate-800">
-      <div className="no-print">
+    <div className="flex h-screen overflow-hidden bg-slate-100 font-sans text-slate-800">
+      <div className="no-print h-screen sticky top-0 flex-shrink-0 z-20">
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         <div className="no-print">
           <Header title={currentInfo.title} subtitle={currentInfo.subtitle} />
         </div>
