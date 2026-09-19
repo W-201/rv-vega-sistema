@@ -9,7 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
 // Librerías para Exportación (OE4)
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export default function Dashboard({ setActiveTab }) {
     const [data, setData] = useState(null);
@@ -72,7 +72,7 @@ export default function Dashboard({ setActiveTab }) {
             `S/ ${p.total}`
         ]);
 
-        doc.autoTable({
+        autoTable(doc, {
             startY: 40,
             head: [tableColumn],
             body: tableRows,
