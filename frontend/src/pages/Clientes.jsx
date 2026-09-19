@@ -57,6 +57,10 @@ export default function Clientes() {
 
   const handleTelefonoChange = (e) => {
     const cleanNumbers = e.target.value.replace(/\D/g, '');
+    // Solo permitir si está vacío (al borrar) o si empieza estrictamente con el número 9
+    if (cleanNumbers.length > 0 && cleanNumbers[0] !== '9') {
+      return; // Bloquea cualquier número que no inicie con 9
+    }
     setFormData(prev => ({
       ...prev,
       telefono: cleanNumbers.slice(0, 9)
@@ -94,9 +98,9 @@ export default function Clientes() {
       return;
     }
 
-    // Validación estricta de teléfono móvil (9 dígitos)
-    if (telefono.trim().length !== 9) {
-      alert('El teléfono móvil debe tener exactamente 9 dígitos numéricos.');
+    // Validación estricta de teléfono móvil (9 dígitos y debe iniciar con 9)
+    if (!/^9\d{8}$/.test(telefono.trim())) {
+      alert('El teléfono móvil debe tener exactamente 9 dígitos y comenzar obligatoriamente con el número 9 (ejemplo: 987654321).');
       return;
     }
 
@@ -327,8 +331,8 @@ export default function Clientes() {
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <label className="block font-semibold text-slate-700">Teléfono Móvil *</label>
-                    <span className={`text-[10px] font-medium ${formData.telefono.length === 9 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                      {formData.telefono.length} / 9 dígitos
+                    <span className={`text-[10px] font-medium ${formData.telefono.length === 9 && formData.telefono.startsWith('9') ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {formData.telefono.length} / 9 (Inicia con 9)
                     </span>
                   </div>
                   <input
@@ -338,7 +342,7 @@ export default function Clientes() {
                     maxLength={9}
                     value={formData.telefono}
                     onChange={handleTelefonoChange}
-                    placeholder="987654321 (9 dígitos)"
+                    placeholder="9XXXXXXXX (9 dígitos)"
                     className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono"
                   />
                 </div>

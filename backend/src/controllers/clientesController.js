@@ -63,8 +63,8 @@ export function createCliente(req, res) {
     }
 
     const telTrimmed = telefono.toString().trim();
-    if (!/^\d{9}$/.test(telTrimmed)) {
-      return res.status(400).json({ error: 'El teléfono móvil debe tener exactamente 9 dígitos numéricos' });
+    if (!/^9\d{8}$/.test(telTrimmed)) {
+      return res.status(400).json({ error: 'El teléfono móvil debe tener exactamente 9 dígitos y comenzar obligatoriamente con el número 9' });
     }
 
     const db = getDb();
@@ -129,8 +129,8 @@ export function updateCliente(req, res) {
     }
 
     const telTrimmed = telefono.toString().trim();
-    if (!/^\d{9}$/.test(telTrimmed)) {
-      return res.status(400).json({ error: 'El teléfono móvil debe tener exactamente 9 dígitos numéricos' });
+    if (!/^9\d{8}$/.test(telTrimmed)) {
+      return res.status(400).json({ error: 'El teléfono móvil debe tener exactamente 9 dígitos y comenzar obligatoriamente con el número 9' });
     }
 
     // Comprobar que no exista otro cliente con el mismo número de documento
