@@ -1,6 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { Users, Plus, Search, Phone, Mail, MapPin, Building, Trash2, Edit, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Users, Plus, Search, Phone, Mail, MapPin, Building, Trash2, Edit, CheckCircle, ChevronDown, Check } from 'lucide-react';
 import { api } from '../services/api';
+
+// Lista oficial de los 24 departamentos del Perú y la Provincia Constitucional del Callao
+const DEPARTAMENTOS_PERU = [
+  'Amazonas',
+  'Áncash',
+  'Apurímac',
+  'Arequipa',
+  'Ayacucho',
+  'Cajamarca',
+  'Callao',
+  'Cusco',
+  'Huancavelica',
+  'Huánuco',
+  'Ica',
+  'Junín',
+  'La Libertad',
+  'Lambayeque',
+  'Lima',
+  'Loreto',
+  'Madre de Dios',
+  'Moquegua',
+  'Pasco',
+  'Piura',
+  'Puno',
+  'San Martín',
+  'Tacna',
+  'Tumbes',
+  'Ucayali'
+];
+
+const normalizeText = (text) =>
+  (text || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -19,6 +51,26 @@ export default function Clientes() {
     direccion: '',
     ciudad: 'Lima'
   });
+
+  const [showCiudadDropdown, setShowCiudadDropdown] = useState(false);
+  const ciudadContainerRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (ciudadContainerRef.current && !ciudadContainerRef.current.contains(event.target)) {
+        setShowCiudadDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Filtrar sugerencias de los 24 departamentos y el Callao según lo escrito (sin distinguir mayúsculas ni tildes)
+  const ciudadesFiltradas = DEPARTAMENTOS_PERU.filter(dep =>
+    normalizeText(dep).includes(normalizeText(formData.ciudad))
+  );
 
   const loadClientes = async () => {
     try {
@@ -360,16 +412,67 @@ export default function Clientes() {
                     className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Ciudad / Región *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.ciudad}
-                    onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })}
-                    placeholder="Lima / Callao"
-                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
+                <div className="relative" ref={ciudadContainerRef}>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block font-semibold text-slate-700">Ciudad / Región *</label>
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      onClick={() => setShowCiudadDropdown(prev => !prev)}
+                      className="text-[10px] text-blue-600 font-medium hover:underline cursor-pointer flex items-center gap-0.5"
+                    >
+                      <span>{showCiudadDropdown ? 'Ocultar lista' : 'Ver 25 regiones'}</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform ${showCiudadDropdown ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={formData.ciudad}
+                      onFocus={() => setShowCiudadDropdown(true)}
+                      onChange={(e) => {
+                        setFormData({ ...formData, ciudad: e.target.value });
+                        setShowCiudadDropdown(true);
+                      }}
+                      placeholder="Escriba o seleccione un departamento..."
+                      className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      onClick={() => setShowCiudadDropdown(prev => !prev)}
+                      className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      title="Desplegar lista de regiones"
+                    >
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${showCiudadDropdown ? 'rotate-180 text-blue-600' : ''}`} />
+                    </button>
+                  </div>
+
+                  {/* Menú de Sugerencias y Selección de Departamentos */}
+                  {showCiudadDropdown && ciudadesFiltradas.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100">
+                      {ciudadesFiltradas.map((dep) => {
+                        const isSelected = formData.ciudad?.toLowerCase() === dep.toLowerCase();
+                        return (
+                          <button
+                            key={dep}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, ciudad: dep });
+                              setShowCiudadDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-xs hover:bg-blue-50 hover:text-blue-700 flex items-center justify-between transition cursor-pointer ${
+                              isSelected ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-700'
+                            }`}
+                          >
+                            <span>{dep}</span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
