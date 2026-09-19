@@ -36,8 +36,77 @@ export default function Clientes() {
     loadClientes();
   }, [busqueda]);
 
+  const handleTipoDocChange = (e) => {
+    const newTipo = e.target.value;
+    const maxLen = newTipo === 'RUC' ? 11 : 8;
+    setFormData(prev => ({
+      ...prev,
+      tipo_documento: newTipo,
+      numero_documento: prev.numero_documento.replace(/\D/g, '').slice(0, maxLen)
+    }));
+  };
+
+  const handleNumeroDocChange = (e) => {
+    const cleanNumbers = e.target.value.replace(/\D/g, '');
+    const maxLen = formData.tipo_documento === 'RUC' ? 11 : 8;
+    setFormData(prev => ({
+      ...prev,
+      numero_documento: cleanNumbers.slice(0, maxLen)
+    }));
+  };
+
+  const handleTelefonoChange = (e) => {
+    const cleanNumbers = e.target.value.replace(/\D/g, '');
+    setFormData(prev => ({
+      ...prev,
+      telefono: cleanNumbers.slice(0, 9)
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const { tipo_documento, numero_documento, razon_social, contacto, telefono, email, direccion, ciudad } = formData;
+
+    // Validar que todos los campos estén completos (no vacíos)
+    if (
+      !tipo_documento?.trim() ||
+      !numero_documento?.trim() ||
+      !razon_social?.trim() ||
+      !contacto?.trim() ||
+      !telefono?.trim() ||
+      !email?.trim() ||
+      !direccion?.trim() ||
+      !ciudad?.trim()
+    ) {
+      alert('Todos los campos son obligatorios. Por favor, complete todos los campos del formulario.');
+      return;
+    }
+
+    // Validación estricta de longitud de documento
+    if (tipo_documento === 'RUC' && numero_documento.trim().length !== 11) {
+      alert('El RUC debe tener exactamente 11 dígitos numéricos.');
+      return;
+    }
+
+    if (tipo_documento === 'DNI' && numero_documento.trim().length !== 8) {
+      alert('El DNI debe tener exactamente 8 dígitos numéricos.');
+      return;
+    }
+
+    // Validación estricta de teléfono móvil (9 dígitos)
+    if (telefono.trim().length !== 9) {
+      alert('El teléfono móvil debe tener exactamente 9 dígitos numéricos.');
+      return;
+    }
+
+    // Validación de formato de correo
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      alert('Por favor, ingrese un correo electrónico válido (ejemplo: contacto@empresa.pe).');
+      return;
+    }
+
     try {
       if (editingCliente) {
         await api.put(`/clientes/${editingCliente.id}`, formData);
@@ -200,48 +269,116 @@ export default function Clientes() {
             <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Tipo Doc.</label>
-                  <select value={formData.tipo_documento} onChange={(e) => setFormData({ ...formData, tipo_documento: e.target.value })} className="w-full p-2 border border-slate-300 rounded-lg">
+                  <label className="block font-semibold text-slate-700 mb-1">Tipo Doc. *</label>
+                  <select
+                    value={formData.tipo_documento}
+                    onChange={handleTipoDocChange}
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    required
+                  >
                     <option value="RUC">RUC</option>
                     <option value="DNI">DNI</option>
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="block font-semibold text-slate-700 mb-1">Número de Documento *</label>
-                  <input type="text" required value={formData.numero_documento} onChange={(e) => setFormData({ ...formData, numero_documento: e.target.value })} placeholder="20XXXXXXXXX" className="w-full p-2 border border-slate-300 rounded-lg" />
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block font-semibold text-slate-700">Número de Documento *</label>
+                    <span className={`text-[10px] font-medium ${formData.numero_documento.length === (formData.tipo_documento === 'RUC' ? 11 : 8) ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {formData.numero_documento.length} / {formData.tipo_documento === 'RUC' ? 11 : 8} dígitos
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    maxLength={formData.tipo_documento === 'RUC' ? 11 : 8}
+                    value={formData.numero_documento}
+                    onChange={handleNumeroDocChange}
+                    placeholder={formData.tipo_documento === 'RUC' ? '20XXXXXXXXX (11 dígitos)' : 'XXXXXXXX (8 dígitos)'}
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                  />
                 </div>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Razón Social o Nombre Completo *</label>
-                <input type="text" required value={formData.razon_social} onChange={(e) => setFormData({ ...formData, razon_social: e.target.value })} placeholder="Ej. CONSTRUCTORA DEL SUR S.A.C." className="w-full p-2 border border-slate-300 rounded-lg" />
+                <input
+                  type="text"
+                  required
+                  value={formData.razon_social}
+                  onChange={(e) => setFormData({ ...formData, razon_social: e.target.value })}
+                  placeholder="Ej. CONSTRUCTORA DEL SUR S.A.C."
+                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Persona de Contacto</label>
-                  <input type="text" value={formData.contacto} onChange={(e) => setFormData({ ...formData, contacto: e.target.value })} placeholder="Ej. Ing. Miguel Torres" className="w-full p-2 border border-slate-300 rounded-lg" />
+                  <label className="block font-semibold text-slate-700 mb-1">Persona de Contacto *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.contacto}
+                    onChange={(e) => setFormData({ ...formData, contacto: e.target.value })}
+                    placeholder="Ej. Ing. Miguel Torres"
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Teléfono Móvil</label>
-                  <input type="text" value={formData.telefono} onChange={(e) => setFormData({ ...formData, telefono: e.target.value })} placeholder="987654321" className="w-full p-2 border border-slate-300 rounded-lg" />
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block font-semibold text-slate-700">Teléfono Móvil *</label>
+                    <span className={`text-[10px] font-medium ${formData.telefono.length === 9 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {formData.telefono.length} / 9 dígitos
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    maxLength={9}
+                    value={formData.telefono}
+                    onChange={handleTelefonoChange}
+                    placeholder="987654321 (9 dígitos)"
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Correo Electrónico</label>
-                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="contacto@empresa.pe" className="w-full p-2 border border-slate-300 rounded-lg" />
+                  <label className="block font-semibold text-slate-700 mb-1">Correo Electrónico *</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="contacto@empresa.pe"
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Ciudad / Región</label>
-                  <input type="text" value={formData.ciudad} onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })} placeholder="Lima / Callao" className="w-full p-2 border border-slate-300 rounded-lg" />
+                  <label className="block font-semibold text-slate-700 mb-1">Ciudad / Región *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.ciudad}
+                    onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })}
+                    placeholder="Lima / Callao"
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Dirección Fiscal / Planta</label>
-                <input type="text" value={formData.direccion} onChange={(e) => setFormData({ ...formData, direccion: e.target.value })} placeholder="Av. Ejemplo 123, Distrito" className="w-full p-2 border border-slate-300 rounded-lg" />
+                <label className="block font-semibold text-slate-700 mb-1">Dirección Fiscal / Planta *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.direccion}
+                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                  placeholder="Av. Ejemplo 123, Distrito"
+                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
               </div>
 
               <div className="pt-4 flex justify-end gap-2 border-t border-slate-100">

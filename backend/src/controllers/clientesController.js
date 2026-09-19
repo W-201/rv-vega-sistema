@@ -40,12 +40,35 @@ export function createCliente(req, res) {
   try {
     const { tipo_documento, numero_documento, razon_social, contacto, telefono, email, direccion, ciudad } = req.body;
 
-    if (!numero_documento || !razon_social) {
-      return res.status(400).json({ error: 'Número de documento y Razón Social son requeridos' });
+    if (
+      !tipo_documento?.toString().trim() ||
+      !numero_documento?.toString().trim() ||
+      !razon_social?.toString().trim() ||
+      !contacto?.toString().trim() ||
+      !telefono?.toString().trim() ||
+      !email?.toString().trim() ||
+      !direccion?.toString().trim() ||
+      !ciudad?.toString().trim()
+    ) {
+      return res.status(400).json({ error: 'Todos los campos son obligatorios. Por favor, complete la información.' });
+    }
+
+    const docTrimmed = numero_documento.toString().trim();
+    if (tipo_documento === 'RUC' && !/^\d{11}$/.test(docTrimmed)) {
+      return res.status(400).json({ error: 'El RUC debe tener exactamente 11 dígitos numéricos' });
+    }
+
+    if (tipo_documento === 'DNI' && !/^\d{8}$/.test(docTrimmed)) {
+      return res.status(400).json({ error: 'El DNI debe tener exactamente 8 dígitos numéricos' });
+    }
+
+    const telTrimmed = telefono.toString().trim();
+    if (!/^\d{9}$/.test(telTrimmed)) {
+      return res.status(400).json({ error: 'El teléfono móvil debe tener exactamente 9 dígitos numéricos' });
     }
 
     const db = getDb();
-    const existe = db.clientes.find(c => c.numero_documento === numero_documento);
+    const existe = db.clientes.find(c => c.numero_documento === docTrimmed);
     if (existe) {
       return res.status(400).json({ error: 'Ya existe un cliente con ese número de documento' });
     }
@@ -54,13 +77,13 @@ export function createCliente(req, res) {
     const nuevoCliente = {
       id: newId,
       tipo_documento: tipo_documento || 'RUC',
-      numero_documento,
-      razon_social,
-      contacto: contacto || '',
-      telefono: telefono || '',
-      email: email || '',
-      direccion: direccion || '',
-      ciudad: ciudad || 'Lima',
+      numero_documento: docTrimmed,
+      razon_social: razon_social.trim(),
+      contacto: contacto.trim(),
+      telefono: telTrimmed,
+      email: email.trim(),
+      direccion: direccion.trim(),
+      ciudad: ciudad.trim(),
       activo: true,
       creado_en: new Date().toISOString()
     };
@@ -81,9 +104,51 @@ export function updateCliente(req, res) {
     const idx = db.clientes.findIndex(c => c.id === id);
     if (idx === -1) return res.status(404).json({ error: 'Cliente no encontrado' });
 
+    const { tipo_documento, numero_documento, razon_social, contacto, telefono, email, direccion, ciudad } = req.body;
+
+    if (
+      !tipo_documento?.toString().trim() ||
+      !numero_documento?.toString().trim() ||
+      !razon_social?.toString().trim() ||
+      !contacto?.toString().trim() ||
+      !telefono?.toString().trim() ||
+      !email?.toString().trim() ||
+      !direccion?.toString().trim() ||
+      !ciudad?.toString().trim()
+    ) {
+      return res.status(400).json({ error: 'Todos los campos son obligatorios. Por favor, complete la información.' });
+    }
+
+    const docTrimmed = numero_documento.toString().trim();
+    if (tipo_documento === 'RUC' && !/^\d{11}$/.test(docTrimmed)) {
+      return res.status(400).json({ error: 'El RUC debe tener exactamente 11 dígitos numéricos' });
+    }
+
+    if (tipo_documento === 'DNI' && !/^\d{8}$/.test(docTrimmed)) {
+      return res.status(400).json({ error: 'El DNI debe tener exactamente 8 dígitos numéricos' });
+    }
+
+    const telTrimmed = telefono.toString().trim();
+    if (!/^\d{9}$/.test(telTrimmed)) {
+      return res.status(400).json({ error: 'El teléfono móvil debe tener exactamente 9 dígitos numéricos' });
+    }
+
+    // Comprobar que no exista otro cliente con el mismo número de documento
+    const yaExiste = db.clientes.find(c => c.id !== id && c.numero_documento === docTrimmed);
+    if (yaExiste) {
+      return res.status(400).json({ error: 'Ya existe otro cliente con ese número de documento' });
+    }
+
     const updated = {
       ...db.clientes[idx],
-      ...req.body,
+      tipo_documento,
+      numero_documento: docTrimmed,
+      razon_social: razon_social.trim(),
+      contacto: contacto.trim(),
+      telefono: telTrimmed,
+      email: email.trim(),
+      direccion: direccion.trim(),
+      ciudad: ciudad.trim(),
       id
     };
 
