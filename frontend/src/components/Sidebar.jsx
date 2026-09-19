@@ -16,11 +16,12 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar({ activeTab, setActiveTab }) {
     const { user, logout } = useAuth();
-    const rol = user?.rol || 'operario'; // Rol por defecto si no viene especificado
+    const rol = user?.rol === 'jefe_produccion' ? 'produccion' : (user?.rol || 'operario');
 
     // Definición de módulos con sus permisos por rol (OE5)
+    // El Dashboard Gerencial está restringido exclusivamente para administradores
     const allMenuItems = [
-        { id: 'dashboard', label: 'Panel Principal', icon: LayoutDashboard, roles: ['admin', 'produccion', 'ventas', 'operario'] },
+        { id: 'dashboard', label: 'Dashboard Gerencial', icon: LayoutDashboard, roles: ['admin'] },
         { id: 'clientes', label: 'Gestión de Clientes', icon: Users, roles: ['admin', 'ventas'] },
         { id: 'pedidos', label: 'Gestión de Pedidos', icon: ShoppingBag, roles: ['admin', 'ventas', 'produccion'] },
         { id: 'produccion', label: 'Planificación / Producción', icon: Hammer, roles: ['admin', 'produccion', 'operario'] },
