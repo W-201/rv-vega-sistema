@@ -18,9 +18,8 @@ export default function Pedidos({ setActiveTab }) {
         { descripcion_producto: '', especificaciones: '', cantidad: 1, precio_unitario: 0 }
     ]);
 
-    // --- NUEVOS ESTADOS PARA OE1 ---
-    const [documentoBuscado, setDocumentoBuscado] = useState('');
-    const [buscandoDoc, setBuscandoDoc] = useState(false);
+    // Cliente seleccionado actualmente para mostrar su DNI/RUC
+    const clienteSeleccionado = clientes.find(c => String(c.id) === String(clienteId));
 
     const loadPedidos = async () => {
         try {
@@ -77,6 +76,10 @@ export default function Pedidos({ setActiveTab }) {
 
     const handleCreatePedido = async (e) => {
         e.preventDefault();
+        if (!clienteId) {
+            alert('Por favor, seleccione un cliente de la lista.');
+            return;
+        }
         try {
             await api.post('/pedidos', {
                 cliente_id: clienteId,
@@ -88,7 +91,6 @@ export default function Pedidos({ setActiveTab }) {
             setShowModal(false);
             setItems([{ descripcion_producto: '', especificaciones: '', cantidad: 1, precio_unitario: 0 }]);
             setObservaciones('');
-            setDocumentoBuscado('');
             loadPedidos();
         } catch (err) {
             alert('Error al crear pedido: ' + err.message);
@@ -102,29 +104,6 @@ export default function Pedidos({ setActiveTab }) {
             loadPedidos();
         } catch (err) {
             alert('Error al generar OP: ' + err.message);
-        }
-    };
-
-    // --- LÓGICA OE1: VALIDACIÓN DE DNI/RUC ---
-    const handleBuscarDocumento = async () => {
-        if (documentoBuscado.length !== 8 && documentoBuscado.length !== 11) {
-            alert("El documento debe tener 8 (DNI) u 11 (RUC) dígitos.");
-            return;
-        }
-        setBuscandoDoc(true);
-        try {
-            // Por ahora busca en los clientes cargados. Luego se puede conectar a SUNAT/RENIEC.
-            const clienteEncontrado = clientes.find(c => c.numero_documento === documentoBuscado);
-            if (clienteEncontrado) {
-                setClienteId(clienteEncontrado.id);
-                alert(`✔ Cliente seleccionado: ${clienteEncontrado.razon_social}`);
-            } else {
-                alert("Cliente no encontrado. Debe registrarlo primero en el módulo de Clientes.");
-            }
-        } catch (err) {
-            alert("Error al consultar el documento.");
-        } finally {
-            setBuscandoDoc(false);
         }
     };
 
@@ -303,31 +282,10 @@ export default function Pedidos({ setActiveTab }) {
                                 </div>
                             </div>
 
-                            {/* BLOQUE OE1: VALIDACIÓN RUC Y SELECCIÓN DE CLIENTE */}
+                            {/* SELECCIÓN DE CLIENTE Y MOSTRAR DNI / RUC */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block font-semibold text-slate-700 mb-1">Validar DNI / RUC</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            placeholder="Ingrese 8 u 11 dígitos"
-                                            value={documentoBuscado}
-                                            onChange={(e) => setDocumentoBuscado(e.target.value)}
-                                            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleBuscarDocumento}
-                                            disabled={buscandoDoc}
-                                            className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-semibold transition whitespace-nowrap"
-                                        >
-                                            {buscandoDoc ? '...' : 'Buscar'}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block font-semibold text-slate-700 mb-1">Cliente Seleccionado *</label>
+                                    <label className="block font-semibold text-slate-700 mb-1">Cliente *</label>
                                     <select
                                         value={clienteId}
                                         onChange={(e) => setClienteId(e.target.value)}
@@ -336,9 +294,33 @@ export default function Pedidos({ setActiveTab }) {
                                     >
                                         <option value="">Seleccione un cliente...</option>
                                         {clientes.map(c => (
-                                            <option key={c.id} value={c.id}>{c.razon_social} ({c.numero_documento})</option>
+                                            <option key={c.id} value={c.id}>{c.razon_social}</option>
                                         ))}
                                     </select>
+                                </div>
+
+                                <div>
+                                    <label className="block font-semibold text-slate-700 mb-1">DNI / RUC del Cliente</label>
+                                    <div className="relative flex items-center">
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            disabled
+                                            value={clienteSeleccionado ? clienteSeleccionado.numero_documento : ''}
+                                            placeholder="Seleccione un cliente para ver su documento"
+                                            className="w-full p-2 border border-slate-200 rounded-lg bg-slate-100 text-slate-800 font-mono font-bold outline-none cursor-not-allowed"
+                                        />
+                                        {clienteSeleccionado && (
+                                            <span className="absolute right-2 px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-800 uppercase tracking-wide">
+                                                {clienteSeleccionado.tipo_documento}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {clienteSeleccionado && (
+                                        <p className="text-[11px] text-slate-500 mt-1">
+                                            Contacto: <span className="font-semibold text-slate-700">{clienteSeleccionado.contacto || 'Sin contacto'}</span> • Tel: <span className="font-semibold text-slate-700">{clienteSeleccionado.telefono || 'Sin teléfono'}</span>
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 

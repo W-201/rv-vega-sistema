@@ -97,6 +97,19 @@
       "direccion": "Calle Los Sauces 142, Surco",
       "ciudad": "Lima",
       "activo": true
+    },
+    {
+      "id": 6,
+      "tipo_documento": "DNI",
+      "numero_documento": "78945612",
+      "razon_social": "Pepito El Pro",
+      "contacto": "Jose Mujica",
+      "telefono": "938373983",
+      "email": "contactoJose@upn.pe",
+      "direccion": "Av. Usares 430",
+      "ciudad": "Lima",
+      "activo": true,
+      "creado_en": "2026-09-19T13:20:12.279Z"
     }
   ],
   "materiales": [
