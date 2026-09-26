@@ -386,14 +386,25 @@ export async function responderChatAdvisor(mensajeUsuario) {
   const calidad = Math.round((100 - merma) * 10) / 10;
   const oeeGlobal = Math.round(((disponibilidad / 100) * (rendimiento / 100) * (calidad / 100)) * 1000) / 10;
 
+  // Detalle de ventas y pedidos para el contexto
+  const listaPedidos = (db.pedidos || []).map(p => {
+    const cli = (db.clientes || []).find(c => c.id === p.cliente_id);
+    const dets = (db.pedido_detalles || []).filter(d => d.pedido_id === p.id);
+    const items = dets.map(d => `${d.cantidad}x ${d.descripcion_producto} (S/ ${Number(d.total_linea).toFixed(2)})`).join(', ');
+    return `• ${p.codigo_pedido}: Cliente: '${cli ? cli.razon_social : 'Cliente'}' | F.Pedido: ${p.fecha_pedido} | F.Entrega: ${p.fecha_entrega_prometida} | Estado: ${p.estado} | Prioridad: ${p.prioridad} | Total: S/ ${Number(p.total).toFixed(2)} | Ítems: ${items || p.observaciones || 'General'}`;
+  }).join('\n');
+  const totalVentas = (db.pedidos || []).reduce((acc, p) => acc + (Number(p.total) || 0), 0);
+
   // 2. Si existe API KEY de Gemini, intentamos llamada directa LLM
   if (apiKey) {
     try {
       const promptContext = `Eres el Copiloto Inteligente de Planta y Asesor Experto en Optimización de la Producción de la empresa metalmecánica 'RV Vega Servicios Generales E.I.R.L.'.
-Tu rol es asistir a la gerencia, jefatura de operaciones y operarios para maximizar el OEE, detectar retrasos antes de que sucedan, erradicar cuellos de botella y asesorar en compras de materias primas.
+Tu rol es asistir a la gerencia, jefatura de operaciones y operarios para maximizar el OEE, detectar retrasos antes de que sucedan, erradicar cuellos de botella y asesorar en compras de materias primas y ventas.
 
-DATOS EN VIVO DE LA PLANTA (RV VEGA):
-- Pedidos en Cartera: ${totalPedidos} (En producción: ${pedidosEnProduccion}, Pendientes: ${pedidosPendientes})
+DATOS EN VIVO DE LA PLANTA Y CARTERA (RV VEGA):
+- Ventas y Pedidos en Cartera (Total facturado en cartera: S/ ${totalVentas.toFixed(2)}):
+${listaPedidos}
+- Total pedidos en sistema: ${totalPedidos} (En producción: ${pedidosEnProduccion}, Pendientes: ${pedidosPendientes})
 - Órdenes de Producción Activas: ${opsActivas.map(o => `${o.codigo_op} (${o.porcentaje_avance}% avance, Estado: ${o.estado})`).join(', ') || 'Ninguna'}
 - Indicadores OEE: Global ${oeeGlobal}%, Disponibilidad ${disponibilidad}%, Rendimiento ${rendimiento}%, Calidad ${calidad}%
 - Paradas no programadas recientes: ${paradas.map(p => `${p.motivo} (${p.minutos_parada} min)`).join('; ') || 'Ninguna'}
@@ -404,8 +415,9 @@ PREGUNTA DEL USUARIO:
 
 INSTRUCCIONES DE RESPUESTA:
 - Responde de forma técnica, ejecutiva, accionable y estructurada en español.
+- Si el usuario pregunta sobre ventas, pedidos, montos o facturación, usa la lista de ventas detallada arriba con nombres de clientes, códigos de pedidos y montos en Soles (S/).
 - Utiliza formato Markdown con títulos destacados (###), negritas (**texto**) y viñetas (-).
-- Siempre provee datos numéricos basados en el estado real de la planta y termina con una 'Acción Operativa Recomendada'.`;
+- Termina con una 'Acción Operativa / Comercial Recomendada'.`;
 
       const model = 'gemini-flash-latest';
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
@@ -431,6 +443,37 @@ INSTRUCCIONES DE RESPUESTA:
 
   // 3. Motor de Procesamiento de Lenguaje Natural (PLN) Heurístico y Contextual Local
   const text = mensajeUsuario.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // Consulta específica sobre Ventas, Facturación o Pedidos
+  if (text.includes('venta') || text.includes('ventas') || text.includes('facturacion') || text.includes('facturado') || text.includes('pedido') || text.includes('pedidos') || text.includes('ingreso') || text.includes('ingresos') || text.includes('cotizacion')) {
+    const pedidos = db.pedidos || [];
+    const totalFacturado = pedidos.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
+    const enProduccion = pedidos.filter(p => p.estado === 'En Producción');
+    const entregados = pedidos.filter(p => p.estado === 'Entregado');
+    const pendientes = pedidos.filter(p => p.estado === 'Pendiente' || p.estado === 'En Planificación');
+
+    const filasPedidos = pedidos.map(p => {
+      const cli = (db.clientes || []).find(c => c.id === p.cliente_id);
+      return `| **${p.codigo_pedido}** | ${cli ? cli.razon_social : 'Cliente'} | ${p.fecha_pedido} | ${p.fecha_entrega_prometida} | ${p.estado} | **S/ ${Number(p.total).toLocaleString('es-PE', { minimumFractionDigits: 2 })}** |`;
+    }).join('\n');
+
+    return `### 💼 Resumen Ejecutivo de Ventas y Pedidos en RV Vega
+
+En el sistema se registran actualmente **${pedidos.length} pedidos comerciales** por un valor total de **S/ ${totalFacturado.toLocaleString('es-PE', { minimumFractionDigits: 2 })}**:
+
+| Código | Cliente | F. Pedido | F. Entrega | Estado | Monto Total |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+${filasPedidos}
+
+---
+📌 **Desglose de Estados de Cartera**:
+- **Entregados y Facturados**: ${entregados.length} pedidos concluidos satisfactoriamente.
+- **En Producción Activa en Taller**: ${enProduccion.length} pedido(s) (**${enProduccion.map(p => p.codigo_pedido).join(', ')}**).
+- **En Planificación / Pendientes**: ${pendientes.length} pedidos (**${pendientes.map(p => p.codigo_pedido).join(', ')}**).
+
+💡 **Acción Comercial Recomendada**:
+Priorizar la liberación y despacho de **PED-2026-0003** (Logística Integral Peruana S.A.C., S/ 18,644.00) cuya fecha pactada de entrega se encuentra en seguimiento prioritario.`;
+  }
 
   // A. Consulta específica sobre Cuellos de Botella o Paradas
   if (text.includes('cuello') || text.includes('botella') || text.includes('parada') || text.includes('atasco') || text.includes('demora')) {

@@ -161,6 +161,7 @@ export default function AsistenteIA() {
   const [loading, setLoading] = useState(false);
   const [sendingChat, setSendingChat] = useState(false);
   const [requisicionEnviada, setRequisicionEnviada] = useState({});
+  const [mostrarOpciones, setMostrarOpciones] = useState(true);
 
   // Chat State
   const [mensajes, setMensajes] = useState([
@@ -396,7 +397,18 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setMostrarOpciones(prev => !prev)}
+                className={`px-2.5 py-1.5 rounded-lg transition cursor-pointer text-xs flex items-center gap-1.5 ${
+                  mostrarOpciones ? 'bg-blue-600 text-white font-bold' : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+                title="Mostrar u ocultar sugerencias de preguntas"
+              >
+                <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
+                <span className="hidden sm:inline text-[11px]">{mostrarOpciones ? 'Ocultar Opciones' : 'Ver Opciones de Pregunta'}</span>
+              </button>
+
               <button
                 onClick={loadData}
                 title="Actualizar datos de planta"
@@ -412,56 +424,148 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
                 className="p-1.5 text-slate-400 hover:text-red-300 rounded-lg hover:bg-slate-800 transition cursor-pointer text-xs flex items-center gap-1"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-[11px]">Reiniciar Chat</span>
+                <span className="hidden sm:inline text-[11px]">Reiniciar</span>
               </button>
             </div>
           </div>
 
-          {/* 3.6.3.4 Sugerencias Dinámicas de Preguntas Frecuentes */}
-          <div className="p-3.5 bg-slate-50 border-b border-slate-200 space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 text-slate-600 font-bold text-[11px]">
-                <Lightbulb className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                <span>Sugerencias Dinámicas de Consulta (Taller y Planta):</span>
-              </div>
-
-              {/* Filtro por Categorías */}
-              <div className="flex gap-1 overflow-x-auto text-[10px]">
-                {['Todos', 'Cuellos de Botella', 'OEE de Planta', 'Compras', 'Riesgos'].map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => setFiltroSugerencia(cat)}
-                    className={`px-2 py-0.5 rounded-md font-semibold transition ${
-                      filtroSugerencia === cat
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Chips de Preguntas Frecuentes Dinámicas */}
-            <div className="flex flex-wrap gap-1.5">
-              {preguntasFiltradas.slice(0, 5).map((p, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleQuickPrompt(p.prompt)}
-                  className={`text-[11px] px-3 py-1 rounded-full border transition flex items-center gap-1.5 font-medium cursor-pointer ${
-                    p.tipo === 'urgente'
-                      ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                      : p.tipo === 'alerta'
-                      ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300'
-                  }`}
+          {/* Panel Interactivo de Opciones de Preguntas para el Usuario */}
+          {mostrarOpciones && (
+            <div className="p-4 bg-slate-900/95 text-white border-b border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  Opciones de Preguntas que puedes hacerle al Copiloto (Haz clic en cualquiera):
+                </span>
+                <button 
+                  onClick={() => setMostrarOpciones(false)}
+                  className="text-[11px] text-slate-400 hover:text-white"
                 >
-                  <Zap className="w-3 h-3 text-amber-500" />
-                  <span>{p.prompt}</span>
+                  ✕ Cerrar
                 </button>
-              ))}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {/* 1. Ventas y Cartera */}
+                <div className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-blue-400 font-bold text-[11px]">
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    <span>Ventas y Cartera</span>
+                  </div>
+                  <div className="space-y-1">
+                    {[
+                      '¿Qué ventas y pedidos se registraron en el sistema?',
+                      '¿Cuáles son los pedidos con mayor facturación en soles?',
+                      '¿Qué clientes tienen pedidos pendientes de entrega?'
+                    ].map((q, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSendMessage(q)}
+                        className="w-full text-left p-1.5 rounded-lg bg-slate-900/80 hover:bg-blue-600/30 hover:text-blue-200 text-slate-300 text-[10px] leading-snug transition flex items-center justify-between group cursor-pointer border border-transparent hover:border-blue-500/40"
+                      >
+                        <span className="line-clamp-2">{q}</span>
+                        <ChevronRight className="w-3 h-3 text-slate-500 group-hover:text-blue-400 flex-shrink-0 ml-1" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Operaciones y Taller */}
+                <div className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-amber-400 font-bold text-[11px]">
+                    <Activity className="w-3.5 h-3.5" />
+                    <span>Producción y Taller</span>
+                  </div>
+                  <div className="space-y-1">
+                    {[
+                      '¿Cuál es el principal cuello de botella actual en el taller?',
+                      '¿Cuál es el estado de avance de la orden OP-2026-003?',
+                      '¿Cómo está distribuida la carga de trabajo de los operarios?'
+                    ].map((q, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSendMessage(q)}
+                        className="w-full text-left p-1.5 rounded-lg bg-slate-900/80 hover:bg-amber-600/30 hover:text-amber-200 text-slate-300 text-[10px] leading-snug transition flex items-center justify-between group cursor-pointer border border-transparent hover:border-amber-500/40"
+                      >
+                        <span className="line-clamp-2">{q}</span>
+                        <ChevronRight className="w-3 h-3 text-slate-500 group-hover:text-amber-400 flex-shrink-0 ml-1" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Inventario y Compras */}
+                <div className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-red-400 font-bold text-[11px]">
+                    <Package className="w-3.5 h-3.5" />
+                    <span>Insumos y Almacén</span>
+                  </div>
+                  <div className="space-y-1">
+                    {[
+                      '¿Qué insumos tienen stock por debajo del mínimo de seguridad?',
+                      '¿Cuánto cuesta la compra sugerida de insumos críticos?',
+                      '¿Qué órdenes corren riesgo por falta de alambre o pintura?'
+                    ].map((q, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSendMessage(q)}
+                        className="w-full text-left p-1.5 rounded-lg bg-slate-900/80 hover:bg-red-600/30 hover:text-red-200 text-slate-300 text-[10px] leading-snug transition flex items-center justify-between group cursor-pointer border border-transparent hover:border-red-500/40"
+                      >
+                        <span className="line-clamp-2">{q}</span>
+                        <ChevronRight className="w-3 h-3 text-slate-500 group-hover:text-red-400 flex-shrink-0 ml-1" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. OEE y Eficiencia */}
+                <div className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    <span>Métricas OEE y OTIF</span>
+                  </div>
+                  <div className="space-y-1">
+                    {[
+                      '¿Cuál es el OEE actual de la planta y cómo superamos el 85%?',
+                      '¿Cuál es la tasa de cumplimiento de entregas a tiempo (OTIF)?',
+                      '¿Qué paradas de planta no programadas se registraron?'
+                    ].map((q, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSendMessage(q)}
+                        className="w-full text-left p-1.5 rounded-lg bg-slate-900/80 hover:bg-emerald-600/30 hover:text-emerald-200 text-slate-300 text-[10px] leading-snug transition flex items-center justify-between group cursor-pointer border border-transparent hover:border-emerald-500/40"
+                      >
+                        <span className="line-clamp-2">{q}</span>
+                        <ChevronRight className="w-3 h-3 text-slate-500 group-hover:text-emerald-400 flex-shrink-0 ml-1" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
+          )}
+
+          {/* 3.6.3.4 Sugerencias Dinámicas Rápidas */}
+          <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-[11px]">
+            <span className="font-bold text-slate-500 flex items-center gap-1 flex-shrink-0">
+              <Zap className="w-3 h-3 text-amber-500" />
+              Rápidas:
+            </span>
+            {[
+              '¿Qué ventas y pedidos se registraron en el sistema?',
+              '¿Cuál es el cuello de botella actual en el taller?',
+              '¿Cuál es el OEE actual de la planta?',
+              '¿Qué insumos con stock crítico debo comprar hoy?',
+              '¿Cuál es el estado de avance de la orden OP-2026-003?'
+            ].map((p, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSendMessage(p)}
+                className="px-2.5 py-1 rounded-full bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 text-[10px] whitespace-nowrap transition cursor-pointer font-medium"
+              >
+                {p}
+              </button>
+            ))}
           </div>
 
           {/* Área de Mensajes */}
