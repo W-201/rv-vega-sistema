@@ -407,7 +407,8 @@ INSTRUCCIONES DE RESPUESTA:
 - Utiliza formato Markdown con títulos destacados (###), negritas (**texto**) y viñetas (-).
 - Siempre provee datos numéricos basados en el estado real de la planta y termina con una 'Acción Operativa Recomendada'.`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      const model = 'gemini-flash-latest';
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -419,6 +420,9 @@ INSTRUCCIONES DE RESPUESTA:
         const data = await response.json();
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (reply) return reply;
+      } else {
+        const errText = await response.text();
+        console.warn('Gemini API call returned non-OK status:', response.status, errText.slice(0, 120));
       }
     } catch (e) {
       console.warn('Gemini API call failed, falling back to local NLP engine:', e.message);

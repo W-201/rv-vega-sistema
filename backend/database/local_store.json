@@ -273,7 +273,7 @@
       "codigo_pedido": "PED-2026-0004",
       "cliente_id": 4,
       "fecha_pedido": "2026-09-05",
-      "fecha_entrega_prometida": "2026-10-03",
+      "fecha_entrega_prometida": "2026-09-22",
       "fecha_entrega_real": null,
       "estado": "En Planificación",
       "prioridad": "Media",
@@ -288,7 +288,7 @@
       "codigo_pedido": "PED-2026-0005",
       "cliente_id": 1,
       "fecha_pedido": "2026-09-10",
-      "fecha_entrega_prometida": "2026-10-15",
+      "fecha_entrega_prometida": "2026-09-30",
       "fecha_entrega_real": null,
       "estado": "Pendiente",
       "prioridad": "Baja",
@@ -394,38 +394,6 @@
       "costo_real": 6800,
       "responsable_id": 2,
       "observaciones": "Fase de soldadura completada; en proceso de tratamiento y pintura"
-    },
-    {
-      "id": 4,
-      "codigo_op": "OP-2026-004",
-      "pedido_id": 4,
-      "estado": "Planificada",
-      "prioridad": "Media",
-      "fecha_inicio_programada": "2026-09-15",
-      "fecha_fin_programada": "2026-10-03",
-      "fecha_inicio_real": null,
-      "fecha_fin_real": null,
-      "porcentaje_avance": 15,
-      "costo_estimado": 4030,
-      "costo_real": 650,
-      "responsable_id": 2,
-      "observaciones": "Fabricación de 4 portones corredizos industriales para Industrias Metalmecánicas Lima"
-    },
-    {
-      "id": 5,
-      "codigo_op": "OP-2026-005",
-      "pedido_id": 5,
-      "estado": "Planificada",
-      "prioridad": "Baja",
-      "fecha_inicio_programada": "2026-09-27",
-      "fecha_fin_programada": "2026-10-15",
-      "fecha_inicio_real": null,
-      "fecha_fin_real": null,
-      "porcentaje_avance": 0,
-      "costo_estimado": 3100,
-      "costo_real": 0,
-      "responsable_id": 2,
-      "observaciones": "Mantenimiento preventivo y cerco perimétrico"
     }
   ],
   "etapas_produccion": [
@@ -489,84 +457,6 @@
       "descripcion": "Inspección dimensional, espesor de pintura y embalaje",
       "operario_asignado": "Carlos Mendoza",
       "horas_estimadas": 8,
-      "horas_reales": 0,
-      "estado": "Pendiente",
-      "fecha_inicio": null,
-      "fecha_fin": null
-    },
-    {
-      "id": 6,
-      "orden_produccion_id": 4,
-      "numero_fase": 1,
-      "nombre_etapa": "Habilitado y Corte",
-      "descripcion": "Corte de perfiles tubulares de 2x2",
-      "operario_asignado": "Juan Pérez T.",
-      "horas_estimadas": 14,
-      "horas_reales": 10,
-      "estado": "En Proceso",
-      "fecha_inicio": "2026-09-15 08:00:00",
-      "fecha_fin": null
-    },
-    {
-      "id": 7,
-      "orden_produccion_id": 4,
-      "numero_fase": 2,
-      "nombre_etapa": "Armado y Soldadura",
-      "descripcion": "Ensamblado de marcos corredizos",
-      "operario_asignado": "Juan Pérez T.",
-      "horas_estimadas": 24,
-      "horas_reales": 0,
-      "estado": "Pendiente",
-      "fecha_inicio": null,
-      "fecha_fin": null
-    },
-    {
-      "id": 8,
-      "orden_produccion_id": 4,
-      "numero_fase": 3,
-      "nombre_etapa": "Tratamiento y Pintura",
-      "descripcion": "Aplicación de anticorrosivo gris",
-      "operario_asignado": "Raúl Gómez",
-      "horas_estimadas": 16,
-      "horas_reales": 0,
-      "estado": "Pendiente",
-      "fecha_inicio": null,
-      "fecha_fin": null
-    },
-    {
-      "id": 9,
-      "orden_produccion_id": 4,
-      "numero_fase": 4,
-      "nombre_etapa": "Control de Calidad y Embalaje",
-      "descripcion": "Inspección de rodamientos y prueba funcional",
-      "operario_asignado": "Carlos Mendoza",
-      "horas_estimadas": 6,
-      "horas_reales": 0,
-      "estado": "Pendiente",
-      "fecha_inicio": null,
-      "fecha_fin": null
-    },
-    {
-      "id": 10,
-      "orden_produccion_id": 5,
-      "numero_fase": 1,
-      "nombre_etapa": "Habilitado y Corte",
-      "descripcion": "Corte de perfiles livianos",
-      "operario_asignado": "Marcos Quispe",
-      "horas_estimadas": 8,
-      "horas_reales": 0,
-      "estado": "Pendiente",
-      "fecha_inicio": null,
-      "fecha_fin": null
-    },
-    {
-      "id": 11,
-      "orden_produccion_id": 5,
-      "numero_fase": 2,
-      "nombre_etapa": "Armado y Soldadura",
-      "descripcion": "Soldadura de paneles",
-      "operario_asignado": "Juan Pérez T.",
-      "horas_estimadas": 10,
       "horas_reales": 0,
       "estado": "Pendiente",
       "fecha_inicio": null,
@@ -682,7 +572,54 @@
       "respuesta": "👋 **Hola, soy el Copiloto de Inteligencia Artificial de RV Vega Servicios Generales E.I.R.L.**\n\nEstoy monitoreando en tiempo real los 5 pedidos en cartera y las órdenes de producción en taller.\n\n📌 **Puntos clave de hoy**:\n- Tenemos 1 Orden de Producción activa (**OP-2026-003**) al 70% de avance.\n- Se detectaron 2 insumos con stock por debajo del mínimo de seguridad (Alambre MIG y Esmalte Poliuretano).\n- La tasa de entregas a tiempo (OTIF) del último mes se mantiene en **91.4%**.\n\n¿Deseas que analice la asignación de operarios, genere una predicción de retrasos o detalle el plan de compras de insumos?",
       "usuario_id": 1,
       "fecha": "2026-09-15T22:50:46.866Z"
+    },
+    {
+      "id": 5,
+      "tipo": "chat_advisor",
+      "consulta": "cuellos de botella",
+      "respuesta": "👋 **Hola, soy el Copiloto de Inteligencia Artificial de RV Vega Servicios Generales E.I.R.L.**\n\nEstoy monitoreando en tiempo real los 5 pedidos en cartera y las órdenes de producción en taller.\n\n📌 **Puntos clave de hoy**:\n- Tenemos 1 Orden de Producción activa (**OP-2026-003**) al 70% de avance.\n- Se detectaron 2 insumos con stock por debajo del mínimo de seguridad (Alambre MIG y Esmalte Poliuretano).\n- La tasa de entregas a tiempo (OTIF) del último mes se mantiene en **91.4%**.\n\n¿Deseas que analice la asignación de operarios, genere una predicción de retrasos o detalle el plan de compras de insumos?",
+      "usuario_id": 1,
+      "fecha": "2026-09-26T11:18:18.402Z"
+    },
+    {
+      "id": 6,
+      "tipo": "chat_advisor",
+      "consulta": "ventas",
+      "respuesta": "👋 **Hola, soy el Copiloto de Inteligencia Artificial de RV Vega Servicios Generales E.I.R.L.**\n\nEstoy monitoreando en tiempo real los 5 pedidos en cartera y las órdenes de producción en taller.\n\n📌 **Puntos clave de hoy**:\n- Tenemos 1 Orden de Producción activa (**OP-2026-003**) al 70% de avance.\n- Se detectaron 2 insumos con stock por debajo del mínimo de seguridad (Alambre MIG y Esmalte Poliuretano).\n- La tasa de entregas a tiempo (OTIF) del último mes se mantiene en **91.4%**.\n\n¿Deseas que analice la asignación de operarios, genere una predicción de retrasos o detalle el plan de compras de insumos?",
+      "usuario_id": 4,
+      "fecha": "2026-09-26T11:19:04.664Z"
+    },
+    {
+      "id": 7,
+      "tipo": "chat_advisor",
+      "consulta": "¿Qué medidas inmediatas debemos tomar en el taller hoy?",
+      "respuesta": "👋 **Hola, soy el Copiloto de Inteligencia Artificial de RV Vega Servicios Generales E.I.R.L.**\n\nEstoy monitoreando en tiempo real los 5 pedidos en cartera y las órdenes de producción en taller.\n\n📌 **Puntos clave de hoy**:\n- Tenemos 1 Orden de Producción activa (**OP-2026-003**) al 70% de avance.\n- Se detectaron 2 insumos con stock por debajo del mínimo de seguridad (Alambre MIG y Esmalte Poliuretano).\n- La tasa de entregas a tiempo (OTIF) del último mes se mantiene en **91.4%**.\n\n¿Deseas que analice la asignación de operarios, genere una predicción de retrasos o detalle el plan de compras de insumos?",
+      "usuario_id": 4,
+      "fecha": "2026-09-26T11:37:34.382Z"
+    },
+    {
+      "id": 8,
+      "tipo": "chat_advisor",
+      "consulta": "¿Qué medidas inmediatas debemos tomar en el taller hoy?",
+      "respuesta": "👋 **Hola, soy el Copiloto de Inteligencia Artificial de RV Vega Servicios Generales E.I.R.L.**\n\nEstoy monitoreando en tiempo real los 5 pedidos en cartera y las órdenes de producción en taller.\n\n📌 **Puntos clave de hoy**:\n- Tenemos 1 Orden de Producción activa (**OP-2026-003**) al 70% de avance.\n- Se detectaron 2 insumos con stock por debajo del mínimo de seguridad (Alambre MIG y Esmalte Poliuretano).\n- La tasa de entregas a tiempo (OTIF) del último mes se mantiene en **91.4%**.\n\n¿Deseas que analice la asignación de operarios, genere una predicción de retrasos o detalle el plan de compras de insumos?",
+      "usuario_id": 4,
+      "fecha": "2026-09-26T11:37:44.860Z"
+    },
+    {
+      "id": 9,
+      "tipo": "chat_advisor",
+      "consulta": "Explícame la situación de los portones industriales",
+      "respuesta": "👋 **Hola, soy el Copiloto de Inteligencia Artificial de RV Vega Servicios Generales E.I.R.L.**\n\nEstoy monitoreando en tiempo real los 5 pedidos en cartera y las órdenes de producción en taller.\n\n📌 **Puntos clave de hoy**:\n- Tenemos 1 Orden de Producción activa (**OP-2026-003**) al 70% de avance.\n- Se detectaron 2 insumos con stock por debajo del mínimo de seguridad (Alambre MIG y Esmalte Poliuretano).\n- La tasa de entregas a tiempo (OTIF) del último mes se mantiene en **91.4%**.\n\n¿Deseas que analice la asignación de operarios, genere una predicción de retrasos o detalle el plan de compras de insumos?",
+      "usuario_id": 4,
+      "fecha": "2026-09-26T11:38:17.245Z"
+    },
+    {
+      "id": 10,
+      "tipo": "chat_advisor",
+      "consulta": "Explícame la situación de los portones industriales",
+      "respuesta": "👋 **Hola, soy el Copiloto de Inteligencia Artificial de RV Vega Servicios Generales E.I.R.L.**\n\nEstoy monitoreando en tiempo real los 5 pedidos en cartera y las órdenes de producción en taller.\n\n📌 **Puntos clave de hoy**:\n- Tenemos 1 Orden de Producción activa (**OP-2026-003**) al 70% de avance.\n- Se detectaron 2 insumos con stock por debajo del mínimo de seguridad (Alambre MIG y Esmalte Poliuretano).\n- La tasa de entregas a tiempo (OTIF) del último mes se mantiene en **91.4%**.\n\n¿Deseas que analice la asignación de operarios, genere una predicción de retrasos o detalle el plan de compras de insumos?",
+      "usuario_id": 4,
+      "fecha": "2026-09-26T11:38:34.047Z"
     }
-  ],
-  "requerimientos_compras": []
+  ]
 }
