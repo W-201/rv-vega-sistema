@@ -1,12 +1,32 @@
 import { Router } from 'express';
-import { getPrediccionRiesgos, getSugerenciasCompras, chatAdvisor } from '../controllers/aiController.js';
+import { 
+  getPrediccionRiesgos, 
+  getSugerenciasCompras, 
+  getSugerenciasPreguntas,
+  chatAdvisor,
+  crearRequerimientoCompra,
+  getChatHistorial,
+  limpiarChatHistorial
+} from '../controllers/aiController.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
 router.use(authenticateToken);
+
+// 3.6.3.2 Algoritmo predictivo de detección de retrasos
 router.get('/riesgos', getPrediccionRiesgos);
+
+// 3.6.3.3 Motor de recomendación analítica para compras asistidas
 router.get('/sugerencias-compras', getSugerenciasCompras);
+router.post('/compras/requerimiento', crearRequerimientoCompra);
+
+// 3.6.3.4 Sugerencias dinámicas de preguntas frecuentes (cuellos de botella, OEE, etc.)
+router.get('/sugerencias-preguntas', getSugerenciasPreguntas);
+
+// 3.6.3.1 Procesamiento de lenguaje natural del copiloto de planta
 router.post('/chat', chatAdvisor);
+router.get('/chat/historial', getChatHistorial);
+router.delete('/chat/historial', limpiarChatHistorial);
 
 export default router;
