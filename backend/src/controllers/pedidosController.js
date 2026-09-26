@@ -82,7 +82,7 @@ export function createPedido(req, res) {
 
     const newId = db.pedidos.length > 0 ? Math.max(...db.pedidos.map(p => p.id)) + 1 : 1;
     const year = new Date().getFullYear();
-    const codigo_pedido = PED--;
+    const codigo_pedido = `PED-${year}-${String(newId).padStart(4, '0')}`;
 
     // Calcular montos
     let subtotal = 0;
