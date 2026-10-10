@@ -1,4 +1,5 @@
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -6,6 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
+        slate: {
+          750: '#243044',
+          850: '#141d2e',
+        },
         brand: {
           50: '#eff6ff',
           100: '#dbeafe',
