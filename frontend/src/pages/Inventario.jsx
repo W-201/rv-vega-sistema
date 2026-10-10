@@ -109,12 +109,30 @@ export default function Inventario() {
         const act = Number(actual);
         const min = Number(minimo);
         if (act <= min) {
-            return { texto: 'Stock Crítico', bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-200', icon: <AlertTriangle className="w-3.5 h-3.5" /> };
+            return {
+                texto: 'Stock Crítico',
+                bg: 'bg-red-100 dark:bg-red-950/60',
+                text: 'text-red-700 dark:text-red-400',
+                border: 'border-red-200 dark:border-red-800/50',
+                icon: <AlertTriangle className="w-3.5 h-3.5" />
+            };
         }
         if (act <= min * 1.3) {
-            return { texto: 'Stock Bajo', bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200', icon: <AlertTriangle className="w-3.5 h-3.5" /> };
+            return {
+                texto: 'Stock Bajo',
+                bg: 'bg-amber-100 dark:bg-amber-950/60',
+                text: 'text-amber-700 dark:text-amber-400',
+                border: 'border-amber-200 dark:border-amber-800/50',
+                icon: <AlertTriangle className="w-3.5 h-3.5" />
+            };
         }
-        return { texto: 'Óptimo', bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-200', icon: <CheckCircle className="w-3.5 h-3.5" /> };
+        return {
+            texto: 'Óptimo',
+            bg: 'bg-emerald-100 dark:bg-emerald-950/60',
+            text: 'text-emerald-700 dark:text-emerald-400',
+            border: 'border-emerald-200 dark:border-emerald-800/50',
+            icon: <CheckCircle className="w-3.5 h-3.5" />
+        };
     };
 
     // Filtrado local por si el backend no procesa el queryParam "alerta_stock"
@@ -125,19 +143,25 @@ export default function Inventario() {
     return (
         <div className="p-8 space-y-6">
             {/* Tab Switcher & Action Bar */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setTab('materiales')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${tab === 'materiales' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                            }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                            tab === 'materiales'
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }`}
                     >
                         Catálogo de Insumos
                     </button>
                     <button
                         onClick={() => setTab('kardex')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${tab === 'kardex' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                            }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                            tab === 'kardex'
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }`}
                     >
                         <History className="w-3.5 h-3.5" />
                         <span>Kardex / Movimientos</span>
@@ -147,7 +171,7 @@ export default function Inventario() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setShowMaterialModal(true)}
-                        className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition"
+                        className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                     >
                         <Plus className="w-4 h-4" />
                         <span>Nuevo Material</span>
@@ -158,7 +182,7 @@ export default function Inventario() {
             {tab === 'materiales' ? (
                 <div className="space-y-4">
                     {/* Filters */}
-                    <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 text-xs shadow-sm">
+                    <div className="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm transition">
                         <div className="relative flex-1 min-w-[200px]">
                             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                             <input
@@ -166,14 +190,14 @@ export default function Inventario() {
                                 placeholder="Buscar por código SKU, nombre o categoría..."
                                 value={busqueda}
                                 onChange={(e) => setBusqueda(e.target.value)}
-                                className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 outline-none"
+                                className="w-full pl-8 pr-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
                             />
                         </div>
 
                         <select
                             value={categoria}
                             onChange={(e) => setCategoria(e.target.value)}
-                            className="p-1.5 border border-slate-200 rounded-lg bg-slate-50 font-medium focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium focus:ring-2 focus:ring-blue-500 outline-none"
                         >
                             <option value="Todas">Todas las Categorías</option>
                             <option value="Metales/Perfiles">Metales / Perfiles</option>
@@ -182,14 +206,14 @@ export default function Inventario() {
                             <option value="Fijaciones/Tornillería">Fijaciones / Tornillería</option>
                         </select>
 
-                        <label className="flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 hover:bg-red-100 transition">
+                        <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200 cursor-pointer bg-red-50 dark:bg-red-950/40 px-3 py-1.5 rounded-lg border border-red-100 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 transition">
                             <input
                                 type="checkbox"
                                 checked={soloAlertas}
                                 onChange={(e) => setSoloAlertas(e.target.checked)}
                                 className="rounded text-red-600 focus:ring-red-500"
                             />
-                            <span className="text-red-700 flex items-center gap-1">
+                            <span className="text-red-700 dark:text-red-400 flex items-center gap-1">
                                 <AlertTriangle className="w-3.5 h-3.5" />
                                 Solo Stock Crítico
                             </span>
@@ -197,10 +221,10 @@ export default function Inventario() {
                     </div>
 
                     {/* Table */}
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs text-slate-600">
-                                <thead className="bg-slate-50 text-slate-700 uppercase font-semibold border-b border-slate-200">
+                            <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                                <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 uppercase font-semibold border-b border-slate-200 dark:border-slate-700/80">
                                     <tr>
                                         <th className="px-5 py-3">Código SKU</th>
                                         <th className="px-5 py-3">Insumo / Ubicación</th>
@@ -212,7 +236,7 @@ export default function Inventario() {
                                         <th className="px-5 py-3 text-right">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {loading ? (
                                         <tr>
                                             <td colSpan="8" className="text-center py-8 text-slate-400">Cargando inventario...</td>
@@ -220,7 +244,7 @@ export default function Inventario() {
                                     ) : materialesFiltrados.length === 0 ? (
                                         <tr>
                                             <td colSpan="8" className="text-center py-8 text-slate-400 flex flex-col items-center gap-2">
-                                                <Boxes className="w-8 h-8 text-slate-300" />
+                                                <Boxes className="w-8 h-8 text-slate-300 dark:text-slate-600" />
                                                 No se encontraron materiales con los filtros actuales
                                             </td>
                                         </tr>
@@ -228,14 +252,14 @@ export default function Inventario() {
                                         materialesFiltrados.map((m) => {
                                             const estado = obtenerEstadoStock(m.stock_actual, m.stock_minimo);
                                             return (
-                                                <tr key={m.id} className="hover:bg-slate-50/60 transition">
-                                                    <td className="px-5 py-3 font-mono font-bold text-slate-900">{m.codigo_sku}</td>
-                                                    <td className="px-5 py-3 font-semibold text-slate-900">
+                                                <tr key={m.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                                                    <td className="px-5 py-3 font-mono font-bold text-slate-900 dark:text-white">{m.codigo_sku}</td>
+                                                    <td className="px-5 py-3 font-semibold text-slate-900 dark:text-white">
                                                         {m.nombre}
-                                                        <div className="text-[10px] text-slate-400 font-normal">Ubic: {m.ubicacion_almacen}</div>
+                                                        <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">Ubic: {m.ubicacion_almacen}</div>
                                                     </td>
                                                     <td className="px-5 py-3">
-                                                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">
+                                                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200 dark:border-slate-700">
                                                             {m.categoria}
                                                         </span>
                                                     </td>
@@ -246,20 +270,20 @@ export default function Inventario() {
                                                         </span>
                                                     </td>
                                                     <td className="px-5 py-3">
-                                                        <span className={`font-bold text-sm ${estado.texto === 'Stock Crítico' ? 'text-red-600' : 'text-slate-900'}`}>
-                                                            {m.stock_actual} <span className="text-[10px] font-normal text-slate-500">{m.unidad_medida}</span>
+                                                        <span className={`font-bold text-sm ${estado.texto === 'Stock Crítico' ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
+                                                            {m.stock_actual} <span className="text-[10px] font-normal text-slate-500 dark:text-slate-400">{m.unidad_medida}</span>
                                                         </span>
                                                     </td>
-                                                    <td className="px-5 py-3 font-medium text-slate-500">
+                                                    <td className="px-5 py-3 font-medium text-slate-500 dark:text-slate-400">
                                                         {m.stock_minimo} {m.unidad_medida}
                                                     </td>
-                                                    <td className="px-5 py-3 font-bold text-slate-900">
+                                                    <td className="px-5 py-3 font-bold text-slate-900 dark:text-white">
                                                         S/ {Number(m.valor_total).toFixed(2)}
                                                     </td>
                                                     <td className="px-5 py-3 text-right space-x-1.5 whitespace-nowrap">
                                                         <button
                                                             onClick={() => openMovimientoPara(m, 'ENTRADA')}
-                                                            className="px-2 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 rounded-lg text-[11px] font-bold transition inline-flex items-center gap-1 shadow-sm"
+                                                            className="px-2 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-lg text-[11px] font-bold transition inline-flex items-center gap-1 shadow-sm cursor-pointer"
                                                             title="Ingreso de Stock"
                                                         >
                                                             <ArrowDownLeft className="w-3.5 h-3.5" />
@@ -267,7 +291,7 @@ export default function Inventario() {
                                                         </button>
                                                         <button
                                                             onClick={() => openMovimientoPara(m, 'SALIDA_PRODUCCION')}
-                                                            className="px-2 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:border-amber-300 rounded-lg text-[11px] font-bold transition inline-flex items-center gap-1 shadow-sm"
+                                                            className="px-2 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg text-[11px] font-bold transition inline-flex items-center gap-1 shadow-sm cursor-pointer"
                                                             title="Salida a Taller"
                                                         >
                                                             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -285,10 +309,10 @@ export default function Inventario() {
                 </div>
             ) : (
                 /* Kardex Table */
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs text-slate-600">
-                            <thead className="bg-slate-50 text-slate-700 uppercase font-semibold border-b border-slate-200">
+                        <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                            <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 uppercase font-semibold border-b border-slate-200 dark:border-slate-700/80">
                                 <tr>
                                     <th className="px-5 py-3">Fecha</th>
                                     <th className="px-5 py-3">Tipo Movimiento</th>
@@ -299,29 +323,32 @@ export default function Inventario() {
                                     <th className="px-5 py-3">Usuario</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {kardex.map((k) => (
-                                    <tr key={k.id} className="hover:bg-slate-50/60 transition">
-                                        <td className="px-5 py-3 font-mono text-[11px] text-slate-500">
+                                    <tr key={k.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                                        <td className="px-5 py-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                                             {new Date(k.fecha).toLocaleString('es-PE')}
                                         </td>
                                         <td className="px-5 py-3">
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${k.tipo_movimiento === 'ENTRADA' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
-                                                }`}>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                                k.tipo_movimiento === 'ENTRADA'
+                                                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50'
+                                                    : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50'
+                                            }`}>
                                                 {k.tipo_movimiento}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-3 font-semibold text-slate-900">
-                                            {k.material_nombre} <span className="font-mono font-normal text-slate-400">({k.material_sku})</span>
+                                        <td className="px-5 py-3 font-semibold text-slate-900 dark:text-white">
+                                            {k.material_nombre} <span className="font-mono font-normal text-slate-400 dark:text-slate-500">({k.material_sku})</span>
                                         </td>
-                                        <td className="px-5 py-3 font-bold text-slate-900">
+                                        <td className="px-5 py-3 font-bold text-slate-900 dark:text-white">
                                             {k.tipo_movimiento === 'ENTRADA' ? '+' : '-'}{k.cantidad} {k.unidad_medida}
                                         </td>
-                                        <td className="px-5 py-3 font-mono text-slate-700">
+                                        <td className="px-5 py-3 font-mono text-slate-700 dark:text-slate-300">
                                             {k.referencia_documento || '-'}
                                         </td>
-                                        <td className="px-5 py-3 text-slate-600">{k.motivo}</td>
-                                        <td className="px-5 py-3 text-slate-500">{k.usuario_nombre}</td>
+                                        <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{k.motivo}</td>
+                                        <td className="px-5 py-3 text-slate-500 dark:text-slate-400">{k.usuario_nombre}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -332,9 +359,9 @@ export default function Inventario() {
 
             {/* Modal Nuevo Material */}
             {showMaterialModal && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-100">
-                        <div className="bg-slate-900 px-6 py-4 text-white flex items-center justify-between">
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-100 dark:border-slate-800">
+                        <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
                             <h3 className="font-bold text-sm">Registrar Insumo / Materia Prima</h3>
                             <button onClick={() => setShowMaterialModal(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
                         </div>
@@ -342,12 +369,12 @@ export default function Inventario() {
                         <form onSubmit={handleCreateMaterial} className="p-6 space-y-4 text-xs">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block font-semibold text-slate-700 mb-1">Código SKU *</label>
-                                    <input type="text" required value={materialForm.codigo_sku} onChange={(e) => setMaterialForm({ ...materialForm, codigo_sku: e.target.value })} placeholder="MP-XXX-001" className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Código SKU *</label>
+                                    <input type="text" required value={materialForm.codigo_sku} onChange={(e) => setMaterialForm({ ...materialForm, codigo_sku: e.target.value })} placeholder="MP-XXX-001" className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                                 </div>
                                 <div>
-                                    <label className="block font-semibold text-slate-700 mb-1">Categoría</label>
-                                    <select value={materialForm.categoria} onChange={(e) => setMaterialForm({ ...materialForm, categoria: e.target.value })} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Categoría</label>
+                                    <select value={materialForm.categoria} onChange={(e) => setMaterialForm({ ...materialForm, categoria: e.target.value })} className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                                         <option value="Metales/Perfiles">Metales/Perfiles</option>
                                         <option value="Soldadura/Consumibles">Soldadura/Consumibles</option>
                                         <option value="Pinturas/Acabados">Pinturas/Acabados</option>
@@ -357,38 +384,38 @@ export default function Inventario() {
                             </div>
 
                             <div>
-                                <label className="block font-semibold text-slate-700 mb-1">Nombre Completo del Insumo *</label>
-                                <input type="text" required value={materialForm.nombre} onChange={(e) => setMaterialForm({ ...materialForm, nombre: e.target.value })} placeholder="Ej. Plancha LAC 1/4 x 1.20 x 2.40m" className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nombre Completo del Insumo *</label>
+                                <input type="text" required value={materialForm.nombre} onChange={(e) => setMaterialForm({ ...materialForm, nombre: e.target.value })} placeholder="Ej. Plancha LAC 1/4 x 1.20 x 2.40m" className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                             </div>
 
-                            <div className="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                            <div className="grid grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
                                 <div>
-                                    <label className="block font-semibold text-slate-700 mb-1">Und. Medida</label>
-                                    <input type="text" required value={materialForm.unidad_medida} onChange={(e) => setMaterialForm({ ...materialForm, unidad_medida: e.target.value })} placeholder="kg, m, und" className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Und. Medida</label>
+                                    <input type="text" required value={materialForm.unidad_medida} onChange={(e) => setMaterialForm({ ...materialForm, unidad_medida: e.target.value })} placeholder="kg, m, und" className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                                 </div>
                                 <div>
-                                    <label className="block font-semibold text-slate-700 mb-1">Stock Inicial</label>
-                                    <input type="number" step="0.1" value={materialForm.stock_actual} onChange={(e) => setMaterialForm({ ...materialForm, stock_actual: e.target.value })} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Stock Inicial</label>
+                                    <input type="number" step="0.1" value={materialForm.stock_actual} onChange={(e) => setMaterialForm({ ...materialForm, stock_actual: e.target.value })} className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                                 </div>
                                 <div>
-                                    <label className="block font-bold text-red-600 mb-1">Stock Mínimo (Alerta)</label>
-                                    <input type="number" step="0.1" value={materialForm.stock_minimo} onChange={(e) => setMaterialForm({ ...materialForm, stock_minimo: e.target.value })} className="w-full p-2 border border-red-300 bg-red-50 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
+                                    <label className="block font-bold text-red-600 dark:text-red-400 mb-1">Stock Mínimo (Alerta)</label>
+                                    <input type="number" step="0.1" value={materialForm.stock_minimo} onChange={(e) => setMaterialForm({ ...materialForm, stock_minimo: e.target.value })} className="w-full p-2 border border-red-300 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block font-semibold text-slate-700 mb-1">Costo Unitario (S/)</label>
-                                    <input type="number" step="0.01" value={materialForm.costo_unitario} onChange={(e) => setMaterialForm({ ...materialForm, costo_unitario: e.target.value })} className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Costo Unitario (S/)</label>
+                                    <input type="number" step="0.01" value={materialForm.costo_unitario} onChange={(e) => setMaterialForm({ ...materialForm, costo_unitario: e.target.value })} className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                                 </div>
                                 <div>
-                                    <label className="block font-semibold text-slate-700 mb-1">Ubicación en Almacén</label>
-                                    <input type="text" value={materialForm.ubicacion_almacen} onChange={(e) => setMaterialForm({ ...materialForm, ubicacion_almacen: e.target.value })} placeholder="Nave A / Racks" className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Ubicación en Almacén</label>
+                                    <input type="text" value={materialForm.ubicacion_almacen} onChange={(e) => setMaterialForm({ ...materialForm, ubicacion_almacen: e.target.value })} placeholder="Nave A / Racks" className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                                 </div>
                             </div>
 
-                            <div className="pt-3 flex justify-end gap-2 border-t border-slate-100">
-                                <button type="button" onClick={() => setShowMaterialModal(false)} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50">Cancelar</button>
+                            <div className="pt-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                                <button type="button" onClick={() => setShowMaterialModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Cancelar</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">Guardar Insumo</button>
                             </div>
                         </form>
@@ -398,24 +425,24 @@ export default function Inventario() {
 
             {/* Modal Registrar Movimiento (Entrada / Salida) */}
             {showMovimientoModal && selectedMaterial && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 p-6 space-y-4 text-xs">
-                        <h3 className="font-bold text-sm text-slate-900">
-                            Registrar Movimiento: <span className="text-blue-600">{selectedMaterial.nombre}</span>
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-slate-800 p-6 space-y-4 text-xs">
+                        <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                            Registrar Movimiento: <span className="text-blue-600 dark:text-blue-400">{selectedMaterial.nombre}</span>
                         </h3>
 
-                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center">
-                            <span className="text-slate-600 font-semibold">Stock Actual:</span>
-                            <span className="font-bold text-sm text-slate-900">{selectedMaterial.stock_actual} {selectedMaterial.unidad_medida}</span>
+                        <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60 flex justify-between items-center">
+                            <span className="text-slate-600 dark:text-slate-300 font-semibold">Stock Actual:</span>
+                            <span className="font-bold text-sm text-slate-900 dark:text-white">{selectedMaterial.stock_actual} {selectedMaterial.unidad_medida}</span>
                         </div>
 
                         <form onSubmit={handleCreateMovimiento} className="space-y-3">
                             <div>
-                                <label className="block font-semibold text-slate-700 mb-1">Tipo de Movimiento</label>
+                                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Tipo de Movimiento</label>
                                 <select
                                     value={movimientoForm.tipo_movimiento}
                                     onChange={(e) => setMovimientoForm({ ...movimientoForm, tipo_movimiento: e.target.value })}
-                                    className="w-full p-2 border border-slate-300 rounded-lg font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg font-bold focus:ring-2 focus:ring-blue-500 outline-none"
                                 >
                                     <option value="ENTRADA">ENTRADA (Compra / Ingreso)</option>
                                     <option value="SALIDA_PRODUCCION">SALIDA A PRODUCCIÓN (Consumo en taller)</option>
@@ -425,7 +452,7 @@ export default function Inventario() {
                             </div>
 
                             <div>
-                                <label className="block font-semibold text-slate-700 mb-1">Cantidad a Mover ({selectedMaterial.unidad_medida})</label>
+                                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Cantidad a Mover ({selectedMaterial.unidad_medida})</label>
                                 <input
                                     type="number"
                                     step="0.1"
@@ -434,33 +461,33 @@ export default function Inventario() {
                                     required
                                     value={movimientoForm.cantidad}
                                     onChange={(e) => setMovimientoForm({ ...movimientoForm, cantidad: e.target.value })}
-                                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 />
                             </div>
 
                             <div>
-                                <label className="block font-semibold text-slate-700 mb-1">Documento de Referencia</label>
+                                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Documento de Referencia</label>
                                 <input
                                     type="text"
                                     placeholder="Ej. Factura F001-1290 / OP-2026-003"
                                     value={movimientoForm.referencia_documento}
                                     onChange={(e) => setMovimientoForm({ ...movimientoForm, referencia_documento: e.target.value })}
-                                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 />
                             </div>
 
                             <div>
-                                <label className="block font-semibold text-slate-700 mb-1">Motivo</label>
+                                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Motivo</label>
                                 <input
                                     type="text"
                                     value={movimientoForm.motivo}
                                     onChange={(e) => setMovimientoForm({ ...movimientoForm, motivo: e.target.value })}
-                                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 />
                             </div>
 
-                            <div className="pt-3 flex justify-end gap-2 border-t border-slate-100">
-                                <button type="button" onClick={() => setShowMovimientoModal(false)} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50">Cancelar</button>
+                            <div className="pt-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                                <button type="button" onClick={() => setShowMovimientoModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Cancelar</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">Confirmar Operación</button>
                             </div>
                         </form>
