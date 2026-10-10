@@ -175,8 +175,32 @@ export default function Reportes() {
         borderColor: isDark ? '#334155' : '#e2e8f0',
         color: isDark ? '#f8fafc' : '#0f172a',
         borderRadius: '8px',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4)',
+        boxShadow: isDark ? '0 10px 15px -3px rgba(0, 0, 0, 0.5)' : '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
         fontSize: '12px'
+    };
+
+    const tooltipItemStyle = {
+        color: isDark ? '#f8fafc' : '#0f172a'
+    };
+
+    const tooltipLabelStyle = {
+        color: isDark ? '#f8fafc' : '#0f172a',
+        fontWeight: 'bold'
+    };
+
+    const CustomPieTooltip = ({ active, payload }) => {
+        if (active && payload && payload.length) {
+            const item = payload[0];
+            const color = item.payload?.color || item.color || '#10b981';
+            return (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg shadow-xl text-xs flex items-center gap-2.5 pointer-events-none">
+                    <span className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0" style={{ backgroundColor: color }} />
+                    <span className="font-medium text-slate-700 dark:text-slate-300">{item.name}:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{item.value}</span>
+                </div>
+            );
+        }
+        return null;
     };
 
     // Datos procesados para gráficos de OTIF
@@ -333,7 +357,7 @@ export default function Reportes() {
                                                 <Cell key={`otif-cell-${index}`} fill={entry.color} />
                                             ))}
                                         </Pie>
-                                        <RechartsTooltip contentStyle={tooltipStyle} />
+                                        <RechartsTooltip content={<CustomPieTooltip />} />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
@@ -354,7 +378,12 @@ export default function Reportes() {
                                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#f1f5f9'} />
                                         <XAxis dataKey="codigo" stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 10 }} />
                                         <YAxis stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 10 }} />
-                                        <RechartsTooltip contentStyle={tooltipStyle} formatter={(val) => [`${val} días`, 'Desviación']} />
+                                        <RechartsTooltip 
+                                            contentStyle={tooltipStyle} 
+                                            itemStyle={tooltipItemStyle}
+                                            labelStyle={tooltipLabelStyle}
+                                            formatter={(val) => [`${val} días`, 'Desviación']} 
+                                        />
                                         <ReferenceLine y={0} stroke={isDark ? '#94a3b8' : '#64748b'} strokeDasharray="3 3" />
                                         <Bar dataKey="dias" name="Días de Desviación" radius={[4, 4, 0, 0]}>
                                             {otifDeviationData.map((entry, idx) => (
@@ -455,7 +484,7 @@ export default function Reportes() {
                                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#f1f5f9'} />
                                         <XAxis dataKey="op" stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 10 }} />
                                         <YAxis stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 10 }} />
-                                        <RechartsTooltip contentStyle={tooltipStyle} formatter={(val) => [`S/ ${Number(val).toLocaleString()}`]} />
+                                        <RechartsTooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} formatter={(val) => [`S/ ${Number(val).toLocaleString()}`]} />
                                         <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
                                         <Bar dataKey="venta" name="Venta (S/)" fill="#2563eb" radius={[4, 4, 0, 0]} />
                                         <Bar dataKey="costo" name="Costo Real (S/)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
@@ -480,7 +509,7 @@ export default function Reportes() {
                                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#f1f5f9'} />
                                         <XAxis dataKey="op" stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 10 }} />
                                         <YAxis unit="%" stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 10 }} />
-                                        <RechartsTooltip contentStyle={tooltipStyle} formatter={(val) => [`${val}%`, 'Margen']} />
+                                        <RechartsTooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} formatter={(val) => [`${val}%`, 'Margen']} />
                                         <ReferenceLine y={30} label={{ value: 'Meta (30%)', fill: '#10b981', fontSize: 10 }} stroke="#10b981" strokeDasharray="3 3" />
                                         <Bar dataKey="porcentaje" name="Margen %" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                                     </BarChart>
@@ -565,7 +594,7 @@ export default function Reportes() {
                                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#f1f5f9'} />
                                         <XAxis dataKey="operario" stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 10 }} />
                                         <YAxis stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 10 }} />
-                                        <RechartsTooltip contentStyle={tooltipStyle} formatter={(val, name, item) => [`${val} horas`, name, item.payload.nombreCompleto]} />
+                                        <RechartsTooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} formatter={(val, name, item) => [`${val} horas`, name, item.payload.nombreCompleto]} />
                                         <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
                                         <Bar dataKey="estimadas" name="Horas Estimadas" fill="#94a3b8" radius={[4, 4, 0, 0]} />
                                         <Bar dataKey="reales" name="Horas Reales" fill="#2563eb" radius={[4, 4, 0, 0]} />
@@ -589,7 +618,12 @@ export default function Reportes() {
                                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#f1f5f9'} />
                                         <XAxis dataKey="operario" stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 10 }} />
                                         <YAxis unit="%" stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 10 }} />
-                                        <RechartsTooltip contentStyle={tooltipStyle} formatter={(val, name, item) => [`${val}%`, 'Eficiencia', item.payload.nombreCompleto]} />
+                                        <RechartsTooltip 
+                                            contentStyle={tooltipStyle} 
+                                            itemStyle={tooltipItemStyle}
+                                            labelStyle={tooltipLabelStyle} 
+                                            formatter={(val, name, item) => [`${val}%`, 'Eficiencia', item.payload.nombreCompleto]} 
+                                        />
                                         <ReferenceLine y={100} label={{ value: 'Meta (100%)', fill: '#10b981', fontSize: 10 }} stroke="#10b981" strokeDasharray="3 3" />
                                         <Bar dataKey="eficiencia" name="Eficiencia %" radius={[4, 4, 0, 0]}>
                                             {operariosEficienciaData.map((entry, idx) => (
