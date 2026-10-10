@@ -47,8 +47,17 @@ export default function BusinessIntelligence() {
     borderColor: isDark ? '#334155' : '#e2e8f0',
     color: isDark ? '#f8fafc' : '#0f172a',
     borderRadius: '8px',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4)',
+    boxShadow: isDark ? '0 10px 15px -3px rgba(0, 0, 0, 0.5)' : '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
     fontSize: '12px'
+  };
+
+  const tooltipItemStyle = {
+    color: isDark ? '#f8fafc' : '#0f172a'
+  };
+
+  const tooltipLabelStyle = {
+    color: isDark ? '#f8fafc' : '#0f172a',
+    fontWeight: 'bold'
   };
 
   const gridStroke = isDark ? '#334155' : '#f1f5f9';
@@ -112,7 +121,7 @@ export default function BusinessIntelligence() {
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                 <XAxis dataKey="etapa" tick={{ fontSize: 10 }} stroke={axisColor} interval={0} angle={-15} textAnchor="end" />
                 <YAxis tick={{ fontSize: 10 }} stroke={axisColor} />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                 <Bar dataKey="horas_estimadas" name="Horas Estimadas" fill="#94a3b8" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="horas_reales" name="Horas Reales Invertidas" fill="#2563eb" radius={[4, 4, 0, 0]} />
@@ -145,7 +154,7 @@ export default function BusinessIntelligence() {
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                 <XAxis dataKey="mes" stroke={axisColor} tick={{ fontSize: 11 }} />
                 <YAxis stroke={axisColor} tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} />
                 <Legend wrapperStyle={{ fontSize: '11px' }} />
                 <Area type="monotone" dataKey="ventas" name="Ventas (S/)" stroke="#2563eb" fillOpacity={1} fill="url(#colorVentas)" strokeWidth={2} />
                 <Area type="monotone" dataKey="costo" name="Costo Producción (S/)" stroke="#f59e0b" fillOpacity={1} fill="url(#colorCostos)" strokeWidth={2} />
@@ -169,7 +178,7 @@ export default function BusinessIntelligence() {
                   <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                   <XAxis type="number" stroke={axisColor} tick={{ fontSize: 10 }} />
                   <YAxis dataKey="motivo" type="category" stroke={axisColor} tick={{ fontSize: 10 }} />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} />
                   <Bar dataKey="minutos" name="Minutos Perdidos" fill="#ef4444" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>

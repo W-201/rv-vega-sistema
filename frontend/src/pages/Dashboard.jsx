@@ -109,8 +109,32 @@ export default function Dashboard({ setActiveTab }) {
         borderColor: isDark ? '#334155' : '#e2e8f0',
         color: isDark ? '#f8fafc' : '#0f172a',
         borderRadius: '8px',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4)',
+        boxShadow: isDark ? '0 10px 15px -3px rgba(0, 0, 0, 0.5)' : '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
         fontSize: '12px'
+    };
+
+    const tooltipItemStyle = {
+        color: isDark ? '#f8fafc' : '#0f172a'
+    };
+
+    const tooltipLabelStyle = {
+        color: isDark ? '#f8fafc' : '#0f172a',
+        fontWeight: 'bold'
+    };
+
+    const CustomPieTooltip = ({ active, payload }) => {
+        if (active && payload && payload.length) {
+            const item = payload[0];
+            const color = item.payload?.color || item.color || '#3b82f6';
+            return (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg shadow-xl text-xs flex items-center gap-2.5 pointer-events-none">
+                    <span className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0" style={{ backgroundColor: color }} />
+                    <span className="font-medium text-slate-700 dark:text-slate-300">{item.name}:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{item.value}</span>
+                </div>
+            );
+        }
+        return null;
     };
 
     return (
@@ -248,7 +272,7 @@ export default function Dashboard({ setActiveTab }) {
                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
                                 </Pie>
-                                <RechartsTooltip contentStyle={tooltipStyle} />
+                                <RechartsTooltip content={<CustomPieTooltip />} />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
@@ -264,7 +288,12 @@ export default function Dashboard({ setActiveTab }) {
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={isDark ? '#334155' : '#f1f5f9'} />
                                 <XAxis type="number" domain={[0, 100]} stroke={isDark ? '#94a3b8' : '#64748b'} tick={{ fontSize: 11 }} />
                                 <YAxis dataKey="codigo_op" type="category" width={80} tick={{ fontSize: 12 }} stroke={isDark ? '#94a3b8' : '#64748b'} />
-                                <RechartsTooltip cursor={{ fill: 'transparent' }} contentStyle={tooltipStyle} />
+                                <RechartsTooltip 
+                                    cursor={{ fill: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)' }} 
+                                    contentStyle={tooltipStyle}
+                                    itemStyle={tooltipItemStyle}
+                                    labelStyle={tooltipLabelStyle}
+                                />
                                 <Bar dataKey="porcentaje_avance" fill="#3b82f6" name="Avance %" radius={[0, 4, 4, 0]} barSize={24} />
                             </BarChart>
                         </ResponsiveContainer>
