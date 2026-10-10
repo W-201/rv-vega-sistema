@@ -4,10 +4,7 @@
 
 -- 1. Usuarios Iniciales
 INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES
-('Ing. Roberto Vega', 'admin@rvvega.com', '/qQYw0Q7p/.gMhI5vWjZt59k7b9a5Wj7YjU7P2fV6q', 'admin'),
-('Carlos Mendoza', 'produccion@rvvega.com', '/qQYw0Q7p/.gMhI5vWjZt59k7b9a5Wj7YjU7P2fV6q', 'jefe_produccion'),
-('Juan Pérez T.', 'operario1@rvvega.com', '/qQYw0Q7p/.gMhI5vWjZt59k7b9a5Wj7YjU7P2fV6q', 'operario'),
-('Lucía Ramírez', 'ventas@rvvega.com', '/qQYw0Q7p/.gMhI5vWjZt59k7b9a5Wj7YjU7P2fV6q', 'ventas');
+('Ing. Roberto Vega', 'admin@rvvega.com', '/qQYw0Q7p/.gMhI5vWjZt59k7b9a5Wj7YjU7P2fV6q', 'admin');
 
 -- 2. Clientes
 INSERT INTO clientes (tipo_documento, numero_documento, razon_social, contacto, telefono, email, direccion, ciudad) VALUES
@@ -34,8 +31,8 @@ INSERT INTO pedidos (codigo_pedido, cliente_id, fecha_pedido, fecha_entrega_prom
 ('PED-2026-0001', 1, '2026-08-10', '2026-08-25', '2026-08-25', 'Entregado', 'Alta', 8500.00, 1530.00, 10030.00, 'Fabricación de 10 barandas metálicas de seguridad para obra San Borja', 1),
 ('PED-2026-0002', 2, '2026-08-15', '2026-09-02', '2026-09-03', 'Entregado', 'Media', 12400.00, 2232.00, 14632.00, 'Tolva metálica para descarga de granos con recubrimiento epóxico', 1),
 ('PED-2026-0003', 3, '2026-09-01', '2026-09-18', NULL, 'En Producción', 'Urgente', 15800.00, 2844.00, 18644.00, 'Estructura soporte para faja transportadora de 12 metros', 1),
-('PED-2026-0004', 4, '2026-09-05', '2026-09-22', NULL, 'En Planificación', 'Media', 6200.00, 1116.00, 7316.00, 'Fabricación de 4 portones corredizos industriales con malla electro-soldada', 4),
-('PED-2026-0005', 1, '2026-09-10', '2026-09-30', NULL, 'Pendiente', 'Baja', 4900.00, 882.00, 5782.00, 'Mantenimiento preventivo y repuestos para cerco perimétrico', 4);
+('PED-2026-0004', 4, '2026-09-05', '2026-09-22', NULL, 'En Planificación', 'Media', 6200.00, 1116.00, 7316.00, 'Fabricación de 4 portones corredizos industriales con malla electro-soldada', 1),
+('PED-2026-0005', 1, '2026-09-10', '2026-09-30', NULL, 'Pendiente', 'Baja', 4900.00, 882.00, 5782.00, 'Mantenimiento preventivo y repuestos para cerco perimétrico', 1);
 
 -- 5. Detalles de Pedidos
 INSERT INTO pedido_detalles (pedido_id, descripcion_producto, especificaciones, cantidad, precio_unitario, total_linea) VALUES
@@ -47,9 +44,9 @@ INSERT INTO pedido_detalles (pedido_id, descripcion_producto, especificaciones, 
 
 -- 6. Órdenes de Producción (OP)
 INSERT INTO ordenes_produccion (codigo_op, pedido_id, estado, prioridad, fecha_inicio_programada, fecha_fin_programada, fecha_inicio_real, fecha_fin_real, porcentaje_avance, costo_estimado, costo_real, responsable_id, observaciones) VALUES
-('OP-2026-001', 1, 'Completada', 'Alta', '2026-08-11', '2026-08-24', '2026-08-11 08:30:00', '2026-08-24 17:00:00', 100, 5200.00, 5350.00, 2, 'Entregado a tiempo sin no conformidades'),
-('OP-2026-002', 2, 'Completada', 'Media', '2026-08-16', '2026-09-01', '2026-08-16 08:00:00', '2026-09-02 11:30:00', 100, 7800.00, 8100.00, 2, 'Ligero retraso por secado de pintura epóxica'),
-('OP-2026-003', 3, 'En Proceso', 'Urgente', '2026-09-02', '2026-09-17', '2026-09-02 08:15:00', NULL, 70, 9400.00, 6800.00, 2, 'Fase de soldadura completada; en proceso de arenado y pintura');
+('OP-2026-001', 1, 'Completada', 'Alta', '2026-08-11', '2026-08-24', '2026-08-11 08:30:00', '2026-08-24 17:00:00', 100, 5200.00, 5350.00, 1, 'Entregado a tiempo sin no conformidades'),
+('OP-2026-002', 2, 'Completada', 'Media', '2026-08-16', '2026-09-01', '2026-08-16 08:00:00', '2026-09-02 11:30:00', 100, 7800.00, 8100.00, 1, 'Ligero retraso por secado de pintura epóxica'),
+('OP-2026-003', 3, 'En Proceso', 'Urgente', '2026-09-02', '2026-09-17', '2026-09-02 08:15:00', NULL, 70, 9400.00, 6800.00, 1, 'Fase de soldadura completada; en proceso de arenado y pintura');
 
 -- 7. Etapas de Producción para OP-2026-003 (En Proceso)
 INSERT INTO etapas_produccion (orden_produccion_id, numero_fase, nombre_etapa, descripcion, operario_asignado, horas_estimadas, horas_reales, estado, fecha_inicio, fecha_fin) VALUES
@@ -62,13 +59,13 @@ INSERT INTO etapas_produccion (orden_produccion_id, numero_fase, nombre_etapa, d
 -- 8. Movimientos de Inventario (Kardex)
 INSERT INTO movimientos_inventario (material_id, tipo_movimiento, cantidad, costo_unitario, referencia_documento, motivo, registrado_por, fecha) VALUES
 (1, 'ENTRADA', 40.00, 245.00, 'F001-9821', 'Compra mensual a Aceros Arequipa', 1, '2026-08-01 09:00:00'),
-(1, 'SALIDA_PRODUCCION', 5.00, 245.00, 'OP-2026-001', 'Consumo para barandas', 2, '2026-08-12 10:00:00'),
-(2, 'SALIDA_PRODUCCION', 14.00, 68.50, 'OP-2026-003', 'Consumo para bastidor de faja', 2, '2026-09-03 08:30:00');
+(1, 'SALIDA_PRODUCCION', 5.00, 245.00, 'OP-2026-001', 'Consumo para barandas', 1, '2026-08-12 10:00:00'),
+(2, 'SALIDA_PRODUCCION', 14.00, 68.50, 'OP-2026-003', 'Consumo para bastidor de faja', 1, '2026-09-03 08:30:00');
 
 -- 9. Controles de Calidad
 INSERT INTO control_calidad (orden_produccion_id, inspector_id, resultado, defectos_encontrados, acciones_correctivas, merma_porcentaje) VALUES
-(1, 2, 'Aprobado', 'Ninguno crítico', 'Ninguna requerida', 1.20),
-(2, 2, 'Aprobado con Observaciones', 'Porosidad leve en cordón secundario de base', 'Resanado y aplicación de cordón de refuerzo', 2.80);
+(1, 1, 'Aprobado', 'Ninguno crítico', 'Ninguna requerida', 1.20),
+(2, 1, 'Aprobado con Observaciones', 'Porosidad leve en cordón secundario de base', 'Resanado y aplicación de cordón de refuerzo', 2.80);
 
 -- 10. Registro de Paradas / Incidencias
 INSERT INTO paradas_produccion (orden_produccion_id, etapa_id, motivo, minutos_parada, descripcion) VALUES

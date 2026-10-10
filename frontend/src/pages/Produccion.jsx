@@ -58,7 +58,7 @@ export default function Produccion() {
         prioridad: 'Media',
         fecha_inicio_programada: new Date().toISOString().split('T')[0],
         fecha_fin_programada: '',
-        responsable_id: '2',
+        responsable_id: '1',
         observaciones: ''
     });
 
@@ -735,8 +735,7 @@ export default function Produccion() {
                                         onChange={(e) => setNuevaOpForm({ ...nuevaOpForm, responsable_id: e.target.value })}
                                         className="w-full p-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
                                     >
-                                        <option value="2">Ing. Carlos Mendoza (Jefe Prod.)</option>
-                                        <option value="1">Ing. Roberto Vega (Gerencia)</option>
+                                        <option value="1">Ing. Roberto Vega (Administrador / Gerencia)</option>
                                     </select>
                                 </div>
                             </div>

@@ -43,10 +43,7 @@ const localStorePath = path.resolve(__dirname, '../../database/local_store.json'
 function getInitialStore() {
   return {
     usuarios: [
-      { id: 1, nombre: 'Ing. Roberto Vega', email: 'admin@rvvega.com', password_hash: '', rol: 'admin', activo: true, creado_en: '2026-08-01' },
-      { id: 2, nombre: 'Carlos Mendoza', email: 'produccion@rvvega.com', password_hash: '', rol: 'jefe_produccion', activo: true, creado_en: '2026-08-01' },
-      { id: 3, nombre: 'Juan Pérez T.', email: 'operario1@rvvega.com', password_hash: '', rol: 'operario', activo: true, creado_en: '2026-08-01' },
-      { id: 4, nombre: 'Lucía Ramírez', email: 'ventas@rvvega.com', password_hash: '', rol: 'ventas', activo: true, creado_en: '2026-08-01' }
+      { id: 1, nombre: 'Ing. Roberto Vega', email: 'admin@rvvega.com', password_hash: '', rol: 'admin', activo: true, creado_en: '2026-08-01' }
     ],
     clientes: [
       { id: 1, tipo_documento: 'RUC', numero_documento: '20518923411', razon_social: 'CONSTRUCTORA E INMOBILIARIA DEL SUR S.A.C.', contacto: 'Arq. Miguel Ángel Torres', telefono: '987654321', email: 'compras@inmodelsur.pe', direccion: 'Av. Javier Prado Este 2450, San Borja', ciudad: 'Lima', activo: true },
@@ -70,8 +67,8 @@ function getInitialStore() {
       { id: 1, codigo_pedido: 'PED-2026-0001', cliente_id: 1, fecha_pedido: '2026-08-10', fecha_entrega_prometida: '2026-08-25', fecha_entrega_real: '2026-08-25', estado: 'Entregado', prioridad: 'Alta', subtotal: 8500.00, igv: 1530.00, total: 10030.00, observaciones: 'Fabricación de 10 barandas metálicas de seguridad para obra San Borja', creado_por: 1 },
       { id: 2, codigo_pedido: 'PED-2026-0002', cliente_id: 2, fecha_pedido: '2026-08-15', fecha_entrega_prometida: '2026-09-02', fecha_entrega_real: '2026-09-03', estado: 'Entregado', prioridad: 'Media', subtotal: 12400.00, igv: 2232.00, total: 14632.00, observaciones: 'Tolva metálica para descarga de granos con recubrimiento epóxico', creado_por: 1 },
       { id: 3, codigo_pedido: 'PED-2026-0003', cliente_id: 3, fecha_pedido: '2026-09-01', fecha_entrega_prometida: '2026-09-18', fecha_entrega_real: null, estado: 'En Producción', prioridad: 'Urgente', subtotal: 15800.00, igv: 2844.00, total: 18644.00, observaciones: 'Estructura soporte para faja transportadora de 12 metros', creado_por: 1 },
-      { id: 4, codigo_pedido: 'PED-2026-0004', cliente_id: 4, fecha_pedido: '2026-09-05', fecha_entrega_prometida: '2026-09-22', fecha_entrega_real: null, estado: 'En Planificación', prioridad: 'Media', subtotal: 6200.00, igv: 1116.00, total: 7316.00, observaciones: 'Fabricación de 4 portones corredizos industriales', creado_por: 4 },
-      { id: 5, codigo_pedido: 'PED-2026-0005', cliente_id: 1, fecha_pedido: '2026-09-10', fecha_entrega_prometida: '2026-09-30', fecha_entrega_real: null, estado: 'Pendiente', prioridad: 'Baja', subtotal: 4900.00, igv: 882.00, total: 5782.00, observaciones: 'Mantenimiento preventivo y repuestos para cerco perimétrico', creado_por: 4 }
+      { id: 4, codigo_pedido: 'PED-2026-0004', cliente_id: 4, fecha_pedido: '2026-09-05', fecha_entrega_prometida: '2026-09-22', fecha_entrega_real: null, estado: 'En Planificación', prioridad: 'Media', subtotal: 6200.00, igv: 1116.00, total: 7316.00, observaciones: 'Fabricación de 4 portones corredizos industriales', creado_por: 1 },
+      { id: 5, codigo_pedido: 'PED-2026-0005', cliente_id: 1, fecha_pedido: '2026-09-10', fecha_entrega_prometida: '2026-09-30', fecha_entrega_real: null, estado: 'Pendiente', prioridad: 'Baja', subtotal: 4900.00, igv: 882.00, total: 5782.00, observaciones: 'Mantenimiento preventivo y repuestos para cerco perimétrico', creado_por: 1 }
     ],
     pedido_detalles: [
       { id: 1, pedido_id: 1, descripcion_producto: 'Baranda de seguridad modular 2m', especificaciones: 'Tubo de 2\" con pintura epóxica amarillo tránsito', cantidad: 10, precio_unitario: 850.00, total_linea: 8500.00 },
@@ -81,9 +78,9 @@ function getInitialStore() {
       { id: 5, pedido_id: 5, descripcion_producto: 'Paquete de postes y refuerzos de anclaje', especificaciones: 'Acero galvanizado con platina base', cantidad: 20, precio_unitario: 245.00, total_linea: 4900.00 }
     ],
     ordenes_produccion: [
-      { id: 1, codigo_op: 'OP-2026-001', pedido_id: 1, estado: 'Completada', prioridad: 'Alta', fecha_inicio_programada: '2026-08-11', fecha_fin_programada: '2026-08-24', fecha_inicio_real: '2026-08-11 08:30:00', fecha_fin_real: '2026-08-24 17:00:00', porcentaje_avance: 100, costo_estimado: 5200.00, costo_real: 5350.00, responsable_id: 2, observaciones: 'Entregado a tiempo sin no conformidades' },
-      { id: 2, codigo_op: 'OP-2026-002', pedido_id: 2, estado: 'Completada', prioridad: 'Media', fecha_inicio_programada: '2026-08-16', fecha_fin_programada: '2026-09-01', fecha_inicio_real: '2026-08-16 08:00:00', fecha_fin_real: '2026-09-02 11:30:00', porcentaje_avance: 100, costo_estimado: 7800.00, costo_real: 8100.00, responsable_id: 2, observaciones: 'Ligero retraso por secado de pintura epóxica' },
-      { id: 3, codigo_op: 'OP-2026-003', pedido_id: 3, estado: 'En Proceso', prioridad: 'Urgente', fecha_inicio_programada: '2026-09-02', fecha_fin_programada: '2026-09-17', fecha_inicio_real: '2026-09-02 08:15:00', fecha_fin_real: null, porcentaje_avance: 70, costo_estimado: 9400.00, costo_real: 6800.00, responsable_id: 2, observaciones: 'Fase de soldadura completada; en proceso de tratamiento y pintura' }
+      { id: 1, codigo_op: 'OP-2026-001', pedido_id: 1, estado: 'Completada', prioridad: 'Alta', fecha_inicio_programada: '2026-08-11', fecha_fin_programada: '2026-08-24', fecha_inicio_real: '2026-08-11 08:30:00', fecha_fin_real: '2026-08-24 17:00:00', porcentaje_avance: 100, costo_estimado: 5200.00, costo_real: 5350.00, responsable_id: 1, observaciones: 'Entregado a tiempo sin no conformidades' },
+      { id: 2, codigo_op: 'OP-2026-002', pedido_id: 2, estado: 'Completada', prioridad: 'Media', fecha_inicio_programada: '2026-08-16', fecha_fin_programada: '2026-09-01', fecha_inicio_real: '2026-08-16 08:00:00', fecha_fin_real: '2026-09-02 11:30:00', porcentaje_avance: 100, costo_estimado: 7800.00, costo_real: 8100.00, responsable_id: 1, observaciones: 'Ligero retraso por secado de pintura epóxica' },
+      { id: 3, codigo_op: 'OP-2026-003', pedido_id: 3, estado: 'En Proceso', prioridad: 'Urgente', fecha_inicio_programada: '2026-09-02', fecha_fin_programada: '2026-09-17', fecha_inicio_real: '2026-09-02 08:15:00', fecha_fin_real: null, porcentaje_avance: 70, costo_estimado: 9400.00, costo_real: 6800.00, responsable_id: 1, observaciones: 'Fase de soldadura completada; en proceso de tratamiento y pintura' }
     ],
     etapas_produccion: [
       { id: 1, orden_produccion_id: 3, numero_fase: 1, nombre_etapa: 'Habilitado y Corte', descripcion: 'Trazado, oxicorte y corte por sierra de perfiles y platinas', operario_asignado: 'Juan Pérez T.', horas_estimadas: 16.0, horas_reales: 15.5, estado: 'Finalizada', fecha_inicio: '2026-09-02 08:30:00', fecha_fin: '2026-09-04 17:00:00' },
@@ -94,12 +91,12 @@ function getInitialStore() {
     ],
     movimientos_inventario: [
       { id: 1, material_id: 1, tipo_movimiento: 'ENTRADA', cantidad: 40.00, costo_unitario: 245.00, referencia_documento: 'F001-9821', motivo: 'Compra mensual a Aceros Arequipa', registrado_por: 1, fecha: '2026-08-01 09:00:00' },
-      { id: 2, material_id: 1, tipo_movimiento: 'SALIDA_PRODUCCION', cantidad: 5.00, costo_unitario: 245.00, referencia_documento: 'OP-2026-001', motivo: 'Consumo para barandas', registrado_por: 2, fecha: '2026-08-12 10:00:00' },
-      { id: 3, material_id: 2, tipo_movimiento: 'SALIDA_PRODUCCION', cantidad: 14.00, costo_unitario: 68.50, referencia_documento: 'OP-2026-003', motivo: 'Consumo para bastidor de faja', registrado_por: 2, fecha: '2026-09-03 08:30:00' }
+      { id: 2, material_id: 1, tipo_movimiento: 'SALIDA_PRODUCCION', cantidad: 5.00, costo_unitario: 245.00, referencia_documento: 'OP-2026-001', motivo: 'Consumo para barandas', registrado_por: 1, fecha: '2026-08-12 10:00:00' },
+      { id: 3, material_id: 2, tipo_movimiento: 'SALIDA_PRODUCCION', cantidad: 14.00, costo_unitario: 68.50, referencia_documento: 'OP-2026-003', motivo: 'Consumo para bastidor de faja', registrado_por: 1, fecha: '2026-09-03 08:30:00' }
     ],
     control_calidad: [
-      { id: 1, orden_produccion_id: 1, inspector_id: 2, resultado: 'Aprobado', defectos_encontrados: 'Ninguno crítico', acciones_correctivas: 'Ninguna', merma_porcentaje: 1.20, fecha_inspeccion: '2026-08-24 16:30:00' },
-      { id: 2, orden_produccion_id: 2, inspector_id: 2, resultado: 'Aprobado con Observaciones', defectos_encontrados: 'Porosidad leve en cordón secundario de base', acciones_correctivas: 'Resanado y aplicación de cordón de refuerzo', merma_porcentaje: 2.80, fecha_inspeccion: '2026-09-02 10:00:00' }
+      { id: 1, orden_produccion_id: 1, inspector_id: 1, resultado: 'Aprobado', defectos_encontrados: 'Ninguno crítico', acciones_correctivas: 'Ninguna', merma_porcentaje: 1.20, fecha_inspeccion: '2026-08-24 16:30:00' },
+      { id: 2, orden_produccion_id: 2, inspector_id: 1, resultado: 'Aprobado con Observaciones', defectos_encontrados: 'Porosidad leve en cordón secundario de base', acciones_correctivas: 'Resanado y aplicación de cordón de refuerzo', merma_porcentaje: 2.80, fecha_inspeccion: '2026-09-02 10:00:00' }
     ],
     paradas_produccion: [
       { id: 1, orden_produccion_id: 3, etapa_id: 3, motivo: 'Falta de Material', minutos_parada: 90, descripcion: 'Espera de reposición de alambre MIG en almacén central', fecha: '2026-09-09 11:00:00' },

@@ -17,23 +17,18 @@ import ThemeToggle from './ThemeToggle';
 
 export default function Sidebar({ activeTab, setActiveTab }) {
     const { user, logout } = useAuth();
-    const rol = user?.rol === 'jefe_produccion' ? 'produccion' : (user?.rol || 'operario');
+    const rol = user?.rol || 'admin';
 
-    // Definición de módulos con sus permisos por rol (OE5)
-    // El Dashboard Gerencial está restringido exclusivamente para administradores
-    const allMenuItems = [
-        { id: 'dashboard', label: 'Dashboard Gerencial', icon: LayoutDashboard, roles: ['admin'] },
-        { id: 'clientes', label: 'Gestión de Clientes', icon: Users, roles: ['admin', 'ventas'] },
-        { id: 'pedidos', label: 'Gestión de Pedidos', icon: ShoppingBag, roles: ['admin', 'ventas', 'produccion'] },
-        { id: 'produccion', label: 'Planificación / Producción', icon: Hammer, roles: ['admin', 'produccion', 'operario'] },
-        { id: 'inventario', label: 'Control de Inventario', icon: Boxes, roles: ['admin', 'produccion'] },
-        { id: 'reportes', label: 'Reportes Gerenciales', icon: FileSpreadsheet, roles: ['admin', 'produccion', 'ventas'] },
-        { id: 'bi', label: 'Inteligencia de Negocios (BI)', icon: LineChart, roles: ['admin'] },
-        { id: 'ai', label: 'Módulo Asistencia con IA', icon: Bot, highlight: true, roles: ['admin', 'produccion', 'ventas'] }
+    const menuItems = [
+        { id: 'dashboard', label: 'Dashboard Gerencial', icon: LayoutDashboard },
+        { id: 'clientes', label: 'Gestión de Clientes', icon: Users },
+        { id: 'pedidos', label: 'Gestión de Pedidos', icon: ShoppingBag },
+        { id: 'produccion', label: 'Planificación / Producción', icon: Hammer },
+        { id: 'inventario', label: 'Control de Inventario', icon: Boxes },
+        { id: 'reportes', label: 'Reportes Gerenciales', icon: FileSpreadsheet },
+        { id: 'bi', label: 'Inteligencia de Negocios (BI)', icon: LineChart },
+        { id: 'ai', label: 'Módulo Asistencia con IA', icon: Bot, highlight: true }
     ];
-
-    // Filtrar los módulos según el rol del usuario autenticado
-    const menuItems = allMenuItems.filter(item => item.roles.includes(rol));
 
     return (
         <aside className="w-72 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 flex flex-col flex-shrink-0 shadow-lg dark:shadow-2xl z-20 h-screen sticky top-0 border-r border-slate-200 dark:border-slate-800 transition-colors duration-200">
@@ -90,7 +85,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                             <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{user?.nombre || 'Usuario'}</p>
                             <span className="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 font-medium capitalize">
                                 <ShieldCheck className="w-3 h-3" />
-                                {user?.rol?.replace('_', ' ') || 'Operario'}
+                                {user?.rol?.replace('_', ' ') || 'Administrador'}
                             </span>
                         </div>
                     </div>

@@ -47,7 +47,7 @@ Sistema web integral de clase empresarial diseñado para optimizar la eficiencia
 - **Seguridad**:
   - Cifrado de credenciales con `bcrypt` v5.1.1.
   - Sesiones y autorización con JSON Web Tokens (`jsonwebtoken` v9.0.2).
-  - Control de acceso basado en roles (RBAC): Administrador, Jefe de Producción, Operario, Ventas.
+  - Acceso exclusivo de administración (Administrador / Gerencia).
 
 ---
 
@@ -85,11 +85,6 @@ npm run test:performance
 | Rol | Correo | Contraseña |
 |---|---|---|
 | **Administrador / Gerencia** | `admin@rvvega.com` | `Admin123*` |
-| **Jefe de Producción** | `produccion@rvvega.com` | `Admin123*` |
-| **Operario de Taller** | `operario1@rvvega.com` | `Admin123*` |
-| **Ventas / Atención** | `ventas@rvvega.com` | `Admin123*` |
-
-*(La pantalla de login incluye botones de acceso rápido con 1 clic para alternar entre roles).*
 
 ---
 

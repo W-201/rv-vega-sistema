@@ -152,7 +152,7 @@ export function createOrdenProduccion(req, res) {
       porcentaje_avance: 0,
       costo_estimado: Math.round(pedido.subtotal * 0.65),
       costo_real: 0.00,
-      responsable_id: responsable_id ? parseInt(responsable_id) : 2,
+      responsable_id: responsable_id ? parseInt(responsable_id) : 1,
       observaciones: observaciones || `Generada para atender ${pedido.codigo_pedido}`,
       creado_en: new Date().toISOString()
     };

@@ -17,25 +17,6 @@ function MainLayout() {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  const userRole = user?.rol === 'jefe_produccion' ? 'produccion' : (user?.rol || 'operario');
-  const isAdmin = userRole === 'admin';
-
-  // Si el usuario no es admin y se encuentra en dashboard, redirigir a su módulo por defecto
-  useEffect(() => {
-    if (user) {
-      const role = user.rol === 'jefe_produccion' ? 'produccion' : (user.rol || 'operario');
-      if (role !== 'admin' && activeTab === 'dashboard') {
-        if (role === 'ventas') {
-          setActiveTab('pedidos');
-        } else if (role === 'produccion' || role === 'operario') {
-          setActiveTab('produccion');
-        } else {
-          setActiveTab('pedidos');
-        }
-      }
-    }
-  }, [user, activeTab]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
@@ -73,11 +54,7 @@ function MainLayout() {
         </div>
 
         <main className="flex-1">
-          {activeTab === 'dashboard' && (isAdmin ? <Dashboard setActiveTab={setActiveTab} /> : (
-            <div className="p-8 text-center text-slate-500 dark:text-slate-400 font-medium">
-              Acceso restringido: El Dashboard Gerencial está disponible únicamente para el Administrador.
-            </div>
-          ))}
+          {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
           {activeTab === 'clientes' && <Clientes />}
           {activeTab === 'pedidos' && <Pedidos setActiveTab={setActiveTab} />}
           {activeTab === 'produccion' && <Produccion />}

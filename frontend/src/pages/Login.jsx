@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Lock, Mail, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Building2, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
 
@@ -21,11 +21,6 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickLogin = (userEmail) => {
-    setEmail(userEmail);
-    setPassword('Admin123*');
   };
 
   return (
@@ -98,45 +93,6 @@ export default function Login() {
             )}
           </button>
         </form>
-
-        {/* Demo Users Quick Selector */}
-        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 text-xs">
-          <p className="font-semibold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            Acceso Rápido por Roles (Pruebas):
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleQuickLogin('admin@rvvega.com')}
-              type="button"
-              className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700 text-[11px] font-medium transition text-left truncate cursor-pointer"
-            >
-              👑 Administrador
-            </button>
-            <button
-              onClick={() => handleQuickLogin('produccion@rvvega.com')}
-              type="button"
-              className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700 text-[11px] font-medium transition text-left truncate cursor-pointer"
-            >
-              ⚙️ Jefe Producción
-            </button>
-            <button
-              onClick={() => handleQuickLogin('operario1@rvvega.com')}
-              type="button"
-              className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700 text-[11px] font-medium transition text-left truncate cursor-pointer"
-            >
-              👷 Operario Taller
-            </button>
-            <button
-              onClick={() => handleQuickLogin('ventas@rvvega.com')}
-              type="button"
-              className="px-2 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700 text-[11px] font-medium transition text-left truncate cursor-pointer"
-            >
-              💼 Ventas / Pedidos
-            </button>
-          </div>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 text-center">Clave demo: <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded text-slate-600 dark:text-slate-300">Admin123*</code></p>
-        </div>
       </div>
     </div>
   );
