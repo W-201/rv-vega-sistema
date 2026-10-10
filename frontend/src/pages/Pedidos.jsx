@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Plus, Filter, Calendar, Hammer, Eye, FileText, CheckCircle2 } from 'lucide-react';
+import { ShoppingBag, Plus, Filter, Calendar, Hammer, Eye, FileText, CheckCircle2, Search, Truck } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function Pedidos({ setActiveTab }) {
     const [pedidos, setPedidos] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [filtroEstado, setFiltroEstado] = useState('Todos');
+    const [filtroPrioridad, setFiltroPrioridad] = useState('Todos');
+    const [busqueda, setBusqueda] = useState('');
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [detallePedido, setDetallePedido] = useState(null);
@@ -24,7 +26,11 @@ export default function Pedidos({ setActiveTab }) {
     const loadPedidos = async () => {
         try {
             setLoading(true);
-            const data = await api.get(`/pedidos?estado=${filtroEstado}`);
+            const params = new URLSearchParams();
+            if (filtroEstado !== 'Todos') params.append('estado', filtroEstado);
+            if (filtroPrioridad !== 'Todos') params.append('prioridad', filtroPrioridad);
+            if (busqueda.trim()) params.append('busqueda', busqueda.trim());
+            const data = await api.get(`/pedidos?${params.toString()}`);
             setPedidos(data);
         } catch (err) {
             console.error('Error al cargar pedidos:', err);
@@ -45,7 +51,7 @@ export default function Pedidos({ setActiveTab }) {
 
     useEffect(() => {
         loadPedidos();
-    }, [filtroEstado]);
+    }, [filtroEstado, filtroPrioridad, busqueda]);
 
     useEffect(() => {
         loadClientes();
@@ -107,6 +113,20 @@ export default function Pedidos({ setActiveTab }) {
         }
     };
 
+    const handleMarcarEntregado = async (pedido) => {
+        if (confirm(`¿Confirmar entrega del pedido ${pedido.codigo_pedido} al cliente ${pedido.cliente_nombre}?`)) {
+            try {
+                await api.patch(`/pedidos/${pedido.id}/estado`, {
+                    estado: 'Entregado',
+                    fecha_entrega_real: new Date().toISOString().split('T')[0]
+                });
+                loadPedidos();
+            } catch (err) {
+                alert('Error al actualizar estado del pedido: ' + err.message);
+            }
+        }
+    };
+
     // --- LÓGICA OE1: ALERTAS DE VENCIMIENTO ---
     const obtenerAlertaVencimiento = (fecha) => {
         if (!fecha) return { color: 'text-slate-700 dark:text-slate-300', mensaje: '' };
@@ -127,26 +147,55 @@ export default function Pedidos({ setActiveTab }) {
 
     return (
         <div className="p-8 space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
-                <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Estado:</span>
-                    <select
-                        value={filtroEstado}
-                        onChange={(e) => setFiltroEstado(e.target.value)}
-                        className="text-xs p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-                    >
-                        <option value="Todos">Todos los Estados</option>
-                        <option value="Pendiente">Pendiente</option>
-                        <option value="En Planificación">En Planificación</option>
-                        <option value="En Producción">En Producción</option>
-                        <option value="Entregado">Entregado</option>
-                    </select>
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+                <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <div className="relative flex-1 sm:w-64">
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                        <input
+                            type="text"
+                            placeholder="Buscar código, cliente, RUC o producto..."
+                            value={busqueda}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Estado:</span>
+                        <select
+                            value={filtroEstado}
+                            onChange={(e) => setFiltroEstado(e.target.value)}
+                            className="text-xs p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                        >
+                            <option value="Todos">Todos los Estados</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En Planificación">En Planificación</option>
+                            <option value="En Producción">En Producción</option>
+                            <option value="Listo para Entrega">Listo para Entrega</option>
+                            <option value="Entregado">Entregado</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Prioridad:</span>
+                        <select
+                            value={filtroPrioridad}
+                            onChange={(e) => setFiltroPrioridad(e.target.value)}
+                            className="text-xs p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                        >
+                            <option value="Todos">Todas</option>
+                            <option value="Urgente">Urgente</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Media">Media</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
                 </div>
 
                 <button
                     onClick={() => setShowModal(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-2 shadow-sm shadow-blue-500/20 transition cursor-pointer"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-2 shadow-sm shadow-blue-500/20 transition cursor-pointer shrink-0"
                 >
                     <Plus className="w-4 h-4" />
                     <span>Nuevo Pedido</span>
@@ -183,7 +232,10 @@ export default function Pedidos({ setActiveTab }) {
                                     return (
                                         <tr key={p.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition">
                                             <td className="px-5 py-3 font-mono font-bold text-blue-700 dark:text-blue-400">{p.codigo_pedido}</td>
-                                            <td className="px-5 py-3 font-semibold text-slate-900 dark:text-slate-100">{p.cliente_nombre}</td>
+                                            <td className="px-5 py-3">
+                                                <div className="font-semibold text-slate-900 dark:text-slate-100">{p.cliente_nombre}</div>
+                                                {p.cliente_doc && <div className="text-[10px] font-mono text-slate-400 dark:text-slate-500">{p.cliente_doc}</div>}
+                                            </td>
                                             <td className="px-5 py-3">
                                                 <div className="flex flex-col gap-1">
                                                     <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
@@ -210,6 +262,8 @@ export default function Pedidos({ setActiveTab }) {
                                                 <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
                                                     p.estado === 'Entregado' 
                                                         ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/50' 
+                                                        : p.estado === 'Listo para Entrega'
+                                                        ? 'bg-teal-100 dark:bg-teal-950/50 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-900/50'
                                                         : p.estado === 'En Producción' 
                                                         ? 'bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-900/50' 
                                                         : p.estado === 'En Planificación' 
@@ -240,7 +294,16 @@ export default function Pedidos({ setActiveTab }) {
                                                     </button>
                                                 )}
                                             </td>
-                                            <td className="px-5 py-3 text-right">
+                                            <td className="px-5 py-3 text-right space-x-1 whitespace-nowrap">
+                                                {p.estado !== 'Entregado' && (
+                                                    <button
+                                                        onClick={() => handleMarcarEntregado(p)}
+                                                        className="p-1.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-800 rounded transition cursor-pointer"
+                                                        title="Confirmar Entrega al Cliente"
+                                                    >
+                                                        <Truck className="w-4 h-4 inline" />
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={async () => {
                                                         const det = await api.get(`/pedidos/${p.id}`);

@@ -3,7 +3,7 @@ import { getDb, saveStore } from '../config/db.js';
 export function getPedidos(req, res) {
   try {
     const db = getDb();
-    const { estado, prioridad, cliente_id } = req.query;
+    const { estado, prioridad, cliente_id, busqueda, fecha_desde, fecha_hasta } = req.query;
 
     let list = db.pedidos.map(p => {
       const cliente = db.clientes.find(c => c.id === p.cliente_id);
@@ -30,6 +30,23 @@ export function getPedidos(req, res) {
     }
     if (cliente_id) {
       list = list.filter(p => p.cliente_id === parseInt(cliente_id));
+    }
+    if (fecha_desde) {
+      list = list.filter(p => p.fecha_pedido >= fecha_desde);
+    }
+    if (fecha_hasta) {
+      list = list.filter(p => p.fecha_pedido <= fecha_hasta);
+    }
+    if (busqueda && busqueda.trim() !== '') {
+      const q = busqueda.trim().toLowerCase();
+      list = list.filter(p =>
+        p.codigo_pedido.toLowerCase().includes(q) ||
+        p.cliente_nombre.toLowerCase().includes(q) ||
+        p.cliente_doc.toLowerCase().includes(q) ||
+        (p.codigo_op && p.codigo_op.toLowerCase().includes(q)) ||
+        (p.observaciones && p.observaciones.toLowerCase().includes(q)) ||
+        p.detalles.some(d => d.descripcion_producto.toLowerCase().includes(q))
+      );
     }
 
     // Orden descendente por id

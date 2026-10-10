@@ -23,7 +23,7 @@ CREATE TABLE usuarios (
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    rol VARCHAR(30) NOT NULL DEFAULT 'operario', -- 'admin', 'jefe_produccion', 'operario', 'ventas'
+    rol VARCHAR(30) NOT NULL DEFAULT 'operario' CHECK (rol IN ('admin', 'jefe_produccion', 'operario', 'ventas')),
     activo BOOLEAN DEFAULT TRUE,
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -31,7 +31,7 @@ CREATE TABLE usuarios (
 -- 2. Tabla de Clientes
 CREATE TABLE clientes (
     id SERIAL PRIMARY KEY,
-    tipo_documento VARCHAR(10) NOT NULL DEFAULT 'RUC', -- 'RUC', 'DNI'
+    tipo_documento VARCHAR(10) NOT NULL DEFAULT 'RUC' CHECK (tipo_documento IN ('RUC', 'DNI')),
     numero_documento VARCHAR(20) UNIQUE NOT NULL,
     razon_social VARCHAR(150) NOT NULL,
     contacto VARCHAR(100),
@@ -47,29 +47,29 @@ CREATE TABLE clientes (
 CREATE TABLE pedidos (
     id SERIAL PRIMARY KEY,
     codigo_pedido VARCHAR(30) UNIQUE NOT NULL,
-    cliente_id INT REFERENCES clientes(id) ON DELETE RESTRICT,
+    cliente_id INT NOT NULL REFERENCES clientes(id) ON DELETE RESTRICT,
     fecha_pedido DATE NOT NULL DEFAULT CURRENT_DATE,
     fecha_entrega_prometida DATE NOT NULL,
-    estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente', 
-    -- 'Pendiente', 'En Planificación', 'En Producción', 'Control de Calidad', 'Listo para Entrega', 'Entregado', 'Cancelado'
-    prioridad VARCHAR(20) NOT NULL DEFAULT 'Media', -- 'Baja', 'Media', 'Alta', 'Urgente'
-    subtotal NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
-    igv NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
-    total NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    fecha_entrega_real DATE,
+    estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'En Planificación', 'En Producción', 'Control de Calidad', 'Listo para Entrega', 'Entregado', 'Cancelado')),
+    prioridad VARCHAR(20) NOT NULL DEFAULT 'Media' CHECK (prioridad IN ('Baja', 'Media', 'Alta', 'Urgente')),
+    subtotal NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (subtotal >= 0),
+    igv NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (igv >= 0),
+    total NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (total >= 0),
     observaciones TEXT,
-    creado_por INT REFERENCES usuarios(id),
+    creado_por INT REFERENCES usuarios(id) ON DELETE SET NULL,
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 4. Detalle de Pedidos
 CREATE TABLE pedido_detalles (
     id SERIAL PRIMARY KEY,
-    pedido_id INT REFERENCES pedidos(id) ON DELETE CASCADE,
+    pedido_id INT NOT NULL REFERENCES pedidos(id) ON DELETE CASCADE,
     descripcion_producto VARCHAR(200) NOT NULL,
     especificaciones TEXT,
     cantidad INT NOT NULL CHECK (cantidad > 0),
-    precio_unitario NUMERIC(12, 2) NOT NULL,
-    total_linea NUMERIC(12, 2) NOT NULL
+    precio_unitario NUMERIC(12, 2) NOT NULL CHECK (precio_unitario >= 0),
+    total_linea NUMERIC(12, 2) NOT NULL CHECK (total_linea >= 0)
 );
 
 -- 5. Catálogo de Materia Prima e Insumos
@@ -79,9 +79,9 @@ CREATE TABLE materiales (
     nombre VARCHAR(120) NOT NULL,
     categoria VARCHAR(50) NOT NULL, -- 'Metales/Perfiles', 'Pinturas/Acabados', 'Fijaciones/Tornillería', 'Soldadura/Consumibles', 'Eléctricos'
     unidad_medida VARCHAR(20) NOT NULL, -- 'kg', 'm', 'plancha', 'galón', 'tubo', 'und'
-    stock_actual NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
-    stock_minimo NUMERIC(12, 2) NOT NULL DEFAULT 5.00,
-    costo_unitario NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    stock_actual NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (stock_actual >= 0),
+    stock_minimo NUMERIC(12, 2) NOT NULL DEFAULT 5.00 CHECK (stock_minimo >= 0),
+    costo_unitario NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (costo_unitario >= 0),
     ubicacion_almacen VARCHAR(50) DEFAULT 'Almacén Central',
     activo BOOLEAN DEFAULT TRUE,
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -90,13 +90,13 @@ CREATE TABLE materiales (
 -- 6. Movimientos de Inventario (Kardex)
 CREATE TABLE movimientos_inventario (
     id SERIAL PRIMARY KEY,
-    material_id INT REFERENCES materiales(id) ON DELETE RESTRICT,
-    tipo_movimiento VARCHAR(20) NOT NULL, -- 'ENTRADA', 'SALIDA_PRODUCCION', 'AJUSTE_POSITIVO', 'AJUSTE_NEGATIVO'
-    cantidad NUMERIC(12, 2) NOT NULL,
-    costo_unitario NUMERIC(12, 2) NOT NULL,
+    material_id INT NOT NULL REFERENCES materiales(id) ON DELETE RESTRICT,
+    tipo_movimiento VARCHAR(20) NOT NULL CHECK (tipo_movimiento IN ('ENTRADA', 'SALIDA_PRODUCCION', 'AJUSTE_POSITIVO', 'AJUSTE_NEGATIVO')),
+    cantidad NUMERIC(12, 2) NOT NULL CHECK (cantidad > 0),
+    costo_unitario NUMERIC(12, 2) NOT NULL CHECK (costo_unitario >= 0),
     referencia_documento VARCHAR(50), -- Nro Factura Proveedor, Nro OP
     motivo TEXT,
-    registrado_por INT REFERENCES usuarios(id),
+    registrado_por INT REFERENCES usuarios(id) ON DELETE SET NULL,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -104,17 +104,17 @@ CREATE TABLE movimientos_inventario (
 CREATE TABLE ordenes_produccion (
     id SERIAL PRIMARY KEY,
     codigo_op VARCHAR(30) UNIQUE NOT NULL,
-    pedido_id INT REFERENCES pedidos(id) ON DELETE RESTRICT,
-    estado VARCHAR(30) NOT NULL DEFAULT 'Planificada', -- 'Planificada', 'En Proceso', 'Pausada', 'Completada', 'Cancelada'
-    prioridad VARCHAR(20) NOT NULL DEFAULT 'Media',
+    pedido_id INT NOT NULL REFERENCES pedidos(id) ON DELETE RESTRICT,
+    estado VARCHAR(30) NOT NULL DEFAULT 'Planificada' CHECK (estado IN ('Planificada', 'En Proceso', 'Pausada', 'Completada', 'Cancelada')),
+    prioridad VARCHAR(20) NOT NULL DEFAULT 'Media' CHECK (prioridad IN ('Baja', 'Media', 'Alta', 'Urgente')),
     fecha_inicio_programada DATE NOT NULL,
     fecha_fin_programada DATE NOT NULL,
     fecha_inicio_real TIMESTAMP,
     fecha_fin_real TIMESTAMP,
     porcentaje_avance INT NOT NULL DEFAULT 0 CHECK (porcentaje_avance BETWEEN 0 AND 100),
-    costo_estimado NUMERIC(12, 2) DEFAULT 0.00,
-    costo_real NUMERIC(12, 2) DEFAULT 0.00,
-    responsable_id INT REFERENCES usuarios(id),
+    costo_estimado NUMERIC(12, 2) DEFAULT 0.00 CHECK (costo_estimado >= 0),
+    costo_real NUMERIC(12, 2) DEFAULT 0.00 CHECK (costo_real >= 0),
+    responsable_id INT REFERENCES usuarios(id) ON DELETE SET NULL,
     observaciones TEXT,
     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -122,14 +122,14 @@ CREATE TABLE ordenes_produccion (
 -- 8. Etapas del Proceso Productivo por Orden de Producción
 CREATE TABLE etapas_produccion (
     id SERIAL PRIMARY KEY,
-    orden_produccion_id INT REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
-    numero_fase INT NOT NULL,
+    orden_produccion_id INT NOT NULL REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
+    numero_fase INT NOT NULL CHECK (numero_fase > 0),
     nombre_etapa VARCHAR(80) NOT NULL, -- 'Habilitado y Corte', 'Mecanizado y Ensamble', 'Soldadura/Estructura', 'Acabado y Pintura', 'Control de Calidad'
     descripcion TEXT,
     operario_asignado VARCHAR(100),
-    horas_estimadas NUMERIC(6, 2) NOT NULL DEFAULT 1.00,
-    horas_reales NUMERIC(6, 2) NOT NULL DEFAULT 0.00,
-    estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente', -- 'Pendiente', 'En Proceso', 'Finalizada', 'Detenida'
+    horas_estimadas NUMERIC(6, 2) NOT NULL DEFAULT 1.00 CHECK (horas_estimadas > 0),
+    horas_reales NUMERIC(6, 2) NOT NULL DEFAULT 0.00 CHECK (horas_reales >= 0),
+    estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'En Proceso', 'Finalizada', 'Detenida')),
     fecha_inicio TIMESTAMP,
     fecha_fin TIMESTAMP
 );
@@ -137,33 +137,33 @@ CREATE TABLE etapas_produccion (
 -- 9. Lista de Materiales (BOM) y Consumos por Orden
 CREATE TABLE consumo_materiales (
     id SERIAL PRIMARY KEY,
-    orden_produccion_id INT REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
-    material_id INT REFERENCES materiales(id) ON DELETE RESTRICT,
-    cantidad_requerida NUMERIC(12, 2) NOT NULL,
-    cantidad_consumida NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
-    cantidad_merma NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
-    costo_total NUMERIC(12, 2) NOT NULL DEFAULT 0.00
+    orden_produccion_id INT NOT NULL REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
+    material_id INT NOT NULL REFERENCES materiales(id) ON DELETE RESTRICT,
+    cantidad_requerida NUMERIC(12, 2) NOT NULL CHECK (cantidad_requerida >= 0),
+    cantidad_consumida NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (cantidad_consumida >= 0),
+    cantidad_merma NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (cantidad_merma >= 0),
+    costo_total NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (costo_total >= 0)
 );
 
 -- 10. Control de Calidad e Inspección
 CREATE TABLE control_calidad (
     id SERIAL PRIMARY KEY,
-    orden_produccion_id INT REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
-    inspector_id INT REFERENCES usuarios(id),
-    resultado VARCHAR(30) NOT NULL, -- 'Aprobado', 'Rechazado', 'Aprobado con Observaciones'
+    orden_produccion_id INT NOT NULL REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
+    inspector_id INT REFERENCES usuarios(id) ON DELETE SET NULL,
+    resultado VARCHAR(30) NOT NULL CHECK (resultado IN ('Aprobado', 'Rechazado', 'Aprobado con Observaciones')),
     defectos_encontrados TEXT,
     acciones_correctivas TEXT,
-    merma_porcentaje NUMERIC(5, 2) DEFAULT 0.00,
+    merma_porcentaje NUMERIC(5, 2) DEFAULT 0.00 CHECK (merma_porcentaje BETWEEN 0 AND 100),
     fecha_inspeccion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 11. Registro de Paradas / Incidencias
 CREATE TABLE paradas_produccion (
     id SERIAL PRIMARY KEY,
-    orden_produccion_id INT REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
+    orden_produccion_id INT NOT NULL REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
     etapa_id INT REFERENCES etapas_produccion(id) ON DELETE SET NULL,
     motivo VARCHAR(100) NOT NULL, -- 'Falla de Máquina', 'Falta de Material', 'Corte de Fluido Eléctrico', 'Reproceso', 'Otro'
-    minutos_parada INT NOT NULL DEFAULT 0,
+    minutos_parada INT NOT NULL DEFAULT 0 CHECK (minutos_parada >= 0),
     descripcion TEXT,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -177,6 +177,13 @@ CREATE TABLE ai_logs (
     metadata JSONB,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Índices para optimización de consultas y reportes (2.2.2 / 3.6.1)
+CREATE INDEX idx_pedidos_cliente ON pedidos(cliente_id);
+CREATE INDEX idx_pedidos_estado ON pedidos(estado);
+CREATE INDEX idx_ordenes_pedido ON ordenes_produccion(pedido_id);
+CREATE INDEX idx_etapas_op ON etapas_produccion(orden_produccion_id);
+CREATE INDEX idx_movimientos_material ON movimientos_inventario(material_id);
 
 -- ============================================================================
 -- 13. VISTAS SQL PARA MÓDULO DE REPORTES GERENCIALES (3.6.1)
