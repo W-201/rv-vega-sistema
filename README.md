@@ -71,6 +71,13 @@ npm run dev
 ```
 > El frontend estará disponible en `http://localhost:3000`
 
+### Paso 3: Ejecutar Pruebas y Benchmarks de Rendimiento (Requerimiento 3.6.1)
+En el directorio `rv-vega-sistema\backend`:
+```powershell
+npm run test:performance
+```
+> Ejecuta la suite de pruebas de rendimiento, concurrencia (15 hilos) y latencia (p95, p99) sobre los endpoints de reportes gerenciales.
+
 ---
 
 ## 4. Credenciales de Acceso Demo

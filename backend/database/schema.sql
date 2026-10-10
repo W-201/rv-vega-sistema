@@ -177,3 +177,63 @@ CREATE TABLE ai_logs (
     metadata JSONB,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================================================================
+-- 13. VISTAS SQL PARA MÓDULO DE REPORTES GERENCIALES (3.6.1)
+-- ============================================================================
+
+-- Vista SQL 1: Reporte de Cumplimiento de Entregas (OTIF)
+CREATE OR REPLACE VIEW vista_reporte_otif AS
+SELECT 
+    p.id,
+    p.codigo_pedido,
+    c.razon_social AS cliente,
+    p.fecha_pedido,
+    p.fecha_entrega_prometida AS fecha_pactada,
+    p.fecha_entrega_real AS fecha_real,
+    (p.fecha_entrega_real - p.fecha_entrega_prometida) AS dias_desviacion,
+    CASE 
+        WHEN p.fecha_entrega_real <= p.fecha_entrega_prometida THEN TRUE
+        ELSE FALSE
+    END AS cumple_otif,
+    p.total
+FROM pedidos p
+LEFT JOIN clientes c ON p.cliente_id = c.id
+WHERE p.estado = 'Entregado' AND p.fecha_entrega_real IS NOT NULL;
+
+-- Vista SQL 2: Reporte Financiero de Costos y Márgenes de Producción
+CREATE OR REPLACE VIEW vista_reporte_costos AS
+SELECT 
+    op.codigo_op,
+    p.codigo_pedido,
+    c.razon_social AS cliente,
+    op.estado,
+    COALESCE(p.subtotal, 0) AS venta_subtotal,
+    COALESCE(op.costo_estimado, 0) AS costo_estimado,
+    COALESCE(op.costo_real, op.costo_estimado, 0) AS costo_real,
+    (COALESCE(p.subtotal, 0) - COALESCE(op.costo_real, op.costo_estimado, 0)) AS margen_bruto,
+    CASE 
+        WHEN COALESCE(p.subtotal, 0) > 0 
+            THEN ROUND(((COALESCE(p.subtotal, 0) - COALESCE(op.costo_real, op.costo_estimado, 0)) / p.subtotal) * 100, 2)
+        ELSE 0
+    END AS porcentaje_margen
+FROM ordenes_produccion op
+LEFT JOIN pedidos p ON op.pedido_id = p.id
+LEFT JOIN clientes c ON p.cliente_id = c.id;
+
+-- Vista SQL 3: Reporte de Productividad y Eficiencia por Operario
+CREATE OR REPLACE VIEW vista_reporte_operarios AS
+SELECT 
+    COALESCE(ep.operario_asignado, 'Sin Asignar') AS operario,
+    COUNT(ep.id) AS etapas_asignadas,
+    COUNT(CASE WHEN ep.estado = 'Finalizada' THEN 1 END) AS etapas_finalizadas,
+    ROUND(SUM(COALESCE(ep.horas_estimadas, 0)), 2) AS horas_estimadas,
+    ROUND(SUM(COALESCE(ep.horas_reales, 0)), 2) AS horas_reales,
+    CASE 
+        WHEN SUM(COALESCE(ep.horas_reales, 0)) > 0 
+            THEN ROUND((SUM(COALESCE(ep.horas_estimadas, 0)) / SUM(COALESCE(ep.horas_reales, 0))) * 100, 2)
+        ELSE 100.00
+    END AS eficiencia_porcentaje
+FROM etapas_produccion ep
+GROUP BY COALESCE(ep.operario_asignado, 'Sin Asignar');
+

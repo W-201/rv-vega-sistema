@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "seed": "node database/seedRunner.js"
+    "seed": "node database/seedRunner.js",
+    "test": "node test-api.js",
+    "test:performance": "node test-performance-reportes.js"
   },
   "engines": {
     "node": ">=20.0.0"
