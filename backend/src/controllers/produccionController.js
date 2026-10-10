@@ -1,5 +1,64 @@
 import { getDb, saveStore } from '../config/db.js';
 
+// Función de cálculo de tiempos de producción (Requerimiento 3.4.1.3)
+export function calcularMetricasTiempos(etapas = [], paradas = []) {
+  const horas_estimadas_totales = Math.round(etapas.reduce((acc, e) => acc + Number(e.horas_estimadas || 0), 0) * 100) / 100;
+  const horas_reales_totales = Math.round(etapas.reduce((acc, e) => acc + Number(e.horas_reales || 0), 0) * 100) / 100;
+  const minutos_parada_totales = paradas.reduce((acc, p) => acc + Number(p.minutos_parada || 0), 0);
+  const horas_parada_totales = Math.round((minutos_parada_totales / 60) * 100) / 100;
+
+  // Para eficiencia de tiempo, comparamos las etapas que ya tienen horas reales registradas
+  const etapasConAvance = etapas.filter(e => Number(e.horas_reales || 0) > 0);
+  const estConAvance = etapasConAvance.reduce((acc, e) => acc + Number(e.horas_estimadas || 0), 0);
+  const realConAvance = etapasConAvance.reduce((acc, e) => acc + Number(e.horas_reales || 0), 0);
+
+  const eficiencia_tiempo_pct = realConAvance > 0
+    ? Math.round((estConAvance / realConAvance) * 1000) / 10
+    : 100.0;
+
+  const desviacion_horas = Math.round((horas_reales_totales - estConAvance) * 100) / 100;
+  const tiempo_ciclo_total_horas = Math.round((horas_reales_totales + horas_parada_totales) * 100) / 100;
+
+  return {
+    horas_estimadas_totales,
+    horas_reales_totales,
+    minutos_parada_totales,
+    horas_parada_totales,
+    eficiencia_tiempo_pct,
+    desviacion_horas,
+    tiempo_ciclo_total_horas
+  };
+}
+
+export function getCalculoTiemposProduccion(req, res) {
+  try {
+    const db = getDb();
+    const resumenPorOp = db.ordenes_produccion.map(op => {
+      const etapas = db.etapas_produccion.filter(e => e.orden_produccion_id === op.id);
+      const paradas = db.paradas_produccion.filter(p => p.orden_produccion_id === op.id);
+      const tiempos = calcularMetricasTiempos(etapas, paradas);
+      return {
+        id: op.id,
+        codigo_op: op.codigo_op,
+        estado: op.estado,
+        porcentaje_avance: op.porcentaje_avance,
+        ...tiempos
+      };
+    });
+
+    const todasEtapas = db.etapas_produccion;
+    const todasParadas = db.paradas_produccion;
+    const global = calcularMetricasTiempos(todasEtapas, todasParadas);
+
+    res.json({
+      global,
+      ordenes: resumenPorOp
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al calcular tiempos de producción: ' + err.message });
+  }
+}
+
 export function getOrdenesProduccion(req, res) {
   try {
     const db = getDb();
@@ -11,6 +70,7 @@ export function getOrdenesProduccion(req, res) {
       const etapas = db.etapas_produccion.filter(e => e.orden_produccion_id === op.id);
       const paradas = db.paradas_produccion.filter(p => p.orden_produccion_id === op.id);
       const responsable = db.usuarios.find(u => u.id === op.responsable_id);
+      const tiempos = calcularMetricasTiempos(etapas, paradas);
 
       return {
         ...op,
@@ -20,6 +80,7 @@ export function getOrdenesProduccion(req, res) {
         responsable_nombre: responsable ? responsable.nombre : 'Por asignar',
         total_etapas: etapas.length,
         etapas_finalizadas: etapas.filter(e => e.estado === 'Finalizada').length,
+        ...tiempos,
         etapas,
         paradas
       };
@@ -49,9 +110,11 @@ export function getOrdenById(req, res) {
     const paradas = db.paradas_produccion.filter(p => p.orden_produccion_id === id);
     const consumos = db.consumo_materiales ? db.consumo_materiales.filter(c => c.orden_produccion_id === id) : [];
     const calidades = db.control_calidad.filter(c => c.orden_produccion_id === id);
+    const tiempos = calcularMetricasTiempos(etapas, paradas);
 
     res.json({
       ...op,
+      ...tiempos,
       pedido,
       cliente,
       etapas,
@@ -289,5 +352,43 @@ export function addControlCalidad(req, res) {
     res.status(201).json(nuevoControl);
   } catch (err) {
     res.status(500).json({ error: 'Error al registrar calidad: ' + err.message });
+  }
+}
+
+export function updateOrdenEstado(req, res) {
+  try {
+    const id = parseInt(req.params.id);
+    const { estado, costo_real, observaciones } = req.body;
+    const db = getDb();
+
+    const idx = db.ordenes_produccion.findIndex(o => o.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Orden de producción no encontrada' });
+
+    const nowIso = new Date().toISOString();
+    if (estado) {
+      db.ordenes_produccion[idx].estado = estado;
+      if (estado === 'En Proceso' && !db.ordenes_produccion[idx].fecha_inicio_real) {
+        db.ordenes_produccion[idx].fecha_inicio_real = nowIso;
+      }
+      if (estado === 'Completada') {
+        db.ordenes_produccion[idx].porcentaje_avance = 100;
+        db.ordenes_produccion[idx].fecha_fin_real = nowIso;
+        const pedIdx = db.pedidos.findIndex(p => p.id === db.ordenes_produccion[idx].pedido_id);
+        if (pedIdx !== -1 && db.pedidos[pedIdx].estado !== 'Entregado') {
+          db.pedidos[pedIdx].estado = 'Listo para Entrega';
+        }
+      }
+    }
+    if (costo_real !== undefined) {
+      db.ordenes_produccion[idx].costo_real = parseFloat(costo_real) || 0;
+    }
+    if (observaciones !== undefined) {
+      db.ordenes_produccion[idx].observaciones = observaciones;
+    }
+
+    saveStore();
+    res.json(db.ordenes_produccion[idx]);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al actualizar estado de OP: ' + err.message });
   }
 }

@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import authRoutes from './routes/authRoutes.js';
 import clientesRoutes from './routes/clientesRoutes.js';
@@ -56,7 +58,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-if (process.env.NODE_ENV !== 'test') {
+const __filename = fileURLToPath(import.meta.url);
+const isMainModule = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename);
+
+if (isMainModule && process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log('==========================================================');
     console.log('🏢 RV Vega Servicios Generales E.I.R.L.');
