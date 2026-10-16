@@ -419,25 +419,32 @@ INSTRUCCIONES DE RESPUESTA:
 - Utiliza formato Markdown con títulos destacados (###), negritas (**texto**) y viñetas (-).
 - Termina con una 'Acción Operativa / Comercial Recomendada'.`;
 
-      const model = 'gemini-flash-latest';
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptContext }] }]
-        })
-      });
+      const candidateModels = ['gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest'];
+      for (const model of candidateModels) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 6000);
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptContext }] }]
+            }),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
 
-      if (response.ok) {
-        const data = await response.json();
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (reply) return reply;
-      } else {
-        const errText = await response.text();
-        console.warn('Gemini API call returned non-OK status:', response.status, errText.slice(0, 120));
+          if (response.ok) {
+            const data = await response.json();
+            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (reply) return reply;
+          }
+        } catch (modelErr) {
+          // Si el modelo da timeout o error temporal, se intenta el siguiente candidato
+        }
       }
     } catch (e) {
-      console.warn('Gemini API call failed, falling back to local NLP engine:', e.message);
+      // Si la conexión global con Google falla, entra en juego el motor experto local
     }
   }
 
