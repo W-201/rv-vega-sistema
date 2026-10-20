@@ -84,7 +84,8 @@ export function crearRequerimientoCompra(req, res) {
 
     res.status(201).json({
       mensaje: 'Requerimiento de compra registrado con éxito',
-      requerimiento: reqCreado
+      requerimiento: reqCreado,
+      aviso_proveedor: reqCreado.aviso_proveedor
     });
   } catch (err) {
     res.status(500).json({ error: 'Error al generar requerimiento: ' + err.message });

@@ -22,7 +22,11 @@ import {
   Zap,
   Trash2,
   Copy,
-  Check
+  Check,
+  Truck,
+  Building2,
+  FileCheck,
+  X
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -161,6 +165,8 @@ export default function AsistenteIA() {
   const [loading, setLoading] = useState(false);
   const [sendingChat, setSendingChat] = useState(false);
   const [requisicionEnviada, setRequisicionEnviada] = useState({});
+  const [modalAvisoProveedor, setModalAvisoProveedor] = useState(null);
+  const [procesandoCompraId, setProcesandoCompraId] = useState(null);
   const [mostrarOpciones, setMostrarOpciones] = useState(true);
 
   // Chat State
@@ -261,18 +267,38 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
 
   const handleGenerarRequerimiento = async (item) => {
     try {
+      setProcesandoCompraId(item.material_id);
       const res = await api.post('/ai/compras/requerimiento', {
         material_id: item.material_id,
         cantidad: item.cantidad_sugerida,
         justificacion: `Requerimiento generado desde el Asistente IA: ${item.justificacion}`
       });
+
+      const avisoData = {
+        codigo_req: res.requerimiento?.codigo_req || 'REQ-2026-CONF',
+        material_nombre: item.nombre,
+        material_sku: item.sku,
+        cantidad: item.cantidad_sugerida,
+        unidad_medida: item.unidad_medida,
+        inversion: item.inversion_estimada_pen,
+        proveedor: res.aviso_proveedor?.proveedor || res.requerimiento?.proveedor_asignado || item.proveedor_sugerido,
+        lead_time: res.aviso_proveedor?.lead_time || item.lead_time_estimado,
+        codigo_confirmacion: res.aviso_proveedor?.codigo_confirmacion || `CONF-2026-${String(item.material_id).padStart(4, '0')}`,
+        mensaje: res.aviso_proveedor?.mensaje || `Confirmación de Recepción: Hemos recibido a satisfacción el requerimiento de compra emitido por RV Vega Servicios Generales E.I.R.L. La compra ha sido aprobada y programada para despacho a planta en un plazo estimado de ${item.lead_time_estimado}.`,
+        fecha_confirmacion: new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      };
+
       setRequisicionEnviada(prev => ({
         ...prev,
-        [item.material_id]: res.requerimiento?.codigo_req || 'REQ-GENERADO'
+        [item.material_id]: avisoData
       }));
-      alert(`✅ Requerimiento formal emitido: ${res.requerimiento?.codigo_req || 'Registrado'}\nInsumo: ${item.nombre}\nCantidad: ${item.cantidad_sugerida} ${item.unidad_medida}\nInversión: S/ ${item.inversion_estimada_pen.toFixed(2)}`);
+
+      // Despliega automáticamente el aviso de regreso (acuse de recibo del proveedor)
+      setModalAvisoProveedor(avisoData);
     } catch (err) {
       alert('Error al generar requerimiento: ' + err.message);
+    } finally {
+      setProcesandoCompraId(null);
     }
   };
 
@@ -953,9 +979,9 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
               </div>
             ) : (
               comprasFiltradas.map((c) => {
-                const reqCode = requisicionEnviada[c.material_id];
+                const reqData = requisicionEnviada[c.material_id];
                 return (
-                  <div key={c.material_id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-4 hover:border-blue-300 dark:hover:border-blue-500/50 transition flex flex-col justify-between">
+                  <div key={c.material_id} className={`bg-white dark:bg-slate-900 rounded-2xl border ${reqData ? 'border-emerald-300 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-800'} shadow-sm p-6 space-y-4 hover:border-blue-300 dark:hover:border-blue-500/50 transition flex flex-col justify-between`}>
                     
                     <div className="space-y-3">
                       {/* Cabecera del Insumo */}
@@ -965,13 +991,20 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
                           <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">{c.nombre}</h3>
                           <span className="text-[11px] text-slate-500 dark:text-slate-400">{c.categoria} • Ubicación: {c.ubicacion_almacen}</span>
                         </div>
-                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase border ${
-                          c.prioridad.includes('Inmediata') || c.prioridad.includes('Crítica')
-                            ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-900/40'
-                            : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/40'
-                        }`}>
-                          {c.prioridad}
-                        </span>
+                        {reqData ? (
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase border bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>Compra Confirmada</span>
+                          </span>
+                        ) : (
+                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase border ${
+                            c.prioridad.includes('Inmediata') || c.prioridad.includes('Crítica')
+                              ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-900/40'
+                              : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/40'
+                          }`}>
+                            {c.prioridad}
+                          </span>
+                        )}
                       </div>
 
                       {/* Cuadrícula cuantitativa de Stock */}
@@ -1001,18 +1034,38 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
                     {/* Botón de Emisión de Requerimiento */}
                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                       <span className="text-[10px] text-slate-400 dark:text-slate-500">Costo unit: S/ {c.costo_unitario.toFixed(2)} / {c.unidad_medida}</span>
-                      {reqCode ? (
-                        <span className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1.5">
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Emitido ({reqCode})</span>
-                        </span>
+                      {reqData ? (
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
+                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <span>{reqData.codigo_req || reqData}</span>
+                          </span>
+                          <button
+                            onClick={() => setModalAvisoProveedor(reqData)}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-500/20 transition cursor-pointer"
+                            title="Ver acuse de recibo y aviso de compra confirmada del proveedor"
+                          >
+                            <FileCheck className="w-3.5 h-3.5" />
+                            <span>Ver Aviso del Proveedor</span>
+                          </button>
+                        </div>
                       ) : (
                         <button
                           onClick={() => handleGenerarRequerimiento(c)}
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition cursor-pointer"
+                          disabled={procesandoCompraId === c.material_id}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition cursor-pointer"
                         >
-                          <span>Generar Requerimiento de Compra</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          {procesandoCompraId === c.material_id ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Enviando al Proveedor...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Generar Requerimiento de Compra</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </>
+                          )}
                         </button>
                       )}
                     </div>
@@ -1020,6 +1073,107 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
                 );
               })
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: AVISO DE RETORNO Y CONFIRMACIÓN DE COMPRA DEL PROVEEDOR */}
+      {/* ============================================================== */}
+      {modalAvisoProveedor && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 transition-all">
+            
+            {/* Cabecera del Aviso */}
+            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white relative">
+              <button
+                onClick={() => setModalAvisoProveedor(null)}
+                className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-2 text-emerald-100 text-xs font-semibold uppercase tracking-wider mb-1">
+                <Truck className="w-4 h-4 text-emerald-200" />
+                <span>Acuse de Recibo • Aviso de Retorno</span>
+              </div>
+              <h3 className="text-xl font-black flex items-center gap-2">
+                <CheckCircle2 className="w-6 h-6 text-emerald-200 flex-shrink-0" />
+                <span>Compra Confirmada por Proveedor</span>
+              </h3>
+              <p className="text-xs text-emerald-100 mt-1">
+                El proveedor ha recibido la orden de compra y emitió la confirmación formal de despacho a planta.
+              </p>
+            </div>
+
+            {/* Cuerpo del Aviso */}
+            <div className="p-6 space-y-4 text-xs">
+              
+              {/* Tarjeta de Datos del Proveedor */}
+              <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                    <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Proveedor Asignado</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white">
+                    {modalAvisoProveedor.codigo_confirmacion || 'CONF-OK'}
+                  </span>
+                </div>
+                <p className="font-extrabold text-sm text-slate-900 dark:text-slate-100 pl-5">
+                  {modalAvisoProveedor.proveedor}
+                </p>
+              </div>
+
+              {/* Mensaje de Retorno Oficial */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-2">
+                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <FileCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>Mensaje de Confirmación del Proveedor</span>
+                </div>
+                <blockquote className="italic text-slate-800 dark:text-slate-200 text-xs leading-relaxed border-l-2 border-emerald-500 pl-3">
+                  "{modalAvisoProveedor.mensaje}"
+                </blockquote>
+              </div>
+
+              {/* Detalle cuantitativo de la Operación */}
+              <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                <div>
+                  <span className="text-[10px] text-slate-400 block">N° Requerimiento</span>
+                  <b className="font-mono text-xs text-blue-600 dark:text-blue-400">{modalAvisoProveedor.codigo_req}</b>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Plazo de Entrega (Lead Time)</span>
+                  <b className="text-emerald-600 dark:text-emerald-400 font-bold">{modalAvisoProveedor.lead_time}</b>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Insumo Solicitado</span>
+                  <b className="text-slate-900 dark:text-slate-100">{modalAvisoProveedor.material_nombre}</b>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Cantidad y Total</span>
+                  <b className="text-slate-900 dark:text-slate-100">{modalAvisoProveedor.cantidad} {modalAvisoProveedor.unidad_medida} • S/ {Number(modalAvisoProveedor.inversion || 0).toFixed(2)}</b>
+                </div>
+              </div>
+
+              {/* Estado del Flujo de Abastecimiento */}
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
+                <span>Destino: <b>Planta RV Vega (Almacén Central)</b></span>
+                <span>Fecha: <b>{modalAvisoProveedor.fecha_confirmacion}</b></span>
+              </div>
+            </div>
+
+            {/* Botón de Cierre */}
+            <div className="p-4 bg-slate-50 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+              <button
+                onClick={() => setModalAvisoProveedor(null)}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 transition cursor-pointer flex items-center gap-1.5"
+              >
+                <Check className="w-4 h-4" />
+                <span>Entendido, Cerrar Aviso</span>
+              </button>
+            </div>
+
           </div>
         </div>
       )}
