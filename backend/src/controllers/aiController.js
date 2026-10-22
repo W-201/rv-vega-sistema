@@ -3,7 +3,10 @@ import {
   sugerirComprasInteligentes, 
   responderChatAdvisor, 
   obtenerSugerenciasDinamicas, 
-  registrarRequerimientoCompra 
+  registrarRequerimientoCompra,
+  obtenerRequerimientosCompras,
+  marcarRequerimientoImpreso,
+  verificarEIngresarCompra
 } from '../services/aiService.js';
 import { getDb, saveStore } from '../config/db.js';
 
@@ -68,6 +71,15 @@ export async function chatAdvisor(req, res) {
   }
 }
 
+export function getRequerimientosCompras(req, res) {
+  try {
+    const listado = obtenerRequerimientosCompras();
+    res.json(listado);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al listar requerimientos de compra: ' + err.message });
+  }
+}
+
 export function crearRequerimientoCompra(req, res) {
   try {
     const { material_id, cantidad, justificacion } = req.body;
@@ -83,12 +95,37 @@ export function crearRequerimientoCompra(req, res) {
     );
 
     res.status(201).json({
-      mensaje: 'Requerimiento de compra registrado con éxito',
-      requerimiento: reqCreado,
-      aviso_proveedor: reqCreado.aviso_proveedor
+      mensaje: 'Orden de compra registrada con éxito',
+      requerimiento: reqCreado
     });
   } catch (err) {
     res.status(500).json({ error: 'Error al generar requerimiento: ' + err.message });
+  }
+}
+
+export function marcarRequerimientoImpresoCtrl(req, res) {
+  try {
+    const { id } = req.params;
+    const reqActualizado = marcarRequerimientoImpreso(id);
+    res.json({
+      mensaje: 'Orden de compra marcada como impresa',
+      requerimiento: reqActualizado
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al actualizar estado impreso: ' + err.message });
+  }
+}
+
+export function ingresarCompraAlmacenCtrl(req, res) {
+  try {
+    const { id } = req.params;
+    const resultado = verificarEIngresarCompra(id, req.body, req.user?.id || 1);
+    res.json({
+      mensaje: 'Compra verificada e ingresada exitosamente al inventario',
+      ...resultado
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al ingresar compra al almacén: ' + err.message });
   }
 }
 

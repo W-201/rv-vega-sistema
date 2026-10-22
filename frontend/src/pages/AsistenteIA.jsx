@@ -26,8 +26,14 @@ import {
   Truck,
   Building2,
   FileCheck,
+  FileDown,
+  FileText,
+  PackageCheck,
+  Printer,
   X
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { api } from '../services/api';
 
 /**
@@ -165,7 +171,15 @@ export default function AsistenteIA() {
   const [loading, setLoading] = useState(false);
   const [sendingChat, setSendingChat] = useState(false);
   const [requisicionEnviada, setRequisicionEnviada] = useState({});
-  const [modalAvisoProveedor, setModalAvisoProveedor] = useState(null);
+  const [requerimientos, setRequerimientos] = useState([]);
+  const [modalVerificarCompra, setModalVerificarCompra] = useState(null);
+  const [verificarForm, setVerificarForm] = useState({
+    cantidad_recibida: '',
+    costo_unitario_real: '',
+    numero_factura: '',
+    observaciones: ''
+  });
+  const [guardandoIngreso, setGuardandoIngreso] = useState(false);
   const [procesandoCompraId, setProcesandoCompraId] = useState(null);
   const [mostrarOpciones, setMostrarOpciones] = useState(true);
 
@@ -201,14 +215,30 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
   const loadData = async () => {
     try {
       setLoading(true);
-      const [dataRiesgos, dataCompras, dataSugerencias] = await Promise.all([
+      const [dataRiesgos, dataCompras, dataSugerencias, dataRequerimientos] = await Promise.all([
         api.get('/ai/riesgos').catch(() => []),
         api.get('/ai/sugerencias-compras').catch(() => []),
-        api.get('/ai/sugerencias-preguntas').catch(() => ({ dinamicas: [], categorias: [], preguntas: [] }))
+        api.get('/ai/sugerencias-preguntas').catch(() => ({ dinamicas: [], categorias: [], preguntas: [] })),
+        api.get('/ai/compras/requerimientos').catch(() => [])
       ]);
       setRiesgos(dataRiesgos || []);
       setCompras(dataCompras || []);
       setSugerenciasPreguntas(dataSugerencias || { dinamicas: [], categorias: [], preguntas: [] });
+      setRequerimientos(dataRequerimientos || []);
+
+      const reqMap = {};
+      (dataRequerimientos || []).forEach(r => {
+        if (!reqMap[r.material_id]) {
+          reqMap[r.material_id] = r;
+        }
+      });
+      // También mapear requerimientos activos directos que vengan en las sugerencias
+      (dataCompras || []).forEach(c => {
+        if (c.requerimiento_activo && !reqMap[c.material_id]) {
+          reqMap[c.material_id] = c.requerimiento_activo;
+        }
+      });
+      setRequisicionEnviada(reqMap);
     } catch (err) {
       console.error('Error cargando módulo IA:', err);
     } finally {
@@ -265,6 +295,152 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
     handleSendMessage(prompt);
   };
 
+  const handleDescargarPdfOC = async (item, req) => {
+    try {
+      const doc = new jsPDF();
+      const fechaEmision = new Date().toLocaleDateString('es-PE');
+      const horaEmision = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Membrete Institucional RV Vega
+      doc.setFontSize(14);
+      doc.setTextColor(30, 58, 138); // Azul institucional
+      doc.text('RV VEGA SERVICIOS GENERALES E.I.R.L.', 14, 18);
+
+      doc.setFontSize(8.5);
+      doc.setTextColor(90, 90, 90);
+      doc.text('RUC: 20601284751 | Fabricación de Estructuras Metálicas, Tolvas y Calderería Industrial', 14, 23);
+      doc.text('Parque Industrial Mz. B Lote 12, Villa El Salvador, Lima | Central: (01) 456-7890', 14, 27);
+
+      // Recuadro de Número de Orden
+      doc.setDrawColor(30, 58, 138);
+      doc.setLineWidth(0.6);
+      doc.setFillColor(241, 245, 249);
+      doc.roundedRect(125, 12, 71, 18, 2, 2, 'FD');
+      doc.setFontSize(8.5);
+      doc.setTextColor(30, 58, 138);
+      doc.text('ORDEN DE COMPRA / REQUERIMIENTO', 128, 18);
+      doc.setFontSize(12);
+      doc.setTextColor(15, 23, 42);
+      doc.text(req.codigo_req, 142, 26);
+
+      // Metadatos
+      doc.setFontSize(8.5);
+      doc.setTextColor(60, 60, 60);
+      doc.text(`Fecha y Hora de Emisión: ${fechaEmision} ${horaEmision}`, 14, 35);
+      doc.text(`Destino: Almacén Central de Materia Prima / Taller Principal`, 14, 40);
+      doc.text(`Estado del Requerimiento: ${req.estado ? req.estado.toUpperCase() : 'PENDIENTE DE COMPRA'}`, 125, 35);
+
+      // Tabla 1: Detalle del Material a Comprar
+      const cantComprar = req.cantidad || item.cantidad_sugerida;
+      const costoUnit = req.costo_unitario || item.costo_unitario;
+      const totalEstimado = req.costo_estimado || (cantComprar * costoUnit);
+
+      const headDetalle = [["SKU", "Descripción del Material / Insumo", "Categoría", "Cant. a Comprar", "Und.", "Costo Unit. Ref.", "Total Estimado"]];
+      const bodyDetalle = [[
+        item.sku || req.material_sku,
+        item.nombre || req.material_nombre,
+        item.categoria || req.categoria || 'Materia Prima',
+        String(cantComprar),
+        item.unidad_medida || req.unidad_medida,
+        `S/ ${Number(costoUnit).toFixed(2)}`,
+        `S/ ${Number(totalEstimado).toFixed(2)}`
+      ]];
+
+      autoTable(doc, {
+        startY: 45,
+        head: headDetalle,
+        body: bodyDetalle,
+        theme: 'grid',
+        headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+        styles: { fontSize: 8.5, cellPadding: 3.5 }
+      });
+
+      // Tabla 2: Diagnóstico de Almacén y Control de Stock
+      const yDiagnostico = doc.lastAutoTable.finalY + 6;
+      doc.setFontSize(9);
+      doc.setTextColor(30, 58, 138);
+      doc.text('1. DIAGNÓSTICO DE STOCK Y FALTANTE EN ALMACÉN', 14, yDiagnostico);
+
+      const stockActualVal = item.stock_actual !== undefined ? item.stock_actual : req.stock_actual_al_solicitar;
+      const stockMinVal = item.stock_minimo !== undefined ? item.stock_minimo : req.stock_minimo;
+      const deficitVal = item.deficit !== undefined ? item.deficit : (req.deficit_al_solicitar || Math.max(0, stockMinVal - stockActualVal));
+
+      const headStock = [["Stock Actual en Planta", "Stock Mínimo de Seguridad", "Déficit Faltante", "Ubicación Almacén", "Criticidad"]];
+      const bodyStock = [[
+        `${stockActualVal} ${item.unidad_medida || req.unidad_medida}`,
+        `${stockMinVal} ${item.unidad_medida || req.unidad_medida}`,
+        `${deficitVal} ${item.unidad_medida || req.unidad_medida}`,
+        item.ubicacion_almacen || 'Almacén Central',
+        item.prioridad || 'Alta (Bajo Mínimo)'
+      ]];
+
+      autoTable(doc, {
+        startY: yDiagnostico + 3,
+        head: headStock,
+        body: bodyStock,
+        theme: 'grid',
+        headStyles: { fillColor: [71, 85, 105], textColor: 255, fontStyle: 'bold', fontSize: 7.5 },
+        styles: { fontSize: 8, cellPadding: 3 }
+      });
+
+      // Sección 2: Justificación Analítica y Órdenes
+      const yJust = doc.lastAutoTable.finalY + 6;
+      doc.setFontSize(9);
+      doc.setTextColor(30, 58, 138);
+      doc.text('2. SUSTENTO TÉCNICO Y PRODUCCIÓN AFECTADA', 14, yJust);
+
+      doc.setFontSize(8);
+      doc.setTextColor(60, 60, 60);
+      const justTexto = req.justificacion || item.justificacion || 'Reabastecimiento de insumos para cubrir la demanda y prevenir paradas en taller.';
+      const lineasJust = doc.splitTextToSize(`Justificación del requerimiento: ${justTexto}`, 182);
+      doc.text(lineasJust, 14, yJust + 5);
+
+      const yAfectadas = yJust + 5 + (lineasJust.length * 4) + 2;
+      const ordenesTxt = item.ordenes_afectadas?.length > 0
+        ? `Órdenes de Producción en taller potencialmente impactadas: ${item.ordenes_afectadas.join(', ')}`
+        : 'Órdenes de Producción en taller potencialmente impactadas: Producción continua de planta';
+      doc.text(ordenesTxt, 14, yAfectadas);
+
+      // Cuadro de Control de Compras
+      const yInst = yAfectadas + 6;
+      doc.setDrawColor(203, 213, 225);
+      doc.setFillColor(248, 250, 252);
+      doc.roundedRect(14, yInst, 182, 16, 1.5, 1.5, 'FD');
+      doc.setFontSize(7.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text('PROCEDIMIENTO DE CONTROL Y RECEPCIÓN:', 17, yInst + 4.5);
+      doc.text('1. El encargado de compras gestionará la adquisición del material indicado para taller.', 17, yInst + 8.5);
+      doc.text('2. Al ingresar el insumo al taller, almacén debe verificar cantidades físicas y registrar el ingreso en el sistema con el N° de Factura.', 17, yInst + 12.5);
+
+      // Firmas
+      const yFirmas = yInst + 28;
+      doc.setDrawColor(148, 163, 184);
+      doc.setLineWidth(0.5);
+      doc.line(25, yFirmas, 85, yFirmas);
+      doc.line(125, yFirmas, 185, yFirmas);
+
+      doc.setFontSize(8);
+      doc.setTextColor(71, 85, 105);
+      doc.text('Encargado de Compras / Logística', 32, yFirmas + 5);
+      doc.text('Firma y Fecha de Gestión', 36, yFirmas + 9);
+
+      doc.text('Aprobado: Gerencia de Operaciones', 131, yFirmas + 5);
+      doc.text('Ing. Roberto Vega - RV Vega E.I.R.L.', 130, yFirmas + 9);
+
+      // Descargar archivo PDF
+      doc.save(`Orden_Compra_${req.codigo_req}_RV_Vega.pdf`);
+
+      // Marcar en backend como impreso
+      if (req.id) {
+        await api.patch(`/ai/compras/requerimientos/${req.id}/impreso`);
+        await loadData();
+      }
+    } catch (err) {
+      console.error("Error al generar PDF de la Orden de Compra:", err);
+      alert("Error al generar PDF: " + err.message);
+    }
+  };
+
   const handleGenerarRequerimiento = async (item) => {
     try {
       setProcesandoCompraId(item.material_id);
@@ -274,31 +450,46 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
         justificacion: `Requerimiento generado desde el Asistente IA: ${item.justificacion}`
       });
 
-      const avisoData = {
-        codigo_req: res.requerimiento?.codigo_req || 'REQ-2026-CONF',
-        material_nombre: item.nombre,
-        material_sku: item.sku,
-        cantidad: item.cantidad_sugerida,
-        unidad_medida: item.unidad_medida,
-        inversion: item.inversion_estimada_pen,
-        proveedor: res.aviso_proveedor?.proveedor || res.requerimiento?.proveedor_asignado || item.proveedor_sugerido,
-        lead_time: res.aviso_proveedor?.lead_time || item.lead_time_estimado,
-        codigo_confirmacion: res.aviso_proveedor?.codigo_confirmacion || `CONF-2026-${String(item.material_id).padStart(4, '0')}`,
-        mensaje: res.aviso_proveedor?.mensaje || `Confirmación de Recepción: Hemos recibido a satisfacción el requerimiento de compra emitido por RV Vega Servicios Generales E.I.R.L. La compra ha sido aprobada y programada para despacho a planta en un plazo estimado de ${item.lead_time_estimado}.`,
-        fecha_confirmacion: new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-      };
-
+      const nuevaOc = res.requerimiento;
       setRequisicionEnviada(prev => ({
         ...prev,
-        [item.material_id]: avisoData
+        [item.material_id]: nuevaOc
       }));
 
-      // Despliega automáticamente el aviso de regreso (acuse de recibo del proveedor)
-      setModalAvisoProveedor(avisoData);
+      // Descargar automáticamente el PDF oficial de la Orden de Compra
+      await handleDescargarPdfOC(item, nuevaOc);
+
+      await loadData();
     } catch (err) {
-      alert('Error al generar requerimiento: ' + err.message);
+      alert('Error al generar Orden de Compra: ' + err.message);
     } finally {
       setProcesandoCompraId(null);
+    }
+  };
+
+  const abrirModalVerificarCompra = (item, req) => {
+    setModalVerificarCompra({ item, req });
+    setVerificarForm({
+      cantidad_recibida: req.cantidad || item.cantidad_sugerida || 1,
+      costo_unitario_real: req.costo_unitario || item.costo_unitario || 0,
+      numero_factura: '',
+      observaciones: 'Material recibido conforme en almacén central.'
+    });
+  };
+
+  const handleConfirmarIngresoAlmacen = async (e) => {
+    e.preventDefault();
+    if (!modalVerificarCompra?.req) return;
+    try {
+      setGuardandoIngreso(true);
+      await api.post(`/ai/compras/requerimientos/${modalVerificarCompra.req.id}/ingresar`, verificarForm);
+      alert(`¡Compra verificada con éxito!\nSe ingresaron ${verificarForm.cantidad_recibida} unidades al catálogo de inventario y se registró la entrada en el Kardex.`);
+      setModalVerificarCompra(null);
+      await loadData();
+    } catch (err) {
+      alert('Error al verificar e ingresar compra: ' + err.message);
+    } finally {
+      setGuardandoIngreso(false);
     }
   };
 
@@ -979,9 +1170,18 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
               </div>
             ) : (
               comprasFiltradas.map((c) => {
-                const reqData = requisicionEnviada[c.material_id];
+                const reqData = requisicionEnviada[c.material_id] || c.requerimiento_activo;
+                const estaIngresado = reqData?.estado === 'Ingresado al Sistema';
+                const estaImpreso = reqData?.estado?.includes('Impreso');
+
                 return (
-                  <div key={c.material_id} className={`bg-white dark:bg-slate-900 rounded-2xl border ${reqData ? 'border-emerald-300 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-800'} shadow-sm p-6 space-y-4 hover:border-blue-300 dark:hover:border-blue-500/50 transition flex flex-col justify-between`}>
+                  <div key={c.material_id} className={`bg-white dark:bg-slate-900 rounded-2xl border ${
+                    estaIngresado 
+                      ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/10' 
+                      : reqData 
+                        ? 'border-blue-300 dark:border-blue-800' 
+                        : 'border-slate-200 dark:border-slate-800'
+                  } shadow-sm p-6 space-y-4 hover:border-blue-300 dark:hover:border-blue-500/50 transition flex flex-col justify-between`}>
                     
                     <div className="space-y-3">
                       {/* Cabecera del Insumo */}
@@ -991,10 +1191,20 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
                           <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">{c.nombre}</h3>
                           <span className="text-[11px] text-slate-500 dark:text-slate-400">{c.categoria} • Ubicación: {c.ubicacion_almacen}</span>
                         </div>
-                        {reqData ? (
+                        {estaIngresado ? (
                           <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase border bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                            <span>Compra Confirmada</span>
+                            <span>Ingresado a Almacén</span>
+                          </span>
+                        ) : estaImpreso ? (
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase border bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800 flex items-center gap-1">
+                            <Printer className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                            <span>OC Impresa / En Compra</span>
+                          </span>
+                        ) : reqData ? (
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase border bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                            <span>Pendiente de Compra</span>
                           </span>
                         ) : (
                           <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase border ${
@@ -1011,14 +1221,18 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
                       <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                         <div>Stock Actual: <b className={c.stock_actual <= c.stock_minimo ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}>{c.stock_actual} {c.unidad_medida}</b></div>
                         <div>Stock Mínimo: <b className="text-slate-900 dark:text-slate-100">{c.stock_minimo} {c.unidad_medida}</b></div>
-                        <div>Lote Sugerido: <b className="text-blue-700 dark:text-blue-400 font-extrabold">{c.cantidad_sugerida} {c.unidad_medida}</b></div>
-                        <div>Inversión Sugerida: <b className="text-slate-900 dark:text-slate-100">S/ {c.inversion_estimada_pen.toFixed(2)}</b></div>
+                        <div>Lote a Comprar: <b className="text-blue-700 dark:text-blue-400 font-extrabold">{c.cantidad_sugerida} {c.unidad_medida}</b></div>
+                        <div>Inversión Estimada: <b className="text-slate-900 dark:text-slate-100">S/ {c.inversion_estimada_pen.toFixed(2)}</b></div>
                       </div>
 
-                      {/* Información de Proveedor y Lead Time */}
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex justify-between border-t border-slate-100 dark:border-slate-800 pt-2">
-                        <span>Proveedor habitual: <b className="text-slate-700 dark:text-slate-300">{c.proveedor_sugerido}</b></span>
-                        <span>Plazo de entrega: <b className="text-slate-700 dark:text-slate-300">{c.lead_time_estimado}</b></span>
+                      {/* Estado del Flujo y Déficit */}
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap items-center justify-between gap-1 border-t border-slate-100 dark:border-slate-800 pt-2">
+                        <span>Déficit de inventario: <b className="text-red-600 dark:text-red-400 font-bold">{c.deficit} {c.unidad_medida}</b></span>
+                        {reqData ? (
+                          <span>Orden: <b className="font-mono text-blue-600 dark:text-blue-400 font-bold">{reqData.codigo_req}</b></span>
+                        ) : (
+                          <span className="text-slate-400 dark:text-slate-500">Sin orden emitida</span>
+                        )}
                       </div>
 
                       {/* Justificación Analítica */}
@@ -1031,26 +1245,56 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
                       </div>
                     </div>
 
-                    {/* Botón de Emisión de Requerimiento */}
-                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">Costo unit: S/ {c.costo_unitario.toFixed(2)} / {c.unidad_medida}</span>
-                      {reqData ? (
-                        <div className="flex items-center gap-2">
-                          <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
-                            <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            <span>{reqData.codigo_req || reqData}</span>
+                    {/* Botones de Gestión de Compra */}
+                    {estaIngresado ? (
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 w-full pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300 font-semibold">
+                          <PackageCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span>Recibido: <b>{reqData.cantidad_recibida || reqData.cantidad} {c.unidad_medida}</b> • Doc: <b>{reqData.numero_factura || reqData.codigo_req}</b></span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDescargarPdfOC(c, reqData)}
+                          className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                          title="Descargar copia oficial de la Orden de Compra"
+                        >
+                          <FileDown className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Copia PDF</span>
+                        </button>
+                      </div>
+                    ) : reqData ? (
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 w-full pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                            Costo ref: S/ {c.costo_unitario.toFixed(2)} / {c.unidad_medida}
                           </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
                           <button
-                            onClick={() => setModalAvisoProveedor(reqData)}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-500/20 transition cursor-pointer"
-                            title="Ver acuse de recibo y aviso de compra confirmada del proveedor"
+                            type="button"
+                            onClick={() => handleDescargarPdfOC(c, reqData)}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                            title="Descargar e imprimir la Orden de Compra en PDF"
                           >
-                            <FileCheck className="w-3.5 h-3.5" />
-                            <span>Ver Aviso del Proveedor</span>
+                            <FileDown className="w-3.5 h-3.5" />
+                            <span>{reqData.impreso ? 'Reimprimir PDF' : 'Descargar PDF'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => abrirModalVerificarCompra(c, reqData)}
+                            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-500/20 transition cursor-pointer"
+                            title="Verificar si ya se compró el material e ingresarlo al almacén"
+                          >
+                            <PackageCheck className="w-4 h-4" />
+                            <span>Verificar Compra e Ingresar</span>
                           </button>
                         </div>
-                      ) : (
+                      </div>
+                    ) : (
+                      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">Costo unit: S/ {c.costo_unitario.toFixed(2)} / {c.unidad_medida}</span>
                         <button
+                          type="button"
                           onClick={() => handleGenerarRequerimiento(c)}
                           disabled={procesandoCompraId === c.material_id}
                           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition cursor-pointer"
@@ -1058,17 +1302,18 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
                           {procesandoCompraId === c.material_id ? (
                             <>
                               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                              <span>Enviando al Proveedor...</span>
+                              <span>Generando Orden...</span>
                             </>
                           ) : (
                             <>
-                              <span>Generar Requerimiento de Compra</span>
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>Generar Orden de Compra (PDF)</span>
                               <ArrowRight className="w-3.5 h-3.5" />
                             </>
                           )}
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -1078,101 +1323,148 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
       )}
 
       {/* ============================================================== */}
-      {/* MODAL: AVISO DE RETORNO Y CONFIRMACIÓN DE COMPRA DEL PROVEEDOR */}
+      {/* MODAL: VERIFICACIÓN DE COMPRA E INGRESO AL ALMACÉN             */}
       {/* ============================================================== */}
-      {modalAvisoProveedor && (
+      {modalVerificarCompra && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 transition-all">
             
-            {/* Cabecera del Aviso */}
+            {/* Cabecera del Modal */}
             <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white relative">
               <button
-                onClick={() => setModalAvisoProveedor(null)}
+                type="button"
+                onClick={() => setModalVerificarCompra(null)}
                 className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
 
               <div className="flex items-center gap-2 text-emerald-100 text-xs font-semibold uppercase tracking-wider mb-1">
-                <Truck className="w-4 h-4 text-emerald-200" />
-                <span>Acuse de Recibo • Aviso de Retorno</span>
+                <PackageCheck className="w-4 h-4 text-emerald-200" />
+                <span>Recepción de Materiales • Almacén Central</span>
               </div>
               <h3 className="text-xl font-black flex items-center gap-2">
-                <CheckCircle2 className="w-6 h-6 text-emerald-200 flex-shrink-0" />
-                <span>Compra Confirmada por Proveedor</span>
+                <span>Verificar Compra e Ingresar a Almacén</span>
               </h3>
               <p className="text-xs text-emerald-100 mt-1">
-                El proveedor ha recibido la orden de compra y emitió la confirmación formal de despacho a planta.
+                Orden de Compra: <span className="font-mono font-bold text-white">{modalVerificarCompra.req.codigo_req}</span>
               </p>
             </div>
 
-            {/* Cuerpo del Aviso */}
-            <div className="p-6 space-y-4 text-xs">
+            {/* Formulario de Verificación */}
+            <form onSubmit={handleConfirmarIngresoAlmacen} className="p-6 space-y-4 text-xs">
               
-              {/* Tarjeta de Datos del Proveedor */}
-              <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
-                    <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>Proveedor Asignado</span>
+              {/* Resumen del Material */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
+                    {modalVerificarCompra.item.sku || modalVerificarCompra.req.material_sku}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white">
-                    {modalAvisoProveedor.codigo_confirmacion || 'CONF-OK'}
+                  <span className="text-[11px] text-slate-500">
+                    Solicitado: <b className="text-slate-800 dark:text-slate-200">{modalVerificarCompra.req.cantidad} {modalVerificarCompra.item.unidad_medida || modalVerificarCompra.req.unidad_medida}</b>
                   </span>
                 </div>
-                <p className="font-extrabold text-sm text-slate-900 dark:text-slate-100 pl-5">
-                  {modalAvisoProveedor.proveedor}
+                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                  {modalVerificarCompra.item.nombre || modalVerificarCompra.req.material_nombre}
+                </h4>
+                <p className="text-[11px] text-slate-500">
+                  {modalVerificarCompra.item.categoria || modalVerificarCompra.req.categoria} • Ubicación: {modalVerificarCompra.item.ubicacion_almacen || 'Almacén Central'}
                 </p>
               </div>
 
-              {/* Mensaje de Retorno Oficial */}
-              <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-2">
-                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                  <FileCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                  <span>Mensaje de Confirmación del Proveedor</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Cantidad Recibida *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    value={verificarForm.cantidad_recibida}
+                    onChange={(e) => setVerificarForm({ ...verificarForm, cantidad_recibida: e.target.value })}
+                    className="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-emerald-500 font-bold"
+                  />
                 </div>
-                <blockquote className="italic text-slate-800 dark:text-slate-200 text-xs leading-relaxed border-l-2 border-emerald-500 pl-3">
-                  "{modalAvisoProveedor.mensaje}"
-                </blockquote>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Costo Unitario Real (S/)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={verificarForm.costo_unitario_real}
+                    onChange={(e) => setVerificarForm({ ...verificarForm, costo_unitario_real: e.target.value })}
+                    className="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
               </div>
 
-              {/* Detalle cuantitativo de la Operación */}
-              <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300">
-                <div>
-                  <span className="text-[10px] text-slate-400 block">N° Requerimiento</span>
-                  <b className="font-mono text-xs text-blue-600 dark:text-blue-400">{modalAvisoProveedor.codigo_req}</b>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Plazo de Entrega (Lead Time)</span>
-                  <b className="text-emerald-600 dark:text-emerald-400 font-bold">{modalAvisoProveedor.lead_time}</b>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Insumo Solicitado</span>
-                  <b className="text-slate-900 dark:text-slate-100">{modalAvisoProveedor.material_nombre}</b>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Cantidad y Total</span>
-                  <b className="text-slate-900 dark:text-slate-100">{modalAvisoProveedor.cantidad} {modalAvisoProveedor.unidad_medida} • S/ {Number(modalAvisoProveedor.inversion || 0).toFixed(2)}</b>
-                </div>
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  N° Factura / Boleta / Guía de Compra *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. F001-004523 o Guía GR-002-8841"
+                  value={verificarForm.numero_factura}
+                  onChange={(e) => setVerificarForm({ ...verificarForm, numero_factura: e.target.value })}
+                  className="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                />
               </div>
 
-              {/* Estado del Flujo de Abastecimiento */}
-              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
-                <span>Destino: <b>Planta RV Vega (Almacén Central)</b></span>
-                <span>Fecha: <b>{modalAvisoProveedor.fecha_confirmacion}</b></span>
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Observaciones de Recepción / Inspección Física
+                </label>
+                <textarea
+                  rows="2"
+                  placeholder="Material conforme, dimensiones verificadas, certificado de calidad recibido..."
+                  value={verificarForm.observaciones}
+                  onChange={(e) => setVerificarForm({ ...verificarForm, observaciones: e.target.value })}
+                  className="w-full p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-emerald-500"
+                />
               </div>
-            </div>
 
-            {/* Botón de Cierre */}
-            <div className="p-4 bg-slate-50 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
-              <button
-                onClick={() => setModalAvisoProveedor(null)}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 transition cursor-pointer flex items-center gap-1.5"
-              >
-                <Check className="w-4 h-4" />
-                <span>Entendido, Cerrar Aviso</span>
-              </button>
-            </div>
+              <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-[11px] text-emerald-900 dark:text-emerald-300 flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span>
+                  Al confirmar, se aumentará automáticamente el <strong>Stock Actual</strong> en el inventario y se registrará un movimiento oficial de <strong>ENTRADA en el Kardex</strong>.
+                </span>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModalVerificarCompra(null)}
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={guardandoIngreso}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-xl font-bold shadow-md shadow-emerald-500/20 transition cursor-pointer flex items-center gap-1.5"
+                >
+                  {guardandoIngreso ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Ingresando a Almacén...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Confirmar Compra e Ingresar</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </form>
 
           </div>
         </div>

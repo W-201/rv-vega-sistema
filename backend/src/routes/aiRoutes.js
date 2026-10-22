@@ -5,6 +5,9 @@ import {
   getSugerenciasPreguntas,
   chatAdvisor,
   crearRequerimientoCompra,
+  getRequerimientosCompras,
+  marcarRequerimientoImpresoCtrl,
+  ingresarCompraAlmacenCtrl,
   getChatHistorial,
   limpiarChatHistorial
 } from '../controllers/aiController.js';
@@ -19,7 +22,10 @@ router.get('/riesgos', getPrediccionRiesgos);
 
 // 3.6.3.3 Motor de recomendación analítica para compras asistidas
 router.get('/sugerencias-compras', getSugerenciasCompras);
+router.get('/compras/requerimientos', getRequerimientosCompras);
 router.post('/compras/requerimiento', crearRequerimientoCompra);
+router.patch('/compras/requerimientos/:id/impreso', marcarRequerimientoImpresoCtrl);
+router.post('/compras/requerimientos/:id/ingresar', ingresarCompraAlmacenCtrl);
 
 // 3.6.3.4 Sugerencias dinámicas de preguntas frecuentes (cuellos de botella, OEE, etc.)
 router.get('/sugerencias-preguntas', getSugerenciasPreguntas);

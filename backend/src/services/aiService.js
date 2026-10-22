@@ -189,25 +189,14 @@ export function sugerirComprasInteligentes() {
         diasAgotamiento = 4;
       }
 
-      // Proveedor sugerido según categoría
-      let proveedorSugerido = 'Distribuidor Mayorista Local';
-      let leadTimeHoras = 48;
-      if (m.categoria.includes('Metales') || m.categoria.includes('Perfiles')) {
-        proveedorSugerido = 'Corporación Aceros Arequipa S.A. / Siderperú';
-        leadTimeHoras = 48;
-      } else if (m.categoria.includes('Soldadura') || m.categoria.includes('Consumibles')) {
-        proveedorSugerido = 'Soldex S.A. / Lincoln Electric del Perú';
-        leadTimeHoras = 24;
-      } else if (m.categoria.includes('Pintura') || m.categoria.includes('Acabados')) {
-        proveedorSugerido = 'Qroma (Pinturas Vencedor / CPP)';
-        leadTimeHoras = 24;
-      } else if (m.categoria.includes('Fijaciones')) {
-        proveedorSugerido = 'Würth del Perú / Tornillería Industrial';
-        leadTimeHoras = 24;
-      }
-
       // Detectar órdenes de producción potencialmente afectadas
       const ordenesAfectadas = opsActivas.map(o => o.codigo_op);
+
+      // Requerimiento activo para este material (si existe)
+      const reqActivo = (db.requerimientos_compras || [])
+        .slice()
+        .reverse()
+        .find(r => r.material_id === m.id);
 
       return {
         material_id: m.id,
@@ -224,9 +213,8 @@ export function sugerirComprasInteligentes() {
         inversion_estimada_pen: inversionEstimada,
         prioridad,
         dias_agotamiento_estimados: diasAgotamiento,
-        lead_time_estimado: `${leadTimeHoras} horas`,
-        proveedor_sugerido: proveedorSugerido,
         ordenes_afectadas: ordenesAfectadas,
+        requerimiento_activo: reqActivo || null,
         justificacion: stockActual === 0
           ? `Alerta crítica de desabastecimiento: Insumo en quiebre total (0 ${m.unidad_medida}). Cualquier trabajo de ${m.categoria} paralizará la línea inmediatamente.`
           : stockActual <= stockMinimo
@@ -248,7 +236,7 @@ export function sugerirComprasInteligentes() {
 }
 
 /**
- * Registra un requerimiento formal de compra asistida
+ * Registra una Orden de Compra / Requerimiento formal desde Compras Asistidas
  */
 export function registrarRequerimientoCompra(material_id, cantidad, justificacion, usuario_id = 1) {
   const db = getDb();
@@ -261,34 +249,9 @@ export function registrarRequerimientoCompra(material_id, cantidad, justificacio
 
   const newId = db.requerimientos_compras.length > 0 ? Math.max(...db.requerimientos_compras.map(r => r.id)) + 1 : 1;
   const year = new Date().getFullYear();
-  const codigo_req = `REQ-${year}-${String(newId).padStart(4, '0')}`;
+  const codigo_req = `OC-${year}-${String(newId).padStart(4, '0')}`;
   const cant = parseFloat(cantidad) || 1;
   const costoEstimado = Math.round(cant * Number(mat.costo_unitario) * 100) / 100;
-
-  let proveedor = 'Distribuidor Mayorista Industrial Local';
-  let leadTime = '48 horas';
-  if (mat.categoria?.includes('Metales') || mat.categoria?.includes('Perfiles')) {
-    proveedor = 'Corporación Aceros Arequipa S.A. / Siderperú';
-    leadTime = '48 horas';
-  } else if (mat.categoria?.includes('Soldadura') || mat.categoria?.includes('Consumibles')) {
-    proveedor = 'Soldex S.A. / Lincoln Electric del Perú';
-    leadTime = '24 horas';
-  } else if (mat.categoria?.includes('Pintura') || mat.categoria?.includes('Acabados')) {
-    proveedor = 'Qroma (Pinturas Vencedor / CPP)';
-    leadTime = '24 horas';
-  } else if (mat.categoria?.includes('Fijaciones')) {
-    proveedor = 'Würth del Perú / Tornillería Industrial';
-    leadTime = '24 horas';
-  }
-
-  const aviso_proveedor = {
-    proveedor,
-    lead_time: leadTime,
-    estado_confirmacion: 'Compra Confirmada por Proveedor',
-    codigo_confirmacion: `CONF-${year}-${String(newId).padStart(4, '0')}`,
-    mensaje: `Confirmación de Recepción: Hemos recibido a satisfacción el requerimiento ${codigo_req} emitido por RV Vega Servicios Generales E.I.R.L. La orden por ${cant} ${mat.unidad_medida} de ${mat.nombre} ha sido aprobada y programada para despacho a planta en un plazo estimado de ${leadTime}.`,
-    fecha_confirmacion: new Date().toISOString()
-  };
 
   const nuevoRequerimiento = {
     id: newId,
@@ -296,14 +259,23 @@ export function registrarRequerimientoCompra(material_id, cantidad, justificacio
     material_id: mat.id,
     material_sku: mat.codigo_sku,
     material_nombre: mat.nombre,
+    categoria: mat.categoria,
     unidad_medida: mat.unidad_medida,
+    stock_actual_al_solicitar: Number(mat.stock_actual),
+    stock_minimo: Number(mat.stock_minimo),
+    deficit_al_solicitar: Math.max(0, Math.round((Number(mat.stock_minimo) - Number(mat.stock_actual)) * 10) / 10),
     cantidad: cant,
-    costo_unitario: mat.costo_unitario,
+    costo_unitario: Number(mat.costo_unitario),
     costo_estimado: costoEstimado,
-    proveedor_asignado: proveedor,
-    justificacion: justificacion || 'Generado automáticamente por el Asistente IA de Compras Asistidas',
-    estado: 'Compra Confirmada / En Despacho',
-    aviso_proveedor,
+    justificacion: justificacion || 'Orden de compra generada desde Compras Asistidas para reabastecimiento de planta.',
+    estado: 'Pendiente de Compra', // 'Pendiente de Compra' | 'Impreso / En Gestión de Compra' | 'Ingresado al Sistema'
+    impreso: false,
+    fecha_impresion: null,
+    cantidad_recibida: null,
+    costo_unitario_real: null,
+    numero_factura: null,
+    observaciones_ingreso: null,
+    fecha_ingreso: null,
     solicitado_por: usuario_id,
     fecha: new Date().toISOString().split('T')[0],
     creado_en: new Date().toISOString()
@@ -313,6 +285,91 @@ export function registrarRequerimientoCompra(material_id, cantidad, justificacio
   saveStore();
 
   return nuevoRequerimiento;
+}
+
+/**
+ * Obtiene el listado de requerimientos y órdenes de compra generadas
+ */
+export function obtenerRequerimientosCompras() {
+  const db = getDb();
+  return (db.requerimientos_compras || []).slice().reverse();
+}
+
+/**
+ * Marca una orden de compra como impresa / descargada en PDF
+ */
+export function marcarRequerimientoImpreso(id) {
+  const db = getDb();
+  const req = (db.requerimientos_compras || []).find(r => r.id === parseInt(id));
+  if (!req) throw new Error('Requerimiento no encontrado');
+  req.impreso = true;
+  req.fecha_impresion = new Date().toISOString();
+  if (req.estado === 'Pendiente de Compra') {
+    req.estado = 'Impreso / En Gestión de Compra';
+  }
+  saveStore();
+  return req;
+}
+
+/**
+ * Verifica la compra física del material e ingresa el stock al sistema y al Kardex
+ */
+export function verificarEIngresarCompra(id, datos, usuario_id = 1) {
+  const db = getDb();
+  const req = (db.requerimientos_compras || []).find(r => r.id === parseInt(id));
+  if (!req) throw new Error('Requerimiento de compra no encontrado');
+
+  const mat = (db.materiales || []).find(m => m.id === req.material_id);
+  if (!mat) throw new Error('Material no encontrado en inventario');
+
+  const cantRecibida = parseFloat(datos.cantidad_recibida) || req.cantidad;
+  const costoReal = datos.costo_unitario_real !== undefined && !isNaN(parseFloat(datos.costo_unitario_real)) && parseFloat(datos.costo_unitario_real) > 0
+    ? parseFloat(datos.costo_unitario_real)
+    : req.costo_unitario;
+  const docReferencia = datos.numero_factura?.trim() || req.codigo_req;
+  const notas = datos.observaciones?.trim() || 'Ingreso por compra asistida verificada';
+
+  // 1. Aumentar stock_actual en catálogo de materiales
+  mat.stock_actual = Math.round((Number(mat.stock_actual) + cantRecibida) * 100) / 100;
+  if (costoReal > 0) {
+    mat.costo_unitario = costoReal;
+  }
+
+  // 2. Registrar movimiento de Kardex (ENTRADA)
+  if (!db.movimientos_inventario) db.movimientos_inventario = [];
+  const movId = db.movimientos_inventario.length > 0
+    ? Math.max(...db.movimientos_inventario.map(m => m.id)) + 1
+    : 1;
+
+  const nuevoMovimiento = {
+    id: movId,
+    material_id: mat.id,
+    tipo_movimiento: 'ENTRADA',
+    cantidad: cantRecibida,
+    costo_unitario: costoReal,
+    referencia_documento: docReferencia,
+    motivo: `Ingreso por Orden de Compra ${req.codigo_req}: ${notas}`,
+    registrado_por: usuario_id,
+    fecha: new Date().toISOString()
+  };
+  db.movimientos_inventario.push(nuevoMovimiento);
+
+  // 3. Actualizar requerimiento de compra
+  req.estado = 'Ingresado al Sistema';
+  req.cantidad_recibida = cantRecibida;
+  req.costo_unitario_real = costoReal;
+  req.numero_factura = docReferencia;
+  req.observaciones_ingreso = notas;
+  req.fecha_ingreso = new Date().toISOString();
+  req.movimiento_id = movId;
+
+  saveStore();
+
+  return {
+    requerimiento: req,
+    material: mat,
+    movimiento: nuevoMovimiento
+  };
 }
 
 /**
