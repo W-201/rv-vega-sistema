@@ -39,12 +39,12 @@ export function getSugerenciasPreguntas(req, res) {
 
 export async function chatAdvisor(req, res) {
   try {
-    const { mensaje } = req.body;
+    const { mensaje, historial } = req.body;
     if (!mensaje || !mensaje.trim()) {
       return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
     }
 
-    const respuesta = await responderChatAdvisor(mensaje);
+    const respuesta = await responderChatAdvisor(mensaje, Array.isArray(historial) ? historial : []);
 
     const db = getDb();
     if (!db.ai_logs) db.ai_logs = [];

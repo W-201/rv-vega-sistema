@@ -445,7 +445,7 @@ export function obtenerSugerenciasDinamicas() {
 /**
  * 3.6.3.1 Backend para el procesamiento del lenguaje natural (chat) del copiloto inteligente
  */
-export async function responderChatAdvisor(mensajeUsuario) {
+export async function responderChatAdvisor(mensajeUsuario, historial = []) {
   const db = getDb();
   const apiKey = process.env.GEMINI_API_KEY;
 
@@ -479,6 +479,16 @@ export async function responderChatAdvisor(mensajeUsuario) {
   }).join('\n');
   const totalVentas = (db.pedidos || []).reduce((acc, p) => acc + (Number(p.total) || 0), 0);
 
+  // Formatear historial conversacional previo para contexto continuo
+  let historialContexto = '';
+  if (Array.isArray(historial) && historial.length > 0) {
+    historialContexto = historial.slice(-6).map(h => {
+      const remitente = h.remitente === 'usuario' ? 'Usuario' : 'Copiloto';
+      const txt = (h.texto || '').length > 600 ? h.texto.substring(0, 600) + '...' : h.texto;
+      return `${remitente}: ${txt}`;
+    }).join('\n\n');
+  }
+
   // 2. Si existe API KEY de Gemini, intentamos llamada directa LLM
   if (apiKey) {
     try {
@@ -494,20 +504,21 @@ ${listaPedidos}
 - Paradas no programadas recientes: ${paradas.map(p => `${p.motivo} (${p.minutos_parada} min)`).join('; ') || 'Ninguna'}
 - Insumos en Quiebre / Stock Crítico: ${materialesCriticos.map(m => `${m.nombre} (Stock: ${m.stock_actual} ${m.unidad_medida}, Mínimo: ${m.stock_minimo})`).join('; ') || 'Stock óptimo'}
 
-PREGUNTA DEL USUARIO:
+${historialContexto ? `HISTORIAL DE LA CONVERSACIÓN PREVIA (Mantén continuidad con las preguntas y respuestas anteriores):\n${historialContexto}\n\n` : ''}PREGUNTA ACTUAL DEL USUARIO:
 "${mensajeUsuario}"
 
 INSTRUCCIONES DE RESPUESTA:
 - Responde de forma técnica, ejecutiva, accionable y estructurada en español.
+- Si el usuario pregunta qué puede hacer, cómo mejorar, o pide soluciones, proporciona un plan de acción concreto y por pasos fundamentado en los datos reales de planta.
 - Si el usuario pregunta sobre ventas, pedidos, montos o facturación, usa la lista de ventas detallada arriba con nombres de clientes, códigos de pedidos y montos en Soles (S/).
 - Utiliza formato Markdown con títulos destacados (###), negritas (**texto**) y viñetas (-).
 - Termina con una 'Acción Operativa / Comercial Recomendada'.`;
 
-      const candidateModels = ['gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest'];
+      const candidateModels = ['gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-2.5-flash-lite'];
       for (const model of candidateModels) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 6000);
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos para respuesta completa
           const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -534,6 +545,117 @@ INSTRUCCIONES DE RESPUESTA:
 
   // 3. Motor de Procesamiento de Lenguaje Natural (PLN) Heurístico y Contextual Local
   const text = mensajeUsuario.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // 3.0 Detección de intenciones de Mejora, Solución, Plan de Acción o Recomendaciones
+  const esPreguntaMejora = text.includes('mejorar') || 
+                           text.includes('solucion') || 
+                           text.includes('soluciones') || 
+                           text.includes('accion') || 
+                           text.includes('acciones') || 
+                           text.includes('que puedo hacer') || 
+                           text.includes('que hago') || 
+                           text.includes('como hago') || 
+                           text.includes('plan') || 
+                           text.includes('optimizar') || 
+                           text.includes('recomienda') || 
+                           text.includes('recomendacion') || 
+                           text.includes('recomiendas') || 
+                           text.includes('resolver') || 
+                           text.includes('estrategia') || 
+                           text.includes('como corregir') || 
+                           text.includes('medidas');
+
+  if (esPreguntaMejora) {
+    const ultimosMensajes = Array.isArray(historial) ? historial.slice(-4) : [];
+    const ultimoContexto = ultimosMensajes.map(m => (m.texto || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")).join(' ');
+
+    // Caso A: El usuario venía hablando de cuellos de botella / cabina de pintura / paradas
+    if (ultimoContexto.includes('cuello') || ultimoContexto.includes('botella') || ultimoContexto.includes('parada') || ultimoContexto.includes('pintura') || text.includes('cuello') || text.includes('parada')) {
+      return `### 🛠️ Plan Operativo de Desestrangulamiento y Eliminación de Cuellos de Botella
+
+Para eliminar los retrasos en las estaciones críticas detectadas en el taller de RV Vega, aplica este plan de contingencia inmediata:
+
+1. **Desestrangulamiento de la Cabina de Pintura (Mayor Restricción)**:
+   - **Climatización y Curado Forzado**: Activar los termoventiladores auxiliares en la cabina para mitigar la humedad ambiental (>80%) y acelerar el tiempo de secado epóxico de 14h a 8h.
+   - **Lotes por Colores / Turnos**: Agrupar piezas por tonalidad y aplicar primeras manos al final del turno vespertino para aprovechar el curado nocturno pasivo sin ocupar horas operativas de día.
+
+2. **Eliminación de Paradas por Materiales (Soldadura MIG)**:
+   - **Kitting Previo en Puesto**: Implementar una política de *"Carrete de Reserva Obligatorio"* en cada puesto de soldadura. Ningún soldador debe arrancar turno sin 1 carrete ER70S-6 nuevo colocado en el rack auxiliar.
+   - **Reposición Automática**: Al perforar los 15 kg de inventario en almacén, emitir inmediatamente la orden de compra antes de que el taller se quede en cero.
+
+3. **Reasignación Dinámica de Mano de Obra**:
+   - Transferir temporalmente a 1 técnico mecanizador de apoyo hacia el área de limpieza y preparación superficial para que la cabina de pintura reciba piezas listas y continuas.
+
+---
+💡 **Meta Operativa**:
+Reducir los 270 minutos acumulados de paradas no programadas a menos de 45 minutos semanales, recuperando un **+12% en disponibilidad de taller**.`;
+    }
+
+    // Caso B: El usuario venía hablando de OEE o eficiencia
+    if (ultimoContexto.includes('oee') || ultimoContexto.includes('eficiencia') || text.includes('oee')) {
+      return `### 📈 Hoja de Ruta para Elevar el OEE de Planta al 85% (Clase Mundial)
+
+Actualmente el OEE de RV Vega se sitúa en **${oeeGlobal}%**. El factor más castigado es la **Disponibilidad (${disponibilidad}%)** debido a los **${totalMinutosParada} minutos de paradas no programadas**:
+
+1. **Ataque Inmediato a la Disponibilidad (Impacto +8%)**:
+   - Eliminar el 100% de paradas por desabastecimiento de alambre MIG y discos manteniendo un stock de seguridad de 20 kg.
+   - Implementar mantenimiento preventivo autónomo (limpieza de toberas, calibración de alimentadores de soldadura) en los primeros 10 minutos de cada jornada.
+
+2. **Optimización del Rendimiento (Impacto +4%)**:
+   - Estandarizar plantillas de trazado y corte en el área de habilitado para acortar tiempos de preparación en un 15%.
+   - Reducir tiempos muertos entre cambio de orden de trabajo (SMED simplificado).
+
+3. **Mantenimiento de Calidad al 99%**:
+   - Mantener la merma actual del ${merma}% mediante control dimensional en banco antes de liberar a soldadura definitiva.
+
+---
+🎯 **Impacto Proyectado**:
+Al reducir las paradas a la mitad, el OEE subirá de **${oeeGlobal}% a 86.4%**, incrementando la capacidad de facturación de la planta sin necesidad de horas extras.`;
+    }
+
+    // Caso C: El usuario venía hablando de compras o stock
+    if (ultimoContexto.includes('compra') || ultimoContexto.includes('stock') || ultimoContexto.includes('insumo') || text.includes('compra') || text.includes('stock')) {
+      return `### 📦 Plan de Acción para Reabastecimiento Crítico de Planta
+
+Para resolver el desabastecimiento de insumos y asegurar el flujo productivo sin interrupciones:
+
+1. **Emisión y Descarga de Órdenes de Compra**:
+   - Ingresa a la pestaña **Compras Asistidas** en este módulo.
+   - Genera y descarga el PDF de Orden de Compra para **Alambre Tubular MIG ER70S-6 (30 kg)** y **Esmalte Poliuretano (15 gal)**.
+2. **Priorización de Despacho de Proveedores**:
+   - Solicitar entrega express en taller dentro de las próximas 24 horas para evitar la paralización de la orden OP-2026-003.
+3. **Verificación de Ingreso Físico**:
+   - Una vez recibido el material en almacén, hacer clic en *"Verificar e Ingresar a Almacén"* para que el stock se actualice inmediatamente en el sistema y se registre en el Kardex.
+
+---
+💡 **Acción Inmediata**:
+Dirígete a la pestaña **Compras Asistidas** para tramitar los insumos en quiebre hoy mismo.`;
+    }
+
+    // Caso D: Plan Integral de Mejora Operativa (General / Holístico)
+    return `### 🚀 Plan de Acción Maestro para Optimización de Planta en RV Vega
+
+Para mejorar el rendimiento general del taller, erradicar cuellos de botella y garantizar entregas a tiempo, sigue estas 4 acciones priorizadas:
+
+1. **1. Resolver la Restricción Principal (Cabina de Pintura)**:
+   - Implementar secado asistido con aire caliente o ventilación forzada en la cabina para reducir los tiempos de curado epóxico de 14h a 8h.
+   - Organizar las aplicaciones de pintura al final del turno tarde para dejar secando las estructuras durante la noche.
+
+2. **2. Asegurar el Abastecimiento Crítico (Alambre MIG & Pintura)**:
+   - Generar las Órdenes de Compra asistidas para reponer el Alambre Tubular MIG ER70S-6 (30 kg) y el Esmalte Poliuretano (15 gal).
+   - Establecer una regla de *"cero quiebres"*: reordenar automáticamente cuando el stock baje a 15 kg.
+
+3. **3. Proteger la Entrega de Órdenes Críticas (OP-2026-003)**:
+   - La orden para *Logística Integral Peruana S.A.C.* se encuentra al 70% de avance.
+   - Priorizar la inspección de Control de Calidad apenas concluya el acabado de pintura para despachar sin penalizaciones.
+
+4. **4. Maximizar el OEE de Planta**:
+   - Elevar la Disponibilidad del **${disponibilidad}% actual a >90%** eliminando paradas por falta de insumos consumibles en puesto.
+
+---
+💡 **Paso Siguiente Recomendado**:
+¿Deseas que analicemos en detalle la situación de una estación específica (Pintura, Soldadura, Habilitado) o revisar la orden de compra sugerida?`;
+  }
 
   // Consulta específica sobre Ventas, Facturación o Pedidos
   if (text.includes('venta') || text.includes('ventas') || text.includes('facturacion') || text.includes('facturado') || text.includes('pedido') || text.includes('pedidos') || text.includes('ingreso') || text.includes('ingresos') || text.includes('cotizacion')) {
@@ -693,7 +815,16 @@ Actualmente el equipo operativo en taller de RV Vega se encuentra distribuido de
    - Programado para inspección dimensional y de película seca (DFT) en Control de Calidad.`;
   }
 
-  // G. Consulta General / Saludo / Menú de Capacidades
+  // G. Respuestas de cortesía y confirmación rápida
+  if (text === 'gracias' || text.includes('muchas gracias') || text === 'ok' || text === 'vale' || text === 'entendido' || text === 'perfecto' || text === 'excelente' || text === 'de acuerdo') {
+    return `### 👍 ¡A tu servicio!
+
+Estoy a tu entera disposición para seguir monitoreando las operaciones de taller, las alertas de inventario y los compromisos de entrega de RV Vega.
+
+¿Necesitas profundizar en alguna orden específica, revisar los cuellos de botella o analizar otra métrica de la planta?`;
+  }
+
+  // H. Consulta General / Saludo / Menú de Capacidades
   return `### 👋 ¡Hola! Soy el Copiloto Inteligente de Planta de RV Vega
 
 Estoy monitoreando en tiempo real las operaciones metalmecánicas del taller, los niveles de inventario y los compromisos de entrega con los clientes.
