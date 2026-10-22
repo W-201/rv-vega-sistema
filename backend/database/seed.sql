@@ -27,12 +27,12 @@ INSERT INTO materiales (codigo_sku, nombre, categoria, unidad_medida, stock_actu
 ('MP-DIS-001', 'Disco de Corte 7\" x 1/8\" Dewalt', 'Soldadura/Consumibles', 'und', 45.00, 20.00, 8.50, 'Gaveta C-05');
 
 -- 4. Pedidos Registrados
-INSERT INTO pedidos (codigo_pedido, cliente_id, fecha_pedido, fecha_entrega_prometida, fecha_entrega_real, estado, prioridad, subtotal, igv, total, observaciones, creado_por) VALUES
-('PED-2026-0001', 1, '2026-08-10', '2026-08-25', '2026-08-25', 'Entregado', 'Alta', 8500.00, 1530.00, 10030.00, 'Fabricación de 10 barandas metálicas de seguridad para obra San Borja', 1),
-('PED-2026-0002', 2, '2026-08-15', '2026-09-02', '2026-09-03', 'Entregado', 'Media', 12400.00, 2232.00, 14632.00, 'Tolva metálica para descarga de granos con recubrimiento epóxico', 1),
-('PED-2026-0003', 3, '2026-09-01', '2026-09-18', NULL, 'En Producción', 'Urgente', 15800.00, 2844.00, 18644.00, 'Estructura soporte para faja transportadora de 12 metros', 1),
-('PED-2026-0004', 4, '2026-09-05', '2026-09-22', NULL, 'En Planificación', 'Media', 6200.00, 1116.00, 7316.00, 'Fabricación de 4 portones corredizos industriales con malla electro-soldada', 1),
-('PED-2026-0005', 1, '2026-09-10', '2026-09-30', NULL, 'Pendiente', 'Baja', 4900.00, 882.00, 5782.00, 'Mantenimiento preventivo y repuestos para cerco perimétrico', 1);
+INSERT INTO pedidos (codigo_pedido, cliente_id, fecha_pedido, fecha_entrega_prometida, fecha_entrega_real, estado, prioridad, suministro_insumos, subtotal, igv, total, observaciones, creado_por) VALUES
+('PED-2026-0001', 1, '2026-08-10', '2026-08-25', '2026-08-25', 'Entregado', 'Alta', 'Cliente los trae', 8500.00, 1530.00, 10030.00, 'Fabricación de 10 barandas metálicas de seguridad para obra San Borja', 1),
+('PED-2026-0002', 2, '2026-08-15', '2026-09-02', '2026-09-03', 'Entregado', 'Media', 'Empresa suministra', 12400.00, 2232.00, 14632.00, 'Tolva metálica para descarga de granos con recubrimiento epóxico', 1),
+('PED-2026-0003', 3, '2026-09-01', '2026-09-18', NULL, 'En Producción', 'Urgente', 'Cliente los trae', 15800.00, 2844.00, 18644.00, 'Estructura soporte para faja transportadora de 12 metros', 1),
+('PED-2026-0004', 4, '2026-09-05', '2026-09-22', NULL, 'En Planificación', 'Media', 'Empresa suministra', 6200.00, 1116.00, 7316.00, 'Fabricación de 4 portones corredizos industriales con malla electro-soldada', 1),
+('PED-2026-0005', 1, '2026-09-10', '2026-09-30', NULL, 'Pendiente', 'Baja', 'Cliente los trae', 4900.00, 882.00, 5782.00, 'Mantenimiento preventivo y repuestos para cerco perimétrico', 1);
 
 -- 5. Detalles de Pedidos
 INSERT INTO pedido_detalles (pedido_id, descripcion_producto, especificaciones, cantidad, precio_unitario, total_linea) VALUES
@@ -43,10 +43,10 @@ INSERT INTO pedido_detalles (pedido_id, descripcion_producto, especificaciones, 
 (5, 'Paquete de postes y refuerzos de anclaje', 'Acero galvanizado con platina base', 20, 245.00, 4900.00);
 
 -- 6. Órdenes de Producción (OP)
-INSERT INTO ordenes_produccion (codigo_op, pedido_id, estado, prioridad, fecha_inicio_programada, fecha_fin_programada, fecha_inicio_real, fecha_fin_real, porcentaje_avance, costo_estimado, costo_real, responsable_id, observaciones) VALUES
-('OP-2026-001', 1, 'Completada', 'Alta', '2026-08-11', '2026-08-24', '2026-08-11 08:30:00', '2026-08-24 17:00:00', 100, 5200.00, 5350.00, 1, 'Entregado a tiempo sin no conformidades'),
-('OP-2026-002', 2, 'Completada', 'Media', '2026-08-16', '2026-09-01', '2026-08-16 08:00:00', '2026-09-02 11:30:00', 100, 7800.00, 8100.00, 1, 'Ligero retraso por secado de pintura epóxica'),
-('OP-2026-003', 3, 'En Proceso', 'Urgente', '2026-09-02', '2026-09-17', '2026-09-02 08:15:00', NULL, 70, 9400.00, 6800.00, 1, 'Fase de soldadura completada; en proceso de arenado y pintura');
+INSERT INTO ordenes_produccion (codigo_op, pedido_id, estado, prioridad, fecha_inicio_programada, fecha_fin_programada, fecha_inicio_real, fecha_fin_real, porcentaje_avance, costo_estimado, costo_real, responsable_id, materiales_recibidos, fecha_recepcion_materiales, observaciones_materiales, observaciones) VALUES
+('OP-2026-001', 1, 'Completada', 'Alta', '2026-08-11', '2026-08-24', '2026-08-11 08:30:00', '2026-08-24 17:00:00', 100, 5200.00, 5350.00, 1, TRUE, '2026-08-11 08:00:00', 'Insumos de cliente recibidos conformes', 'Entregado a tiempo sin no conformidades'),
+('OP-2026-002', 2, 'Completada', 'Media', '2026-08-16', '2026-09-01', '2026-08-16 08:00:00', '2026-09-02 11:30:00', 100, 7800.00, 8100.00, 1, TRUE, '2026-08-16 07:45:00', 'Insumos de almacén listos para producción', 'Ligero retraso por secado de pintura epóxica'),
+('OP-2026-003', 3, 'En Proceso', 'Urgente', '2026-09-02', '2026-09-17', '2026-09-02 08:15:00', NULL, 70, 9400.00, 6800.00, 1, TRUE, '2026-09-02 08:00:00', 'Perfiles y platinas recibidos del cliente', 'Fase de soldadura completada; en proceso de arenado y pintura');
 
 -- 7. Etapas de Producción para OP-2026-003 (En Proceso)
 INSERT INTO etapas_produccion (orden_produccion_id, numero_fase, nombre_etapa, descripcion, operario_asignado, horas_estimadas, horas_reales, estado, fecha_inicio, fecha_fin) VALUES

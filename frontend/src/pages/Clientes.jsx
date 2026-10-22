@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Users, Plus, Search, Phone, Mail, MapPin, Building, Trash2, Edit, CheckCircle, ChevronDown, Check } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -314,15 +315,15 @@ export default function Clientes() {
         </div>
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-100 dark:border-slate-800">
-            <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+      {showModal && createPortal(
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800">
+            <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
               <h3 className="font-bold text-sm">{editingCliente ? 'Editar Datos de Cliente' : 'Registrar Nuevo Cliente'}</h3>
               <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Tipo Doc. *</label>
@@ -497,6 +498,8 @@ export default function Clientes() {
             </form>
           </div>
         </div>
+,
+        document.body
       )}
     </div>
   );

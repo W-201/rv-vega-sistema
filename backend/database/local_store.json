@@ -116,7 +116,7 @@
       "nombre": "Ángulo Estructural 1 1/2\" x 3/16\" x 6m",
       "categoria": "Metales/Perfiles",
       "unidad_medida": "tubo",
-      "stock_actual": 18,
+      "stock_actual": 58,
       "stock_minimo": 20,
       "costo_unitario": 52,
       "ubicacion_almacen": "Nave A - Caballete 1",
@@ -270,6 +270,56 @@
       "total": 5782,
       "observaciones": "Mantenimiento preventivo y repuestos para cerco perimétrico",
       "creado_por": 1
+    },
+    {
+      "id": 6,
+      "codigo_pedido": "PED-2026-0006",
+      "cliente_id": 1,
+      "fecha_pedido": "2026-10-22",
+      "fecha_entrega_prometida": "2026-10-30",
+      "fecha_entrega_real": null,
+      "estado": "En Planificación",
+      "prioridad": "Media",
+      "subtotal": 0,
+      "igv": 0,
+      "total": 0,
+      "observaciones": "",
+      "creado_por": 1,
+      "creado_en": "2026-10-22T17:29:11.869Z"
+    },
+    {
+      "id": 7,
+      "codigo_pedido": "PED-2026-0007",
+      "cliente_id": 1,
+      "fecha_pedido": "2026-10-22",
+      "fecha_entrega_prometida": "2026-10-24",
+      "fecha_entrega_real": null,
+      "estado": "Pendiente",
+      "prioridad": "Media",
+      "suministro_insumos": "Empresa suministra",
+      "subtotal": 230,
+      "igv": 41.4,
+      "total": 271.4,
+      "observaciones": "",
+      "creado_por": 1,
+      "creado_en": "2026-10-22T17:55:28.656Z"
+    },
+    {
+      "id": 8,
+      "codigo_pedido": "PED-2026-0008",
+      "cliente_id": 1,
+      "fecha_pedido": "2026-10-22",
+      "fecha_entrega_prometida": "2026-11-01",
+      "fecha_entrega_real": null,
+      "estado": "Pendiente",
+      "prioridad": "Media",
+      "suministro_insumos": "Empresa suministra",
+      "subtotal": 1200,
+      "igv": 216,
+      "total": 1416,
+      "observaciones": "",
+      "creado_por": 1,
+      "creado_en": "2026-10-22T20:12:01.472Z"
     }
   ],
   "pedido_detalles": [
@@ -317,6 +367,33 @@
       "cantidad": 20,
       "precio_unitario": 245,
       "total_linea": 4900
+    },
+    {
+      "id": 6,
+      "pedido_id": 6,
+      "descripcion_producto": "una banquitqa",
+      "especificaciones": "",
+      "cantidad": 1,
+      "precio_unitario": 0,
+      "total_linea": 0
+    },
+    {
+      "id": 7,
+      "pedido_id": 7,
+      "descripcion_producto": "un trapito",
+      "especificaciones": "",
+      "cantidad": 1,
+      "precio_unitario": 230,
+      "total_linea": 230
+    },
+    {
+      "id": 8,
+      "pedido_id": 8,
+      "descripcion_producto": "Mesitas",
+      "especificaciones": "",
+      "cantidad": 2,
+      "precio_unitario": 600,
+      "total_linea": 1200
     }
   ],
   "ordenes_produccion": [
@@ -334,7 +411,10 @@
       "costo_estimado": 5200,
       "costo_real": 5350,
       "responsable_id": 1,
-      "observaciones": "Entregado a tiempo sin no conformidades"
+      "observaciones": "Entregado a tiempo sin no conformidades",
+      "materiales_recibidos": true,
+      "fecha_recepcion_materiales": "2026-08-11 08:30:00",
+      "observaciones_materiales": "Materiales conformes"
     },
     {
       "id": 2,
@@ -350,7 +430,10 @@
       "costo_estimado": 7800,
       "costo_real": 8100,
       "responsable_id": 1,
-      "observaciones": "Ligero retraso por secado de pintura epóxica"
+      "observaciones": "Ligero retraso por secado de pintura epóxica",
+      "materiales_recibidos": true,
+      "fecha_recepcion_materiales": "2026-08-16 08:00:00",
+      "observaciones_materiales": "Materiales conformes"
     },
     {
       "id": 3,
@@ -366,7 +449,10 @@
       "costo_estimado": 9400,
       "costo_real": 6800,
       "responsable_id": 1,
-      "observaciones": "Fase de soldadura completada; en proceso de tratamiento y pintura"
+      "observaciones": "Fase de soldadura completada; en proceso de tratamiento y pintura",
+      "materiales_recibidos": true,
+      "fecha_recepcion_materiales": "2026-09-02 08:15:00",
+      "observaciones_materiales": "Materiales conformes"
     },
     {
       "id": 4,
@@ -383,7 +469,30 @@
       "costo_real": 0,
       "responsable_id": 1,
       "observaciones": "Generada para atender PED-2026-0004",
-      "creado_en": "2026-10-20T19:07:44.040Z"
+      "creado_en": "2026-10-20T19:07:44.040Z",
+      "materiales_recibidos": true,
+      "fecha_recepcion_materiales": "2026-10-22T20:10:00.100Z",
+      "observaciones_materiales": "En espera de que el almacén habilite los materiales comprados"
+    },
+    {
+      "id": 5,
+      "codigo_op": "OP-2026-005",
+      "pedido_id": 6,
+      "estado": "Planificada",
+      "prioridad": "Media",
+      "fecha_inicio_programada": "2026-10-22",
+      "fecha_fin_programada": "2026-10-30",
+      "fecha_inicio_real": null,
+      "fecha_fin_real": null,
+      "porcentaje_avance": 0,
+      "costo_estimado": 0,
+      "costo_real": 0,
+      "responsable_id": 1,
+      "observaciones": "Generada para atender PED-2026-0006",
+      "creado_en": "2026-10-22T17:29:19.734Z",
+      "materiales_recibidos": true,
+      "fecha_recepcion_materiales": "2026-10-22T17:55:43.535Z",
+      "observaciones_materiales": "Materiales entregados por el cliente en taller."
     }
   ],
   "etapas_produccion": [
@@ -516,6 +625,71 @@
       "estado": "Pendiente",
       "fecha_inicio": null,
       "fecha_fin": null
+    },
+    {
+      "id": 11,
+      "orden_produccion_id": 5,
+      "numero_fase": 1,
+      "nombre_etapa": "Habilitado y Corte",
+      "descripcion": "Corte, dimensionamiento y preparación de perfiles / planchas",
+      "operario_asignado": "Juan Pérez T.",
+      "horas_estimadas": 14,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
+    },
+    {
+      "id": 12,
+      "orden_produccion_id": 5,
+      "numero_fase": 2,
+      "nombre_etapa": "Mecanizado y Perforado",
+      "descripcion": "Taladrado, biselado y preparación de uniones mecánicas",
+      "operario_asignado": "Marcos Quispe",
+      "horas_estimadas": 10,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
+    },
+    {
+      "id": 13,
+      "orden_produccion_id": 5,
+      "numero_fase": 3,
+      "nombre_etapa": "Armado y Soldadura",
+      "descripcion": "Fijación, apuntalado y cordones continuos estructurales",
+      "operario_asignado": "Juan Pérez T.",
+      "horas_estimadas": 24,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
+    },
+    {
+      "id": 14,
+      "orden_produccion_id": 5,
+      "numero_fase": 4,
+      "nombre_etapa": "Tratamiento, Pintura y Acabado",
+      "descripcion": "Desengrase, base anticorrosiva y esmalte de terminación",
+      "operario_asignado": "Raúl Gómez",
+      "horas_estimadas": 16,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
+    },
+    {
+      "id": 15,
+      "orden_produccion_id": 5,
+      "numero_fase": 5,
+      "nombre_etapa": "Control de Calidad y Despacho",
+      "descripcion": "Verificación dimensional, pruebas de soldadura y embalaje",
+      "operario_asignado": "Carlos Mendoza",
+      "horas_estimadas": 6,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
     }
   ],
   "movimientos_inventario": [
@@ -551,6 +725,17 @@
       "motivo": "Consumo para bastidor de faja",
       "registrado_por": 1,
       "fecha": "2026-09-03 08:30:00"
+    },
+    {
+      "id": 4,
+      "material_id": 3,
+      "tipo_movimiento": "ENTRADA",
+      "cantidad": 40,
+      "costo_unitario": 52,
+      "referencia_documento": "F001-002845",
+      "motivo": "Ingreso por Orden de Compra OC-2026-0001: Prueba de ingreso satisfactorio",
+      "registrado_por": 1,
+      "fecha": "2026-10-22T18:38:44.648Z"
     }
   ],
   "control_calidad": [
@@ -693,24 +878,99 @@
       "usuario_id": 1,
       "usuario_nombre": "Ing. Roberto Vega",
       "fecha": "2026-10-20T19:03:27.025Z"
+    },
+    {
+      "id": 13,
+      "tipo": "chat_advisor",
+      "consulta": "¿Cuál es el principal cuello de botella actual en el taller?",
+      "respuesta": "### Diagnóstico del Cuello de Botella Actual\n\nTras analizar los datos en vivo de la planta de **RV Vega Servicios Generales E.I.R.L.**, el principal cuello de botella que frena la producción actual se concentra en la **disponibilidad de materiales y consumibles críticos**, generando un impacto directo en las órdenes de producción activas y futuras.\n\n### Causas Raíz Identificadas\n\n- **Paradas No Programadas por Abastecimiento:** Se registra una parada reciente de **90 minutos por falta de material**, evidenciando quiebres en la cadena de suministro interna.\n- **Quiebre de Stock en Insumos Críticos:**\n  - **Alambre Tubular MIG ER70S-6 (Carrete 15kg):** Stock actual de 12 kg (por debajo del mínimo de 15 kg). Esto afecta directamente las operaciones de soldadura en los procesos en curso.\n  - **Esmalte Poliuretano Industrial Blanco (Galón):** Stock actual de 8 galones (por debajo del mínimo de 12 galones), lo que compromete la fase de acabados.\n- **Bloqueo en la Línea de Producción:** \n  - La **OP-2026-004** se encuentra completamente detenida con **0% de avance** bajo el estado de **\"Pendiente de Materiales\"**, retrasando el flujo hacia el pedido **PED-2026-0004** (*INDUSTRIAS METALMECÁNICAS LIMA S.A.*, valorizado en **S/ 7316.00**).\n  - Asimismo, se suma una parada por factores ambientales (**Humedad Ambiental de 180 min**), que afecta los tiempos de secado en pintura y los procesos metalmecánicos sensibles.\n\n---\n\n### Acción Operativa / Comercial Recomendada\n\n1. **Emitir Orden de Compra de Emergencia Inmediata:** Autorizar al área de logística la compra urgente de stock faltante de *Alambre Tubular MIG ER70S-6* y *Esmalte Poliuretano Industrial Blanco* para destrabar la **OP-2026-004** y evitar retrasos en el pedido de *INDUSTRIAS METALMECÁNICAS LIMA S.A.* (F. de entrega: **2026-09-22**).\n2. **Mitigación Ambiental:** Implementar sistemas de deshumidificación temporal en el área de acabados para mitigar futuras paradas por humedad ambiental y proteger la calidad global del OEE (actualmente en un sólido **91.4%**).",
+      "usuario_id": 1,
+      "usuario_nombre": "Ing. Roberto Vega",
+      "fecha": "2026-10-22T19:16:03.127Z"
+    },
+    {
+      "id": 14,
+      "tipo": "chat_advisor",
+      "consulta": "y que puedo hacer para mejorar eso?",
+      "respuesta": "### 👋 ¡Hola! Soy el Copiloto Inteligente de Planta de RV Vega\n\nEstoy monitoreando en tiempo real las operaciones metalmecánicas del taller, los niveles de inventario y los compromisos de entrega con los clientes.\n\n📌 **Resumen de Operaciones Hoy**:\n- **Órdenes Activas**: 3 orden(es) en proceso (**OP-2026-003, OP-2026-004, OP-2026-005**).\n- **Eficiencia Global (OEE)**: **91.4%** (Disponibilidad: 97% | Rendimiento: 96% | Calidad: 98.2%).\n- **Alertas de Almacén**: **2 insumos** por debajo del stock mínimo de seguridad.\n- **Cumplimiento OTIF**: **1 órdenes** en seguimiento de SLA de entrega.\n\n---\n🎯 **¿En qué te puedo asesorar?**\n- Pregúntame sobre el **cuello de botella** actual en el taller.\n- Analizar el **OEE** y cómo llegar a la meta de Clase Mundial (>85%).\n- Ver la **predicción de retrasos** de las órdenes activas.\n- Revisar las sugerencias del **motor de compras asistidas** de insumos.",
+      "usuario_id": 1,
+      "usuario_nombre": "Ing. Roberto Vega",
+      "fecha": "2026-10-22T19:16:25.418Z"
+    },
+    {
+      "id": 15,
+      "tipo": "chat_advisor",
+      "consulta": "¿Cuál es el principal cuello de botella actual en el taller y qué etapas presentan retraso?",
+      "respuesta": "### Diagnóstico del Cuello de Botella y Retrasos Actuales en Planta\n\nComo Copiloto Inteligente y Asesor de Optimización de **RV Vega Servicios Generales E.I.R.L.**, he analizado los datos en tiempo real del taller. El diagnóstico técnico del estado actual de producción es el siguiente:\n\n### 1. Principal Cuello de Botella Operativo\nEl principal cuello de botella se concentra en la **etapa de aprovisionamiento y preparación de materiales (Fase Pre-Producción)**, afectando directamente la secuencia de las Órdenes de Producción activas. \n* **Evidencia:** La **OP-2026-004** (correspondiente al *PED-2026-0004*: Portón industrial corredizo) se encuentra al **0% de avance** bajo el estado crítico de **\"Pendiente de Materiales\"**. Esto bloquea el flujo lineal del taller hacia el área de habilitado y soldadura.\n\n### 2. Etapas que Presentan Retraso y Causas Raíz\nActualmente registramos paradas no programadas críticas que impactan en los tiempos de ciclo y retrasan las fases operativas:\n* **Área de Soldadura y Montaje:** Sufrió una parada de **90 minutos por Falta de Material**, impulsada directamente por el quiebre de stock crítico en nuestro consumible principal: **Alambre Tubular MIG ER70S-6** (Stock actual: 12 kg vs Mínimo: 15 kg). Sin este insumo, las líneas de unión estructural se detienen.\n* **Área de Acabados / Pintura:** Registró un retraso severo de **180 minutos por Humedad Ambiental**, sumado al quiebre de stock en **Esmalte Poliuretano Industrial Blanco** (Stock actual: 8 galones vs Mínimo: 12 galones). Esto impide culminar los procesos de recubrimiento protector antes del empaque.\n\n### 3. Impacto en la Cartera de Pedidos en Riesgo\n* **PED-2026-0003** (*LOGÍSTICA INTEGRAL PERUANA S.A.C.* - S/ 18,644.00 / Prioridad Urgente): Está \"En Producción\" mediante la OP-2026-003 (70% de avance). Sin embargo, cualquier micro-parada por falta de consumibles (Alambre MIG) pondrá en riesgo la fecha límite de entrega (**18-09-2026**).\n* **PED-2026-0004** (*INDUSTRIAS METALMECÁNICAS LIMA S.A.* - S/ 7,316.00): En fase \"En Planificación\", pero estancada por la OP-2026-004 sin materiales. Su entrega es el **22-09-2026**.\n\n---\n\n### Acción Operativa / Comercial Recomendada\n1. **Compras de Emergencia Inmediata:** Emitir orden de compra exprés por **3 carretes (45 kg) de Alambre Tubular MIG ER70S-6** y **6 galones de Esmalte Poliuretano Industrial Blanco** para reponer los quiebres de stock y destrabar la OP-2026-004.\n2. **Mitigación en Pintura:** Implementar sistemas de calefacción/deshumidificación focalizada en el área de acabados para mitigar los tiempos muertos por humedad ambiental y proteger los plazos del pedido urgente PED-2026-0003.",
+      "usuario_id": 1,
+      "usuario_nombre": "Ing. Roberto Vega",
+      "fecha": "2026-10-22T19:31:00.345Z"
+    },
+    {
+      "id": 16,
+      "tipo": "chat_advisor",
+      "consulta": "y que puedo hacer para mejorar eso?",
+      "respuesta": "### Plan de Acción Inmediato para Eliminar el Cuello de Botella en Planta\n\nPara resolver el bloqueo en la **Fase Pre-Producción** y destrabar la **OP-2026-004** (asociada al *PED-2026-0004* para *INDUSTRIAS METALMECÁNICAS LIMA S.A.*), implementaremos un plan de choque correctivo y preventivo estructurado en 4 pasos:\n\n### 1. Resolución Inmediata de Quiebres de Stock (Acción en 24 Horas)\n* **Compra de emergencia:** Autorizar de inmediato la adquisición de los insumos críticos reportados en quiebre que paralizan el avance:\n  - **Alambre Tubular MIG ER70S-6 (Carrete 15kg):** Stock actual de 12 kg (por debajo del mínimo de 15 kg). Comprar al menos 2 carretes adicionales para asegurar continuidad en soldadura.\n  - **Esmalte Poliuretano Industrial Blanco (Galón):** Stock actual de 8 galones (por debajo del mínimo de 12 galones). Reponer 10 galones para evitar cuellos de botella en la fase de acabado del *PED-2026-0004*.\n* **Liberación de la OP-2026-004:** Una vez ingresados los materiales al almacén, actualizar el estado de la orden de *\"Pendiente de Materiales\"* a *\"En Proceso\"* de manera prioritaria.\n\n### 2. Mitigación de Paradas por Factores Ambientales (Corto Plazo)\n* **Protocolo contra Humedad Ambiental:** Dado el registro de una parada de 180 minutos por humedad, establecer un control preventivo en la zona de soldadura y pintura:\n  - Implementar uso de estufas para electrodos/alambres y verificar condiciones higrométricas antes de iniciar turnos de soldadura estructural.\n  - Asegurar un espacio de secado con ventilación forzada para evitar mermas en la calidad de los acabados de poliuretano.\n\n### 3. Ajuste en la Planificación y Secuenciamiento (Mediano Plazo)\n* **Revisión del MRP (Planificación de Requerimiento de Materiales):** Modificar el punto de pedido (Stock Mínimo) de los consumibles críticos, elevando el Alambre MIG a un mínimo de 25 kg y el Esmalte Poliuretano a 18 galones, considerando el aumento actual en la cartera de pedidos (S/ 56,675.40).\n* **Sincronización con la OP-2026-005:** Asegurar que la planificación de esta orden contemple la disponibilidad de materia prima *antes* de liberar la orden al piso de taller, evitando duplicar el estatus de espera.\n\n### 4. Monitoreo del OEE y Indicadores Clave\n* Mantener los excelentes niveles actuales de **OEE Global (91.4%)**, **Disponibilidad (97%)** y **Calidad (98.2%)**, asegurando que el tiempo recuperado al eliminar la falta de material se traduzca en un incremento directo del **Rendimiento (actualmente en 96%)**.\n\n---\n\n### Acción Operativa / Comercial Recomendada\n**Aprobar hoy mismo la orden de compra urgente de Alambre MIG y Esmalte Poliuretano** para destrabar la OP-2026-004, garantizando el cumplimiento de la fecha de entrega del **PED-2026-0004** (*INDUSTRIAS METALMECÁNICAS LIMA S.A.*, S/ 7,316.00) programada para el 2026-09-22, protegiendo así la relación con el cliente y manteniendo la fluidez de los S/ 56,675.40 en cartera.",
+      "usuario_id": 1,
+      "usuario_nombre": "Ing. Roberto Vega",
+      "fecha": "2026-10-22T19:31:03.623Z"
     }
   ],
   "requerimientos_compras": [
     {
       "id": 1,
-      "codigo_req": "REQ-2026-0001",
+      "codigo_req": "OC-2026-0001",
       "material_id": 3,
       "material_sku": "MP-MET-003",
-      "material_nombre": "Ángulo Estructural 1 1/2\" x 3/16\" x 6m",
+      "material_nombre": "Angulo Estructural 1 1/2 pulg x 3/16 pulg x 6m",
+      "categoria": "Metales/Perfiles",
       "unidad_medida": "tubo",
+      "stock_actual_al_solicitar": 18,
+      "stock_minimo": 20,
+      "deficit_al_solicitar": 2,
       "cantidad": 40,
       "costo_unitario": 52,
       "costo_estimado": 2080,
-      "justificacion": "Requerimiento generado desde el Asistente IA: El stock actual (18 tubo) ha perforado el umbral de seguridad de planta (20 tubo). Lote calculado para cubrir 30 días de demanda estándar.",
-      "estado": "Registrado / En Aprobación",
+      "justificacion": "Requerimiento generado desde el Asistente IA: El stock actual (18 tubo) ha perforado el umbral de seguridad de planta (20 tubo). Lote calculado para cubrir 30 dias de demanda estandar.",
+      "estado": "Ingresado al Sistema",
+      "impreso": false,
+      "fecha_impresion": null,
+      "cantidad_recibida": 40,
+      "costo_unitario_real": 52,
+      "numero_factura": "F001-002845",
+      "observaciones_ingreso": "Prueba de ingreso satisfactorio",
+      "fecha_ingreso": "2026-10-22T18:38:44.648Z",
       "solicitado_por": 1,
-      "fecha": "2026-10-20",
-      "creado_en": "2026-10-20T19:27:58.227Z"
+      "fecha": "2026-10-22",
+      "creado_en": "2026-10-22T12:00:00.000Z",
+      "movimiento_id": 4
+    },
+    {
+      "id": 2,
+      "codigo_req": "OC-2026-0002",
+      "material_id": 5,
+      "material_sku": "MP-SOL-002",
+      "material_nombre": "Alambre Tubular MIG ER70S-6 (Carrete 15kg)",
+      "categoria": "Soldadura/Consumibles",
+      "unidad_medida": "kg",
+      "stock_actual_al_solicitar": 12,
+      "stock_minimo": 15,
+      "deficit_al_solicitar": 3,
+      "cantidad": 30,
+      "costo_unitario": 19.8,
+      "costo_estimado": 594,
+      "justificacion": "Requerimiento generado desde el Asistente IA: El stock actual (12 kg) ha perforado el umbral de seguridad de planta (15 kg). Lote calculado para cubrir 30 días de demanda estándar.",
+      "estado": "Impreso / En Gestión de Compra",
+      "impreso": true,
+      "fecha_impresion": "2026-10-22T18:45:07.046Z",
+      "cantidad_recibida": null,
+      "costo_unitario_real": null,
+      "numero_factura": null,
+      "observaciones_ingreso": null,
+      "fecha_ingreso": null,
+      "solicitado_por": 1,
+      "fecha": "2026-10-22",
+      "creado_en": "2026-10-22T18:44:22.079Z"
     }
   ]
 }

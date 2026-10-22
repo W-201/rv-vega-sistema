@@ -3,17 +3,19 @@ import { getDb, saveStore } from '../config/db.js';
 export function getMateriales(req, res) {
   try {
     const db = getDb();
-    const { categoria, alerta_stock, busqueda } = req.query;
+    const { categoria, alerta_stock, busqueda, incluir_inactivos } = req.query;
 
-    let list = db.materiales.map(m => {
-      const enAlerta = Number(m.stock_actual) <= Number(m.stock_minimo);
-      const valorTotal = Math.round(Number(m.stock_actual) * Number(m.costo_unitario) * 100) / 100;
-      return {
-        ...m,
-        en_alerta: enAlerta,
-        valor_total: valorTotal
-      };
-    });
+    let list = (db.materiales || [])
+      .filter(m => incluir_inactivos === 'true' || m.activo !== false)
+      .map(m => {
+        const enAlerta = Number(m.stock_actual) <= Number(m.stock_minimo);
+        const valorTotal = Math.round(Number(m.stock_actual) * Number(m.costo_unitario) * 100) / 100;
+        return {
+          ...m,
+          en_alerta: enAlerta,
+          valor_total: valorTotal
+        };
+      });
 
     if (categoria && categoria !== 'Todas') {
       list = list.filter(m => m.categoria === categoria);
@@ -97,6 +99,102 @@ export function createMaterial(req, res) {
     res.status(201).json(nuevo);
   } catch (err) {
     res.status(500).json({ error: 'Error al registrar material: ' + err.message });
+  }
+}
+
+export function updateMaterial(req, res) {
+  try {
+    const { id } = req.params;
+    const { codigo_sku, nombre, categoria, unidad_medida, stock_actual, stock_minimo, costo_unitario, ubicacion_almacen } = req.body;
+
+    const db = getDb();
+    const matIdx = db.materiales.findIndex(m => m.id === parseInt(id));
+    if (matIdx === -1) {
+      return res.status(404).json({ error: 'Material no encontrado' });
+    }
+
+    // Si se modifica el SKU, verificar que no colisione con otro
+    if (codigo_sku && codigo_sku.trim() !== db.materiales[matIdx].codigo_sku) {
+      const existeSku = db.materiales.some(m => m.id !== parseInt(id) && m.codigo_sku.toLowerCase() === codigo_sku.trim().toLowerCase());
+      if (existeSku) {
+        return res.status(400).json({ error: 'El código SKU ingresado ya pertenece a otro material' });
+      }
+      db.materiales[matIdx].codigo_sku = codigo_sku.trim();
+    }
+
+    if (nombre) db.materiales[matIdx].nombre = nombre.trim();
+    if (categoria) db.materiales[matIdx].categoria = categoria.trim();
+    if (unidad_medida) db.materiales[matIdx].unidad_medida = unidad_medida.trim();
+    if (ubicacion_almacen !== undefined) db.materiales[matIdx].ubicacion_almacen = ubicacion_almacen.trim();
+
+    if (stock_minimo !== undefined && !isNaN(parseFloat(stock_minimo))) {
+      db.materiales[matIdx].stock_minimo = parseFloat(stock_minimo);
+    }
+    if (costo_unitario !== undefined && !isNaN(parseFloat(costo_unitario))) {
+      db.materiales[matIdx].costo_unitario = parseFloat(costo_unitario);
+    }
+    // Permitir ajustar stock_actual si se corrige digitación inicial
+    if (stock_actual !== undefined && !isNaN(parseFloat(stock_actual))) {
+      db.materiales[matIdx].stock_actual = parseFloat(stock_actual);
+    }
+
+    db.materiales[matIdx].actualizado_en = new Date().toISOString();
+    saveStore();
+
+    const matActualizado = db.materiales[matIdx];
+    res.json({
+      mensaje: 'Material actualizado exitosamente',
+      material: {
+        ...matActualizado,
+        en_alerta: Number(matActualizado.stock_actual) <= Number(matActualizado.stock_minimo),
+        valor_total: Math.round(Number(matActualizado.stock_actual) * Number(matActualizado.costo_unitario) * 100) / 100
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al actualizar material: ' + err.message });
+  }
+}
+
+export function deleteMaterial(req, res) {
+  try {
+    const { id } = req.params;
+    const matId = parseInt(id);
+    const db = getDb();
+
+    const matIdx = db.materiales.findIndex(m => m.id === matId);
+    if (matIdx === -1) {
+      return res.status(404).json({ error: 'Material no encontrado' });
+    }
+
+    // Verificar si tiene movimientos en Kardex o referencias en órdenes / compras
+    const kardexCount = (db.movimientos_inventario || []).filter(k => k.material_id === matId).length;
+    const consumoCount = (db.consumo_materiales || []).filter(c => c.material_id === matId).length;
+    const reqComprasCount = (db.requerimientos_compras || []).filter(r => r.material_id === matId).length;
+
+    const tieneRegistrosHistoricos = kardexCount > 0 || consumoCount > 0 || reqComprasCount > 0;
+
+    if (tieneRegistrosHistoricos) {
+      // Inactivación lógica segura para proteger la trazabilidad contable
+      db.materiales[matIdx].activo = false;
+      db.materiales[matIdx].desactivado_en = new Date().toISOString();
+      saveStore();
+      return res.json({
+        mensaje: `El material tiene historial registrado (${kardexCount} mov. Kardex). Ha sido retirado del inventario activo preservando la trazabilidad.`,
+        tipo: 'inactivado',
+        id: matId
+      });
+    } else {
+      // Eliminación física directa (material nuevo sin movimientos por error de digitación)
+      db.materiales.splice(matIdx, 1);
+      saveStore();
+      return res.json({
+        mensaje: 'Material eliminado definitivamente del catálogo.',
+        tipo: 'eliminado',
+        id: matId
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar material: ' + err.message });
   }
 }
 

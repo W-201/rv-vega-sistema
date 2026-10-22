@@ -6,7 +6,7 @@ import { getDb, saveStore } from '../config/db.js';
 export async function predecirRiesgosProduccion() {
   const db = getDb();
   // Evaluamos órdenes activas o en planificación
-  const ops = db.ordenes_produccion.filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente');
+  const ops = db.ordenes_produccion.filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente de Materiales' || o.estado === 'Pendiente');
   const now = new Date();
 
   const analisis = ops.map(op => {
@@ -68,7 +68,7 @@ export async function predecirRiesgosProduccion() {
     // 3. Evaluación de insumos críticos de almacén
     const insumosCriticos = (db.materiales || []).filter(m => Number(m.stock_actual) <= Number(m.stock_minimo));
     if (insumosCriticos.length > 0) {
-      if (op.estado === 'Planificada' || op.estado === 'En Proceso') {
+      if (op.estado === 'Planificada' || op.estado === 'En Proceso' || op.estado === 'Pendiente de Materiales') {
         probRetraso = Math.min(98, probRetraso + 10);
         factores.push(`Vulnerabilidad de suministro: Existen ${insumosCriticos.length} insumos con stock por debajo del mínimo de seguridad.`);
       }
@@ -158,7 +158,7 @@ export async function predecirRiesgosProduccion() {
 export function sugerirComprasInteligentes() {
   const db = getDb();
   const materiales = db.materiales || [];
-  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada');
+  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente de Materiales');
 
   const sugerencias = materiales
     .filter(m => Number(m.stock_actual) <= Number(m.stock_minimo) * 1.35)
@@ -189,25 +189,14 @@ export function sugerirComprasInteligentes() {
         diasAgotamiento = 4;
       }
 
-      // Proveedor sugerido según categoría
-      let proveedorSugerido = 'Distribuidor Mayorista Local';
-      let leadTimeHoras = 48;
-      if (m.categoria.includes('Metales') || m.categoria.includes('Perfiles')) {
-        proveedorSugerido = 'Corporación Aceros Arequipa S.A. / Siderperú';
-        leadTimeHoras = 48;
-      } else if (m.categoria.includes('Soldadura') || m.categoria.includes('Consumibles')) {
-        proveedorSugerido = 'Soldex S.A. / Lincoln Electric del Perú';
-        leadTimeHoras = 24;
-      } else if (m.categoria.includes('Pintura') || m.categoria.includes('Acabados')) {
-        proveedorSugerido = 'Qroma (Pinturas Vencedor / CPP)';
-        leadTimeHoras = 24;
-      } else if (m.categoria.includes('Fijaciones')) {
-        proveedorSugerido = 'Würth del Perú / Tornillería Industrial';
-        leadTimeHoras = 24;
-      }
-
       // Detectar órdenes de producción potencialmente afectadas
       const ordenesAfectadas = opsActivas.map(o => o.codigo_op);
+
+      // Requerimiento activo para este material (si existe)
+      const reqActivo = (db.requerimientos_compras || [])
+        .slice()
+        .reverse()
+        .find(r => r.material_id === m.id);
 
       return {
         material_id: m.id,
@@ -224,9 +213,8 @@ export function sugerirComprasInteligentes() {
         inversion_estimada_pen: inversionEstimada,
         prioridad,
         dias_agotamiento_estimados: diasAgotamiento,
-        lead_time_estimado: `${leadTimeHoras} horas`,
-        proveedor_sugerido: proveedorSugerido,
         ordenes_afectadas: ordenesAfectadas,
+        requerimiento_activo: reqActivo || null,
         justificacion: stockActual === 0
           ? `Alerta crítica de desabastecimiento: Insumo en quiebre total (0 ${m.unidad_medida}). Cualquier trabajo de ${m.categoria} paralizará la línea inmediatamente.`
           : stockActual <= stockMinimo
@@ -248,7 +236,7 @@ export function sugerirComprasInteligentes() {
 }
 
 /**
- * Registra un requerimiento formal de compra asistida
+ * Registra una Orden de Compra / Requerimiento formal desde Compras Asistidas
  */
 export function registrarRequerimientoCompra(material_id, cantidad, justificacion, usuario_id = 1) {
   const db = getDb();
@@ -261,34 +249,9 @@ export function registrarRequerimientoCompra(material_id, cantidad, justificacio
 
   const newId = db.requerimientos_compras.length > 0 ? Math.max(...db.requerimientos_compras.map(r => r.id)) + 1 : 1;
   const year = new Date().getFullYear();
-  const codigo_req = `REQ-${year}-${String(newId).padStart(4, '0')}`;
+  const codigo_req = `OC-${year}-${String(newId).padStart(4, '0')}`;
   const cant = parseFloat(cantidad) || 1;
   const costoEstimado = Math.round(cant * Number(mat.costo_unitario) * 100) / 100;
-
-  let proveedor = 'Distribuidor Mayorista Industrial Local';
-  let leadTime = '48 horas';
-  if (mat.categoria?.includes('Metales') || mat.categoria?.includes('Perfiles')) {
-    proveedor = 'Corporación Aceros Arequipa S.A. / Siderperú';
-    leadTime = '48 horas';
-  } else if (mat.categoria?.includes('Soldadura') || mat.categoria?.includes('Consumibles')) {
-    proveedor = 'Soldex S.A. / Lincoln Electric del Perú';
-    leadTime = '24 horas';
-  } else if (mat.categoria?.includes('Pintura') || mat.categoria?.includes('Acabados')) {
-    proveedor = 'Qroma (Pinturas Vencedor / CPP)';
-    leadTime = '24 horas';
-  } else if (mat.categoria?.includes('Fijaciones')) {
-    proveedor = 'Würth del Perú / Tornillería Industrial';
-    leadTime = '24 horas';
-  }
-
-  const aviso_proveedor = {
-    proveedor,
-    lead_time: leadTime,
-    estado_confirmacion: 'Compra Confirmada por Proveedor',
-    codigo_confirmacion: `CONF-${year}-${String(newId).padStart(4, '0')}`,
-    mensaje: `Confirmación de Recepción: Hemos recibido a satisfacción el requerimiento ${codigo_req} emitido por RV Vega Servicios Generales E.I.R.L. La orden por ${cant} ${mat.unidad_medida} de ${mat.nombre} ha sido aprobada y programada para despacho a planta en un plazo estimado de ${leadTime}.`,
-    fecha_confirmacion: new Date().toISOString()
-  };
 
   const nuevoRequerimiento = {
     id: newId,
@@ -296,14 +259,23 @@ export function registrarRequerimientoCompra(material_id, cantidad, justificacio
     material_id: mat.id,
     material_sku: mat.codigo_sku,
     material_nombre: mat.nombre,
+    categoria: mat.categoria,
     unidad_medida: mat.unidad_medida,
+    stock_actual_al_solicitar: Number(mat.stock_actual),
+    stock_minimo: Number(mat.stock_minimo),
+    deficit_al_solicitar: Math.max(0, Math.round((Number(mat.stock_minimo) - Number(mat.stock_actual)) * 10) / 10),
     cantidad: cant,
-    costo_unitario: mat.costo_unitario,
+    costo_unitario: Number(mat.costo_unitario),
     costo_estimado: costoEstimado,
-    proveedor_asignado: proveedor,
-    justificacion: justificacion || 'Generado automáticamente por el Asistente IA de Compras Asistidas',
-    estado: 'Compra Confirmada / En Despacho',
-    aviso_proveedor,
+    justificacion: justificacion || 'Orden de compra generada desde Compras Asistidas para reabastecimiento de planta.',
+    estado: 'Pendiente de Compra', // 'Pendiente de Compra' | 'Impreso / En Gestión de Compra' | 'Ingresado al Sistema'
+    impreso: false,
+    fecha_impresion: null,
+    cantidad_recibida: null,
+    costo_unitario_real: null,
+    numero_factura: null,
+    observaciones_ingreso: null,
+    fecha_ingreso: null,
     solicitado_por: usuario_id,
     fecha: new Date().toISOString().split('T')[0],
     creado_en: new Date().toISOString()
@@ -316,11 +288,96 @@ export function registrarRequerimientoCompra(material_id, cantidad, justificacio
 }
 
 /**
+ * Obtiene el listado de requerimientos y órdenes de compra generadas
+ */
+export function obtenerRequerimientosCompras() {
+  const db = getDb();
+  return (db.requerimientos_compras || []).slice().reverse();
+}
+
+/**
+ * Marca una orden de compra como impresa / descargada en PDF
+ */
+export function marcarRequerimientoImpreso(id) {
+  const db = getDb();
+  const req = (db.requerimientos_compras || []).find(r => r.id === parseInt(id));
+  if (!req) throw new Error('Requerimiento no encontrado');
+  req.impreso = true;
+  req.fecha_impresion = new Date().toISOString();
+  if (req.estado === 'Pendiente de Compra') {
+    req.estado = 'Impreso / En Gestión de Compra';
+  }
+  saveStore();
+  return req;
+}
+
+/**
+ * Verifica la compra física del material e ingresa el stock al sistema y al Kardex
+ */
+export function verificarEIngresarCompra(id, datos, usuario_id = 1) {
+  const db = getDb();
+  const req = (db.requerimientos_compras || []).find(r => r.id === parseInt(id));
+  if (!req) throw new Error('Requerimiento de compra no encontrado');
+
+  const mat = (db.materiales || []).find(m => m.id === req.material_id);
+  if (!mat) throw new Error('Material no encontrado en inventario');
+
+  const cantRecibida = parseFloat(datos.cantidad_recibida) || req.cantidad;
+  const costoReal = datos.costo_unitario_real !== undefined && !isNaN(parseFloat(datos.costo_unitario_real)) && parseFloat(datos.costo_unitario_real) > 0
+    ? parseFloat(datos.costo_unitario_real)
+    : req.costo_unitario;
+  const docReferencia = datos.numero_factura?.trim() || req.codigo_req;
+  const notas = datos.observaciones?.trim() || 'Ingreso por compra asistida verificada';
+
+  // 1. Aumentar stock_actual en catálogo de materiales
+  mat.stock_actual = Math.round((Number(mat.stock_actual) + cantRecibida) * 100) / 100;
+  if (costoReal > 0) {
+    mat.costo_unitario = costoReal;
+  }
+
+  // 2. Registrar movimiento de Kardex (ENTRADA)
+  if (!db.movimientos_inventario) db.movimientos_inventario = [];
+  const movId = db.movimientos_inventario.length > 0
+    ? Math.max(...db.movimientos_inventario.map(m => m.id)) + 1
+    : 1;
+
+  const nuevoMovimiento = {
+    id: movId,
+    material_id: mat.id,
+    tipo_movimiento: 'ENTRADA',
+    cantidad: cantRecibida,
+    costo_unitario: costoReal,
+    referencia_documento: docReferencia,
+    motivo: `Ingreso por Orden de Compra ${req.codigo_req}: ${notas}`,
+    registrado_por: usuario_id,
+    fecha: new Date().toISOString()
+  };
+  db.movimientos_inventario.push(nuevoMovimiento);
+
+  // 3. Actualizar requerimiento de compra
+  req.estado = 'Ingresado al Sistema';
+  req.cantidad_recibida = cantRecibida;
+  req.costo_unitario_real = costoReal;
+  req.numero_factura = docReferencia;
+  req.observaciones_ingreso = notas;
+  req.fecha_ingreso = new Date().toISOString();
+  req.movimiento_id = movId;
+
+  saveStore();
+
+  return {
+    requerimiento: req,
+    material: mat,
+    movimiento: nuevoMovimiento
+  };
+}
+
+/**
  * 3.6.3.4 Sugerencias dinámicas de preguntas frecuentes (cuellos de botella, OEE, etc.)
  */
 export function obtenerSugerenciasDinamicas() {
   const db = getDb();
-  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada');
+  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente de Materiales');
   const materialesCriticos = (db.materiales || []).filter(m => Number(m.stock_actual) <= Number(m.stock_minimo));
   const paradas = db.paradas_produccion || [];
 
@@ -388,7 +445,7 @@ export function obtenerSugerenciasDinamicas() {
 /**
  * 3.6.3.1 Backend para el procesamiento del lenguaje natural (chat) del copiloto inteligente
  */
-export async function responderChatAdvisor(mensajeUsuario) {
+export async function responderChatAdvisor(mensajeUsuario, historial = []) {
   const db = getDb();
   const apiKey = process.env.GEMINI_API_KEY;
 
@@ -396,7 +453,7 @@ export async function responderChatAdvisor(mensajeUsuario) {
   const totalPedidos = (db.pedidos || []).length;
   const pedidosEnProduccion = (db.pedidos || []).filter(p => p.estado === 'En Producción').length;
   const pedidosPendientes = (db.pedidos || []).filter(p => p.estado === 'Pendiente').length;
-  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada');
+  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente de Materiales');
   const materialesCriticos = (db.materiales || []).filter(m => Number(m.stock_actual) <= Number(m.stock_minimo));
   const paradas = db.paradas_produccion || [];
   const etapas = db.etapas_produccion || [];
@@ -422,6 +479,16 @@ export async function responderChatAdvisor(mensajeUsuario) {
   }).join('\n');
   const totalVentas = (db.pedidos || []).reduce((acc, p) => acc + (Number(p.total) || 0), 0);
 
+  // Formatear historial conversacional previo para contexto continuo
+  let historialContexto = '';
+  if (Array.isArray(historial) && historial.length > 0) {
+    historialContexto = historial.slice(-6).map(h => {
+      const remitente = h.remitente === 'usuario' ? 'Usuario' : 'Copiloto';
+      const txt = (h.texto || '').length > 600 ? h.texto.substring(0, 600) + '...' : h.texto;
+      return `${remitente}: ${txt}`;
+    }).join('\n\n');
+  }
+
   // 2. Si existe API KEY de Gemini, intentamos llamada directa LLM
   if (apiKey) {
     try {
@@ -437,20 +504,21 @@ ${listaPedidos}
 - Paradas no programadas recientes: ${paradas.map(p => `${p.motivo} (${p.minutos_parada} min)`).join('; ') || 'Ninguna'}
 - Insumos en Quiebre / Stock Crítico: ${materialesCriticos.map(m => `${m.nombre} (Stock: ${m.stock_actual} ${m.unidad_medida}, Mínimo: ${m.stock_minimo})`).join('; ') || 'Stock óptimo'}
 
-PREGUNTA DEL USUARIO:
+${historialContexto ? `HISTORIAL DE LA CONVERSACIÓN PREVIA (Mantén continuidad con las preguntas y respuestas anteriores):\n${historialContexto}\n\n` : ''}PREGUNTA ACTUAL DEL USUARIO:
 "${mensajeUsuario}"
 
 INSTRUCCIONES DE RESPUESTA:
 - Responde de forma técnica, ejecutiva, accionable y estructurada en español.
+- Si el usuario pregunta qué puede hacer, cómo mejorar, o pide soluciones, proporciona un plan de acción concreto y por pasos fundamentado en los datos reales de planta.
 - Si el usuario pregunta sobre ventas, pedidos, montos o facturación, usa la lista de ventas detallada arriba con nombres de clientes, códigos de pedidos y montos en Soles (S/).
 - Utiliza formato Markdown con títulos destacados (###), negritas (**texto**) y viñetas (-).
 - Termina con una 'Acción Operativa / Comercial Recomendada'.`;
 
-      const candidateModels = ['gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest'];
+      const candidateModels = ['gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-2.5-flash-lite'];
       for (const model of candidateModels) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 6000);
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos para respuesta completa
           const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -477,6 +545,117 @@ INSTRUCCIONES DE RESPUESTA:
 
   // 3. Motor de Procesamiento de Lenguaje Natural (PLN) Heurístico y Contextual Local
   const text = mensajeUsuario.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // 3.0 Detección de intenciones de Mejora, Solución, Plan de Acción o Recomendaciones
+  const esPreguntaMejora = text.includes('mejorar') || 
+                           text.includes('solucion') || 
+                           text.includes('soluciones') || 
+                           text.includes('accion') || 
+                           text.includes('acciones') || 
+                           text.includes('que puedo hacer') || 
+                           text.includes('que hago') || 
+                           text.includes('como hago') || 
+                           text.includes('plan') || 
+                           text.includes('optimizar') || 
+                           text.includes('recomienda') || 
+                           text.includes('recomendacion') || 
+                           text.includes('recomiendas') || 
+                           text.includes('resolver') || 
+                           text.includes('estrategia') || 
+                           text.includes('como corregir') || 
+                           text.includes('medidas');
+
+  if (esPreguntaMejora) {
+    const ultimosMensajes = Array.isArray(historial) ? historial.slice(-4) : [];
+    const ultimoContexto = ultimosMensajes.map(m => (m.texto || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")).join(' ');
+
+    // Caso A: El usuario venía hablando de cuellos de botella / cabina de pintura / paradas
+    if (ultimoContexto.includes('cuello') || ultimoContexto.includes('botella') || ultimoContexto.includes('parada') || ultimoContexto.includes('pintura') || text.includes('cuello') || text.includes('parada')) {
+      return `### 🛠️ Plan Operativo de Desestrangulamiento y Eliminación de Cuellos de Botella
+
+Para eliminar los retrasos en las estaciones críticas detectadas en el taller de RV Vega, aplica este plan de contingencia inmediata:
+
+1. **Desestrangulamiento de la Cabina de Pintura (Mayor Restricción)**:
+   - **Climatización y Curado Forzado**: Activar los termoventiladores auxiliares en la cabina para mitigar la humedad ambiental (>80%) y acelerar el tiempo de secado epóxico de 14h a 8h.
+   - **Lotes por Colores / Turnos**: Agrupar piezas por tonalidad y aplicar primeras manos al final del turno vespertino para aprovechar el curado nocturno pasivo sin ocupar horas operativas de día.
+
+2. **Eliminación de Paradas por Materiales (Soldadura MIG)**:
+   - **Kitting Previo en Puesto**: Implementar una política de *"Carrete de Reserva Obligatorio"* en cada puesto de soldadura. Ningún soldador debe arrancar turno sin 1 carrete ER70S-6 nuevo colocado en el rack auxiliar.
+   - **Reposición Automática**: Al perforar los 15 kg de inventario en almacén, emitir inmediatamente la orden de compra antes de que el taller se quede en cero.
+
+3. **Reasignación Dinámica de Mano de Obra**:
+   - Transferir temporalmente a 1 técnico mecanizador de apoyo hacia el área de limpieza y preparación superficial para que la cabina de pintura reciba piezas listas y continuas.
+
+---
+💡 **Meta Operativa**:
+Reducir los 270 minutos acumulados de paradas no programadas a menos de 45 minutos semanales, recuperando un **+12% en disponibilidad de taller**.`;
+    }
+
+    // Caso B: El usuario venía hablando de OEE o eficiencia
+    if (ultimoContexto.includes('oee') || ultimoContexto.includes('eficiencia') || text.includes('oee')) {
+      return `### 📈 Hoja de Ruta para Elevar el OEE de Planta al 85% (Clase Mundial)
+
+Actualmente el OEE de RV Vega se sitúa en **${oeeGlobal}%**. El factor más castigado es la **Disponibilidad (${disponibilidad}%)** debido a los **${totalMinutosParada} minutos de paradas no programadas**:
+
+1. **Ataque Inmediato a la Disponibilidad (Impacto +8%)**:
+   - Eliminar el 100% de paradas por desabastecimiento de alambre MIG y discos manteniendo un stock de seguridad de 20 kg.
+   - Implementar mantenimiento preventivo autónomo (limpieza de toberas, calibración de alimentadores de soldadura) en los primeros 10 minutos de cada jornada.
+
+2. **Optimización del Rendimiento (Impacto +4%)**:
+   - Estandarizar plantillas de trazado y corte en el área de habilitado para acortar tiempos de preparación en un 15%.
+   - Reducir tiempos muertos entre cambio de orden de trabajo (SMED simplificado).
+
+3. **Mantenimiento de Calidad al 99%**:
+   - Mantener la merma actual del ${merma}% mediante control dimensional en banco antes de liberar a soldadura definitiva.
+
+---
+🎯 **Impacto Proyectado**:
+Al reducir las paradas a la mitad, el OEE subirá de **${oeeGlobal}% a 86.4%**, incrementando la capacidad de facturación de la planta sin necesidad de horas extras.`;
+    }
+
+    // Caso C: El usuario venía hablando de compras o stock
+    if (ultimoContexto.includes('compra') || ultimoContexto.includes('stock') || ultimoContexto.includes('insumo') || text.includes('compra') || text.includes('stock')) {
+      return `### 📦 Plan de Acción para Reabastecimiento Crítico de Planta
+
+Para resolver el desabastecimiento de insumos y asegurar el flujo productivo sin interrupciones:
+
+1. **Emisión y Descarga de Órdenes de Compra**:
+   - Ingresa a la pestaña **Compras Asistidas** en este módulo.
+   - Genera y descarga el PDF de Orden de Compra para **Alambre Tubular MIG ER70S-6 (30 kg)** y **Esmalte Poliuretano (15 gal)**.
+2. **Priorización de Despacho de Proveedores**:
+   - Solicitar entrega express en taller dentro de las próximas 24 horas para evitar la paralización de la orden OP-2026-003.
+3. **Verificación de Ingreso Físico**:
+   - Una vez recibido el material en almacén, hacer clic en *"Verificar e Ingresar a Almacén"* para que el stock se actualice inmediatamente en el sistema y se registre en el Kardex.
+
+---
+💡 **Acción Inmediata**:
+Dirígete a la pestaña **Compras Asistidas** para tramitar los insumos en quiebre hoy mismo.`;
+    }
+
+    // Caso D: Plan Integral de Mejora Operativa (General / Holístico)
+    return `### 🚀 Plan de Acción Maestro para Optimización de Planta en RV Vega
+
+Para mejorar el rendimiento general del taller, erradicar cuellos de botella y garantizar entregas a tiempo, sigue estas 4 acciones priorizadas:
+
+1. **1. Resolver la Restricción Principal (Cabina de Pintura)**:
+   - Implementar secado asistido con aire caliente o ventilación forzada en la cabina para reducir los tiempos de curado epóxico de 14h a 8h.
+   - Organizar las aplicaciones de pintura al final del turno tarde para dejar secando las estructuras durante la noche.
+
+2. **2. Asegurar el Abastecimiento Crítico (Alambre MIG & Pintura)**:
+   - Generar las Órdenes de Compra asistidas para reponer el Alambre Tubular MIG ER70S-6 (30 kg) y el Esmalte Poliuretano (15 gal).
+   - Establecer una regla de *"cero quiebres"*: reordenar automáticamente cuando el stock baje a 15 kg.
+
+3. **3. Proteger la Entrega de Órdenes Críticas (OP-2026-003)**:
+   - La orden para *Logística Integral Peruana S.A.C.* se encuentra al 70% de avance.
+   - Priorizar la inspección de Control de Calidad apenas concluya el acabado de pintura para despachar sin penalizaciones.
+
+4. **4. Maximizar el OEE de Planta**:
+   - Elevar la Disponibilidad del **${disponibilidad}% actual a >90%** eliminando paradas por falta de insumos consumibles en puesto.
+
+---
+💡 **Paso Siguiente Recomendado**:
+¿Deseas que analicemos en detalle la situación de una estación específica (Pintura, Soldadura, Habilitado) o revisar la orden de compra sugerida?`;
+  }
 
   // Consulta específica sobre Ventas, Facturación o Pedidos
   if (text.includes('venta') || text.includes('ventas') || text.includes('facturacion') || text.includes('facturado') || text.includes('pedido') || text.includes('pedidos') || text.includes('ingreso') || text.includes('ingresos') || text.includes('cotizacion')) {
@@ -636,7 +815,16 @@ Actualmente el equipo operativo en taller de RV Vega se encuentra distribuido de
    - Programado para inspección dimensional y de película seca (DFT) en Control de Calidad.`;
   }
 
-  // G. Consulta General / Saludo / Menú de Capacidades
+  // G. Respuestas de cortesía y confirmación rápida
+  if (text === 'gracias' || text.includes('muchas gracias') || text === 'ok' || text === 'vale' || text === 'entendido' || text === 'perfecto' || text === 'excelente' || text === 'de acuerdo') {
+    return `### 👍 ¡A tu servicio!
+
+Estoy a tu entera disposición para seguir monitoreando las operaciones de taller, las alertas de inventario y los compromisos de entrega de RV Vega.
+
+¿Necesitas profundizar en alguna orden específica, revisar los cuellos de botella o analizar otra métrica de la planta?`;
+  }
+
+  // H. Consulta General / Saludo / Menú de Capacidades
   return `### 👋 ¡Hola! Soy el Copiloto Inteligente de Planta de RV Vega
 
 Estoy monitoreando en tiempo real las operaciones metalmecánicas del taller, los niveles de inventario y los compromisos de entrega con los clientes.

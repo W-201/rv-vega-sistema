@@ -3,6 +3,7 @@
 -- Sistema de Gestión de Producción y Pedidos
 
 DROP TABLE IF EXISTS ai_logs CASCADE;
+DROP TABLE IF EXISTS requerimientos_compras CASCADE;
 DROP TABLE IF EXISTS kpi_records CASCADE;
 DROP TABLE IF EXISTS control_calidad CASCADE;
 DROP TABLE IF EXISTS paradas_produccion CASCADE;
@@ -53,6 +54,7 @@ CREATE TABLE pedidos (
     fecha_entrega_real DATE,
     estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'En Planificación', 'En Producción', 'Control de Calidad', 'Listo para Entrega', 'Entregado', 'Cancelado')),
     prioridad VARCHAR(20) NOT NULL DEFAULT 'Media' CHECK (prioridad IN ('Baja', 'Media', 'Alta', 'Urgente')),
+    suministro_insumos VARCHAR(40) NOT NULL DEFAULT 'Cliente los trae' CHECK (suministro_insumos IN ('Cliente los trae', 'Empresa suministra')),
     subtotal NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (subtotal >= 0),
     igv NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (igv >= 0),
     total NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (total >= 0),
@@ -105,7 +107,10 @@ CREATE TABLE ordenes_produccion (
     id SERIAL PRIMARY KEY,
     codigo_op VARCHAR(30) UNIQUE NOT NULL,
     pedido_id INT NOT NULL REFERENCES pedidos(id) ON DELETE RESTRICT,
-    estado VARCHAR(30) NOT NULL DEFAULT 'Planificada' CHECK (estado IN ('Planificada', 'En Proceso', 'Pausada', 'Completada', 'Cancelada')),
+    estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente de Materiales' CHECK (estado IN ('Pendiente de Materiales', 'Planificada', 'En Proceso', 'Pausada', 'Completada', 'Cancelada')),
+    materiales_recibidos BOOLEAN DEFAULT FALSE,
+    fecha_recepcion_materiales TIMESTAMP,
+    observaciones_materiales TEXT,
     prioridad VARCHAR(20) NOT NULL DEFAULT 'Media' CHECK (prioridad IN ('Baja', 'Media', 'Alta', 'Urgente')),
     fecha_inicio_programada DATE NOT NULL,
     fecha_fin_programada DATE NOT NULL,
@@ -176,6 +181,36 @@ CREATE TABLE ai_logs (
     respuesta TEXT,
     metadata JSONB,
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 13. Órdenes y Requerimientos de Compra Asistida (PDF / Ingreso a Almacén)
+CREATE TABLE requerimientos_compras (
+    id SERIAL PRIMARY KEY,
+    codigo_req VARCHAR(30) UNIQUE NOT NULL,
+    material_id INT NOT NULL REFERENCES materiales(id) ON DELETE RESTRICT,
+    material_sku VARCHAR(30) NOT NULL,
+    material_nombre VARCHAR(120) NOT NULL,
+    categoria VARCHAR(50),
+    unidad_medida VARCHAR(20) NOT NULL,
+    stock_actual_al_solicitar NUMERIC(12, 2) DEFAULT 0.00,
+    stock_minimo NUMERIC(12, 2) DEFAULT 0.00,
+    deficit_al_solicitar NUMERIC(12, 2) DEFAULT 0.00,
+    cantidad NUMERIC(12, 2) NOT NULL CHECK (cantidad > 0),
+    costo_unitario NUMERIC(12, 2) NOT NULL CHECK (costo_unitario >= 0),
+    costo_estimado NUMERIC(12, 2) NOT NULL CHECK (costo_estimado >= 0),
+    justificacion TEXT,
+    estado VARCHAR(40) NOT NULL DEFAULT 'Pendiente de Compra', -- 'Pendiente de Compra', 'Impreso / En Gestión de Compra', 'Ingresado al Sistema'
+    impreso BOOLEAN DEFAULT FALSE,
+    fecha_impresion TIMESTAMP,
+    cantidad_recibida NUMERIC(12, 2),
+    costo_unitario_real NUMERIC(12, 2),
+    numero_factura VARCHAR(50),
+    observaciones_ingreso TEXT,
+    fecha_ingreso TIMESTAMP,
+    movimiento_id INT REFERENCES movimientos_inventario(id) ON DELETE SET NULL,
+    solicitado_por INT REFERENCES usuarios(id) ON DELETE SET NULL,
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Índices para optimización de consultas y reportes (2.2.2 / 3.6.1)

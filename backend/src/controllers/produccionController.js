@@ -76,6 +76,11 @@ export function getOrdenesProduccion(req, res) {
         ...op,
         codigo_pedido: pedido ? pedido.codigo_pedido : 'Sin Pedido',
         cliente_nombre: cliente ? cliente.razon_social : 'Sin Cliente',
+        suministro_insumos: pedido ? (pedido.suministro_insumos || 'Cliente los trae') : 'Cliente los trae',
+        materiales_solicitados: pedido ? (pedido.materiales_solicitados || []) : [],
+        materiales_recibidos: Boolean(op.materiales_recibidos),
+        fecha_recepcion_materiales: op.fecha_recepcion_materiales || null,
+        observaciones_materiales: op.observaciones_materiales || '',
         fecha_entrega_prometida: pedido ? pedido.fecha_entrega_prometida : null,
         responsable_nombre: responsable ? responsable.nombre : 'Por asignar',
         total_etapas: etapas.length,
@@ -129,7 +134,16 @@ export function getOrdenById(req, res) {
 
 export function createOrdenProduccion(req, res) {
   try {
-    const { pedido_id, prioridad, fecha_inicio_programada, fecha_fin_programada, responsable_id, observaciones } = req.body;
+    const { 
+      pedido_id, 
+      prioridad, 
+      fecha_inicio_programada, 
+      fecha_fin_programada, 
+      responsable_id, 
+      observaciones,
+      materiales_recibidos,
+      observaciones_materiales
+    } = req.body;
 
     const db = getDb();
     const pedido = db.pedidos.find(p => p.id === parseInt(pedido_id));
@@ -139,11 +153,15 @@ export function createOrdenProduccion(req, res) {
     const year = new Date().getFullYear();
     const codigo_op = `OP-${year}-${String(newId).padStart(3, '0')}`;
 
+    const estaRecibido = Boolean(materiales_recibidos);
     const nuevaOp = {
       id: newId,
       codigo_op,
       pedido_id: parseInt(pedido_id),
-      estado: 'Planificada',
+      estado: estaRecibido ? 'Planificada' : 'Pendiente de Materiales',
+      materiales_recibidos: estaRecibido,
+      fecha_recepcion_materiales: estaRecibido ? new Date().toISOString() : null,
+      observaciones_materiales: observaciones_materiales || '',
       prioridad: prioridad || pedido.prioridad || 'Media',
       fecha_inicio_programada: fecha_inicio_programada || new Date().toISOString().split('T')[0],
       fecha_fin_programada: fecha_fin_programada || pedido.fecha_entrega_prometida,
@@ -358,7 +376,14 @@ export function addControlCalidad(req, res) {
 export function updateOrdenEstado(req, res) {
   try {
     const id = parseInt(req.params.id);
-    const { estado, costo_real, observaciones } = req.body;
+    const { 
+      estado, 
+      costo_real, 
+      observaciones, 
+      materiales_recibidos, 
+      fecha_recepcion_materiales, 
+      observaciones_materiales 
+    } = req.body;
     const db = getDb();
 
     const idx = db.ordenes_produccion.findIndex(o => o.id === id);
@@ -367,6 +392,13 @@ export function updateOrdenEstado(req, res) {
     const nowIso = new Date().toISOString();
     if (estado) {
       db.ordenes_produccion[idx].estado = estado;
+      // Si se transiciona a Planificada o posterior y no se había marcado materiales, se asume verificado
+      if ((estado === 'Planificada' || estado === 'En Proceso') && !db.ordenes_produccion[idx].materiales_recibidos) {
+        db.ordenes_produccion[idx].materiales_recibidos = true;
+        if (!db.ordenes_produccion[idx].fecha_recepcion_materiales) {
+          db.ordenes_produccion[idx].fecha_recepcion_materiales = nowIso;
+        }
+      }
       if (estado === 'En Proceso' && !db.ordenes_produccion[idx].fecha_inicio_real) {
         db.ordenes_produccion[idx].fecha_inicio_real = nowIso;
       }
@@ -378,6 +410,18 @@ export function updateOrdenEstado(req, res) {
           db.pedidos[pedIdx].estado = 'Listo para Entrega';
         }
       }
+    }
+    if (materiales_recibidos !== undefined) {
+      db.ordenes_produccion[idx].materiales_recibidos = Boolean(materiales_recibidos);
+      if (materiales_recibidos && !db.ordenes_produccion[idx].fecha_recepcion_materiales) {
+        db.ordenes_produccion[idx].fecha_recepcion_materiales = nowIso;
+      }
+    }
+    if (fecha_recepcion_materiales !== undefined) {
+      db.ordenes_produccion[idx].fecha_recepcion_materiales = fecha_recepcion_materiales;
+    }
+    if (observaciones_materiales !== undefined) {
+      db.ordenes_produccion[idx].observaciones_materiales = observaciones_materiales;
     }
     if (costo_real !== undefined) {
       db.ordenes_produccion[idx].costo_real = parseFloat(costo_real) || 0;

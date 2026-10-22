@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Boxes, Plus, AlertTriangle, ArrowDownLeft, ArrowUpRight, History, Search, CheckCircle } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Boxes, Plus, AlertTriangle, ArrowDownLeft, ArrowUpRight, History, Search, CheckCircle, Edit2, Trash2 } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function Inventario() {
@@ -13,6 +14,19 @@ export default function Inventario() {
 
     // Modales
     const [showMaterialModal, setShowMaterialModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingMaterial, setEditingMaterial] = useState(null);
+    const [editForm, setEditForm] = useState({
+        codigo_sku: '',
+        nombre: '',
+        categoria: 'Metales/Perfiles',
+        unidad_medida: 'und',
+        stock_actual: 0,
+        stock_minimo: 5,
+        costo_unitario: 0,
+        ubicacion_almacen: 'Almacén Central'
+    });
+    const [deletingId, setDeletingId] = useState(null);
     const [showMovimientoModal, setShowMovimientoModal] = useState(false);
     const [selectedMaterial, setSelectedMaterial] = useState(null);
 
@@ -77,6 +91,51 @@ export default function Inventario() {
             loadData();
         } catch (err) {
             alert('Error: ' + err.message);
+        }
+    };
+
+    const handleOpenEdit = (m) => {
+        setEditingMaterial(m);
+        setEditForm({
+            codigo_sku: m.codigo_sku,
+            nombre: m.nombre,
+            categoria: m.categoria,
+            unidad_medida: m.unidad_medida,
+            stock_actual: m.stock_actual,
+            stock_minimo: m.stock_minimo,
+            costo_unitario: m.costo_unitario,
+            ubicacion_almacen: m.ubicacion_almacen || 'Almacén Central'
+        });
+        setShowEditModal(true);
+    };
+
+    const handleUpdateMaterial = async (e) => {
+        e.preventDefault();
+        if (!editingMaterial) return;
+        try {
+            const res = await api.put(`/inventario/${editingMaterial.id}`, editForm);
+            setShowEditModal(false);
+            setEditingMaterial(null);
+            await loadData();
+            alert(res.mensaje || 'Insumo actualizado exitosamente');
+        } catch (err) {
+            alert('Error al actualizar insumo: ' + err.message);
+        }
+    };
+
+    const handleDeleteMaterial = async (m) => {
+        const confirmMsg = `¿Estás seguro de que deseas eliminar o retirar el insumo "${m.nombre}" (${m.codigo_sku})?\n\n- Si fue un error de digitación y NO tiene movimientos en el Kardex, se eliminará definitivamente.\n- Si ya tiene movimientos registrados, se retirará del catálogo activo de almacén para proteger la trazabilidad contable.`;
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            setDeletingId(m.id);
+            const res = await api.delete(`/inventario/${m.id}`);
+            alert(res.mensaje || 'Insumo procesado con éxito');
+            await loadData();
+        } catch (err) {
+            alert('Error al eliminar material: ' + err.message);
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -297,6 +356,23 @@ export default function Inventario() {
                                                             <ArrowUpRight className="w-3.5 h-3.5" />
                                                             Salida
                                                         </button>
+                                                        <button
+                                                            onClick={() => handleOpenEdit(m)}
+                                                            className="px-2 py-1.5 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-[11px] font-bold transition inline-flex items-center gap-1 shadow-sm cursor-pointer"
+                                                            title="Editar Insumo (Corregir digitación)"
+                                                        >
+                                                            <Edit2 className="w-3.5 h-3.5" />
+                                                            Editar
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteMaterial(m)}
+                                                            disabled={deletingId === m.id}
+                                                            className="px-2 py-1.5 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/50 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-[11px] font-bold transition inline-flex items-center gap-1 shadow-sm cursor-pointer disabled:opacity-50"
+                                                            title="Eliminar Insumo"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                            Eliminar
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             );
@@ -358,15 +434,15 @@ export default function Inventario() {
             )}
 
             {/* Modal Nuevo Material */}
-            {showMaterialModal && (
-                <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-100 dark:border-slate-800">
-                        <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+            {showMaterialModal && createPortal(
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800">
+                        <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
                             <h3 className="font-bold text-sm">Registrar Insumo / Materia Prima</h3>
                             <button onClick={() => setShowMaterialModal(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
                         </div>
 
-                        <form onSubmit={handleCreateMaterial} className="p-6 space-y-4 text-xs">
+                        <form onSubmit={handleCreateMaterial} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Código SKU *</label>
@@ -420,13 +496,140 @@ export default function Inventario() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Modal Editar Insumo / Corregir Digitación */}
+            {showEditModal && editingMaterial && createPortal(
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800">
+                        <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+                            <div className="flex items-center gap-2">
+                                <Edit2 className="w-4 h-4 text-blue-400" />
+                                <h3 className="font-bold text-sm">Editar Insumo / Corregir Digitación</h3>
+                            </div>
+                            <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
+                        </div>
+
+                        <form onSubmit={handleUpdateMaterial} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Código SKU *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editForm.codigo_sku}
+                                        onChange={(e) => setEditForm({ ...editForm, codigo_sku: e.target.value })}
+                                        className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Categoría</label>
+                                    <select
+                                        value={editForm.categoria}
+                                        onChange={(e) => setEditForm({ ...editForm, categoria: e.target.value })}
+                                        className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    >
+                                        <option value="Metales/Perfiles">Metales/Perfiles</option>
+                                        <option value="Soldadura/Consumibles">Soldadura/Consumibles</option>
+                                        <option value="Pinturas/Acabados">Pinturas/Acabados</option>
+                                        <option value="Fijaciones/Tornillería">Fijaciones/Tornillería</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nombre Completo del Insumo *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={editForm.nombre}
+                                    onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
+                                    className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+                                <div>
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Und. Medida</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editForm.unidad_medida}
+                                        onChange={(e) => setEditForm({ ...editForm, unidad_medida: e.target.value })}
+                                        className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Stock en Planta</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={editForm.stock_actual}
+                                        onChange={(e) => setEditForm({ ...editForm, stock_actual: e.target.value })}
+                                        className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-red-600 dark:text-red-400 mb-1">Stock Mínimo (Alerta)</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={editForm.stock_minimo}
+                                        onChange={(e) => setEditForm({ ...editForm, stock_minimo: e.target.value })}
+                                        className="w-full p-2 border border-red-300 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Costo Unitario (S/)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={editForm.costo_unitario}
+                                        onChange={(e) => setEditForm({ ...editForm, costo_unitario: e.target.value })}
+                                        className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Ubicación en Almacén</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.ubicacion_almacen}
+                                        onChange={(e) => setEditForm({ ...editForm, ubicacion_almacen: e.target.value })}
+                                        className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="pt-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditModal(false)}
+                                    className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm"
+                                >
+                                    Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>,
+                document.body
             )}
 
             {/* Modal Registrar Movimiento (Entrada / Salida) */}
-            {showMovimientoModal && selectedMaterial && (
-                <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-slate-800 p-6 space-y-4 text-xs">
+            {showMovimientoModal && selectedMaterial && createPortal(
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800 p-6 space-y-4 text-xs">
                         <h3 className="font-bold text-sm text-slate-900 dark:text-white">
                             Registrar Movimiento: <span className="text-blue-600 dark:text-blue-400">{selectedMaterial.nombre}</span>
                         </h3>
@@ -492,7 +695,8 @@ export default function Inventario() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
