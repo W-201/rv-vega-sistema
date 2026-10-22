@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
     Hammer, CheckCircle, Clock, AlertTriangle, Play, CheckSquare,
     User, Plus, LayoutGrid, ListChecks, PauseCircle, ArrowRight, Activity,
@@ -742,6 +743,27 @@ export default function Produccion() {
                                             </button>
                                         )}
                                     </div>
+                                    {selectedOp.materiales_solicitados && selectedOp.materiales_solicitados.length > 0 && (
+                                        <div className="w-full mt-3 pt-3 border-t border-purple-200/80 dark:border-purple-800/60">
+                                            <span className="text-[11px] font-bold text-purple-900 dark:text-purple-300 block mb-1.5 flex items-center gap-1.5">
+                                                <Boxes className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                                <span>Materiales asignados para este pedido (Suministrados por Nosotros):</span>
+                                            </span>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                                {selectedOp.materiales_solicitados.map((m, idx) => (
+                                                    <div key={idx} className="p-2 bg-white dark:bg-slate-850 rounded-lg border border-purple-200 dark:border-purple-900/50 shadow-xs flex justify-between items-center text-xs">
+                                                        <div>
+                                                            <div className="font-semibold text-slate-800 dark:text-slate-100">{m.nombre}</div>
+                                                            <div className="text-[10px] text-slate-400 font-mono">{m.codigo_sku}</div>
+                                                        </div>
+                                                        <span className="font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800">
+                                                            {m.cantidad} {m.unidad_medida}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Seguimiento Digital por Etapas */}
@@ -869,18 +891,18 @@ export default function Produccion() {
             {/* ========================================================================= */}
             {/* FORMULARIO MODAL 1: REGISTRAR NUEVA ORDEN DE PRODUCCIÓN (3.4.2.2)         */}
             {/* ========================================================================= */}
-            {showNuevaOpModal && (
-                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-100 dark:border-slate-800 transition-colors">
-                        <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+            {showNuevaOpModal && createPortal(
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800 transition-colors">
+                        <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
                             <h3 className="font-bold text-sm flex items-center gap-2">
                                 <Hammer className="w-4 h-4 text-amber-400" />
                                 Registrar Nueva Orden de Producción (OP)
                             </h3>
-                            <button onClick={() => setShowNuevaOpModal(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
+                            <button onClick={() => setShowNuevaOpModal(false)} className="text-slate-400 hover:text-white text-lg cursor-pointer">✕</button>
                         </div>
 
-                        <form onSubmit={handleCreateOrdenProduccion} className="p-6 space-y-4 text-xs">
+                        <form onSubmit={handleCreateOrdenProduccion} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
                             <div>
                                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pedido Asociado *</label>
                                 {pedidosDisponibles.length === 0 ? (
@@ -1002,15 +1024,16 @@ export default function Produccion() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* ========================================================================= */}
             {/* FORMULARIO MODAL 2: REGISTRO DE TIEMPOS Y AVANCE DE ETAPA (3.4.2.2)       */}
             {/* ========================================================================= */}
-            {showEtapaModal && etapaActiva && (
-                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-slate-800 p-6 space-y-4 text-xs transition-colors">
+            {showEtapaModal && etapaActiva && createPortal(
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800 p-6 space-y-4 text-xs transition-colors">
                         <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
                             <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             Registro de Producción: {etapaActiva.nombre_etapa}
@@ -1073,13 +1096,14 @@ export default function Produccion() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Modal Parada de Producción */}
-            {showParadaModal && (
-                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-slate-800 p-6 space-y-4 text-xs transition-colors">
+            {showParadaModal && createPortal(
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800 p-6 space-y-4 text-xs transition-colors">
                         <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4 text-amber-500" />
                             Registrar Parada / Incidencia en Taller
@@ -1131,13 +1155,14 @@ export default function Produccion() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Modal Control de Calidad */}
-            {showCalidadModal && (
-                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-slate-800 p-6 space-y-4 text-xs transition-colors">
+            {showCalidadModal && createPortal(
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800 p-6 space-y-4 text-xs transition-colors">
                         <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
                             <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                             Inspección de Control de Calidad
@@ -1186,16 +1211,17 @@ export default function Produccion() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* ========================================================================= */}
             {/* FORMULARIO MODAL 4: VERIFICACIÓN Y RECEPCIÓN DE INSUMOS / MATERIALES       */}
             {/* ========================================================================= */}
-            {showMaterialModal && opParaVerificar && (
-                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-100 dark:border-slate-800 transition-colors">
-                        <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+            {showMaterialModal && opParaVerificar && createPortal(
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800 transition-colors">
+                        <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
                             <div className="flex items-center gap-2">
                                 <PackageCheck className="w-5 h-5 text-cyan-400" />
                                 <div>
@@ -1291,7 +1317,8 @@ export default function Produccion() {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ShoppingBag, Plus, Filter, Calendar, Hammer, Eye, FileText, CheckCircle2, Search, Truck, Boxes } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -18,6 +19,8 @@ export default function Pedidos({ setActiveTab }) {
     const [prioridad, setPrioridad] = useState('Media');
     const [suministroInsumos, setSuministroInsumos] = useState('Cliente los trae');
     const [observaciones, setObservaciones] = useState('');
+    const [materialesInventario, setMaterialesInventario] = useState([]);
+    const [materialesUsados, setMaterialesUsados] = useState([]);
     const [items, setItems] = useState([
         { descripcion_producto: '', especificaciones: '', cantidad: 1, precio_unitario: 0 }
     ]);
@@ -56,9 +59,50 @@ export default function Pedidos({ setActiveTab }) {
         loadPedidos();
     }, [filtroEstado, filtroPrioridad, filtroInsumos, busqueda]);
 
+    const loadMateriales = async () => {
+        try {
+            const data = await api.get('/inventario');
+            setMaterialesInventario(data || []);
+        } catch (err) {
+            console.error('Error al cargar inventario para pedidos:', err);
+        }
+    };
+
     useEffect(() => {
         loadClientes();
+        loadMateriales();
     }, []);
+
+    const handleAddMaterialUsado = () => {
+        setMaterialesUsados(prev => [
+            ...prev,
+            { material_id: '', cantidad: 1, unidad_medida: '', costo_unitario: 0, nombre: '', codigo_sku: '' }
+        ]);
+    };
+
+    const handleRemoveMaterialUsado = (idx) => {
+        setMaterialesUsados(prev => prev.filter((_, i) => i !== idx));
+    };
+
+    const handleMaterialUsadoChange = (idx, field, val) => {
+        setMaterialesUsados(prev => {
+            const copy = [...prev];
+            if (field === 'material_id') {
+                const mat = materialesInventario.find(m => String(m.id) === String(val));
+                copy[idx] = {
+                    ...copy[idx],
+                    material_id: val,
+                    nombre: mat ? mat.nombre : '',
+                    codigo_sku: mat ? mat.codigo_sku : '',
+                    unidad_medida: mat ? mat.unidad_medida : 'und',
+                    costo_unitario: mat ? mat.costo_unitario : 0
+                };
+            } else {
+                copy[idx][field] = val;
+            }
+            return copy;
+        });
+    };
 
     const handleAddItem = () => {
         setItems([...items, { descripcion_producto: '', especificaciones: '', cantidad: 1, precio_unitario: 0 }]);
@@ -95,11 +139,13 @@ export default function Pedidos({ setActiveTab }) {
                 fecha_entrega_prometida: fechaEntrega,
                 prioridad,
                 suministro_insumos: suministroInsumos,
+                materiales_usados: suministroInsumos === 'Empresa suministra' ? materialesUsados.filter(m => m.material_id) : [],
                 observaciones,
                 items
             });
             setShowModal(false);
             setItems([{ descripcion_producto: '', especificaciones: '', cantidad: 1, precio_unitario: 0 }]);
+            setMaterialesUsados([]);
             setObservaciones('');
             setSuministroInsumos('Cliente los trae');
             loadPedidos();
@@ -204,9 +250,9 @@ export default function Pedidos({ setActiveTab }) {
                             onChange={(e) => setFiltroInsumos(e.target.value)}
                             className="text-xs p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                         >
-                            <option value="Todos">Todos los Insumos</option>
-                            <option value="Cliente los trae">Cliente los trae</option>
-                            <option value="Empresa suministra">Empresa suministra</option>
+                            <option value="Todos">Todos (Clientes / Nosotros)</option>
+                            <option value="Cliente los trae">Clientes</option>
+                            <option value="Empresa suministra">Nosotros</option>
                         </select>
                     </div>
                 </div>
@@ -268,14 +314,14 @@ export default function Pedidos({ setActiveTab }) {
                                             </td>
                                             <td className="px-5 py-3">
                                                 {p.suministro_insumos === 'Empresa suministra' ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60" title="RV Vega suministra / compra los insumos">
+                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60" title="Materiales provistos por Nosotros (RV Vega)">
                                                         <ShoppingBag className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-                                                        <span>Empresa suministra</span>
+                                                        <span>Nosotros</span>
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60" title="El comprador provee los insumos (modalidad habitual)">
+                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60" title="Materiales provistos por Clientes">
                                                         <Boxes className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                                                        <span>Cliente los trae</span>
+                                                        <span>Clientes</span>
                                                     </span>
                                                 )}
                                             </td>
@@ -356,15 +402,16 @@ export default function Pedidos({ setActiveTab }) {
                 </div>
             </div>
 
-            {showModal && (
-                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-100 dark:border-slate-800 my-8 transition-colors">
-                        <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+            {showModal && createPortal(
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800 transition-colors">
+                        <div className="bg-slate-900 dark:bg-slate-950 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
                             <h3 className="font-bold text-sm">Registrar Nuevo Pedido / Cotización</h3>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
+                            <button type="button" onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white text-lg p-1 cursor-pointer">✕</button>
                         </div>
 
-                        <form onSubmit={handleCreatePedido} className="p-6 space-y-4 text-xs">
+                        <form onSubmit={handleCreatePedido} className="flex-1 flex flex-col overflow-hidden min-h-0">
+                            <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
 
                             {/* BLOQUE OE1: CÓDIGO AUTOGENERADO Y FECHA */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
@@ -453,10 +500,10 @@ export default function Pedidos({ setActiveTab }) {
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                    {/* Opción 1: Cliente los trae (Por defecto / Habitual) */}
+                                    {/* Opción 1: Clientes */}
                                     <div
                                         onClick={() => setSuministroInsumos('Cliente los trae')}
-                                        className={`p-3 rounded-xl border-2 text-left transition flex items-start gap-3 cursor-pointer ${
+                                        className={`p-3 rounded-xl border-2 text-left transition flex items-center gap-3 cursor-pointer ${
                                             suministroInsumos === 'Cliente los trae'
                                                 ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/40 dark:border-blue-500 shadow-sm'
                                                 : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/60'
@@ -468,28 +515,28 @@ export default function Pedidos({ setActiveTab }) {
                                             name="suministro_insumos"
                                             checked={suministroInsumos === 'Cliente los trae'}
                                             onChange={() => setSuministroInsumos('Cliente los trae')}
-                                            className="mt-0.5 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                            className="text-blue-600 focus:ring-blue-500 cursor-pointer"
                                         />
                                         <label htmlFor="insumo_cliente" className="cursor-pointer flex-1">
                                             <div className="flex items-center gap-1.5 flex-wrap">
                                                 <Boxes className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                                <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-                                                    Ellos los traen
+                                                <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                                                    Clientes
                                                 </span>
                                                 <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.5 rounded font-bold border border-emerald-300 dark:border-emerald-800">
                                                     Habitual
                                                 </span>
                                             </div>
-                                            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-snug">
-                                                El comprador provee los materiales. El taller solo cotiza mano de obra y fabricación.
+                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                                El cliente provee los materiales
                                             </p>
                                         </label>
                                     </div>
 
-                                    {/* Opción 2: Compra por nuestra parte */}
+                                    {/* Opción 2: Nosotros */}
                                     <div
                                         onClick={() => setSuministroInsumos('Empresa suministra')}
-                                        className={`p-3 rounded-xl border-2 text-left transition flex items-start gap-3 cursor-pointer ${
+                                        className={`p-3 rounded-xl border-2 text-left transition flex items-center gap-3 cursor-pointer ${
                                             suministroInsumos === 'Empresa suministra'
                                                 ? 'border-purple-600 bg-purple-50/80 dark:bg-purple-950/40 dark:border-purple-500 shadow-sm'
                                                 : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/60'
@@ -501,49 +548,141 @@ export default function Pedidos({ setActiveTab }) {
                                             name="suministro_insumos"
                                             checked={suministroInsumos === 'Empresa suministra'}
                                             onChange={() => setSuministroInsumos('Empresa suministra')}
-                                            className="mt-0.5 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                                            className="text-purple-600 focus:ring-purple-500 cursor-pointer"
                                         />
                                         <label htmlFor="insumo_empresa" className="cursor-pointer flex-1">
                                             <div className="flex items-center gap-1.5 flex-wrap">
                                                 <ShoppingBag className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                                                <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-                                                    Compra por nuestra parte
+                                                <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                                                    Nosotros
                                                 </span>
                                             </div>
-                                            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-snug">
-                                                Se añade la compra de insumos; RV Vega cotiza, adquiere y suministra los materiales.
+                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                                RV Vega cotiza y suministra los materiales
                                             </p>
                                         </label>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* Desglose de Materiales a usar si "Nosotros" suministramos */}
+                            {suministroInsumos === 'Empresa suministra' && (
+                                <div className="border border-purple-200 dark:border-purple-800/80 rounded-xl p-3 bg-purple-50/50 dark:bg-purple-950/20 space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <Boxes className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                            <div>
+                                                <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                                                    Desglose de Materiales a Utilizar
+                                                </h4>
+                                                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                                    Selecciona los materiales del inventario requeridos para este pedido
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleAddMaterialUsado}
+                                            className="text-[11px] bg-purple-600 hover:bg-purple-700 text-white font-semibold px-2.5 py-1 rounded-lg shadow-sm cursor-pointer flex items-center gap-1"
+                                        >
+                                            <Plus className="w-3.5 h-3.5" />
+                                            <span>Agregar Material</span>
+                                        </button>
+                                    </div>
+
+                                    {materialesUsados.length === 0 ? (
+                                        <div className="p-3 text-center text-[11px] text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/60 rounded-lg border border-dashed border-purple-300 dark:border-purple-800">
+                                            No se han seleccionado materiales aún. Haz clic en <strong>+ Agregar Material</strong> para detallar los insumos requeridos.
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {materialesUsados.map((mat, idx) => (
+                                                <div key={idx} className="p-2.5 bg-white dark:bg-slate-800/90 border border-purple-100 dark:border-purple-900/40 rounded-lg grid grid-cols-12 gap-2 items-center">
+                                                    <div className="col-span-6">
+                                                        <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">Material / Insumo *</label>
+                                                        <select
+                                                            required
+                                                            value={mat.material_id}
+                                                            onChange={(e) => handleMaterialUsadoChange(idx, 'material_id', e.target.value)}
+                                                            className="w-full p-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs focus:ring-2 focus:ring-purple-500 outline-none"
+                                                        >
+                                                            <option value="">-- Seleccionar material del inventario --</option>
+                                                            {materialesInventario.map(m => (
+                                                                <option key={m.id} value={m.id}>
+                                                                    [{m.codigo_sku}] {m.nombre} (Stock: {m.stock_actual} {m.unidad_medida})
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5 text-center">Cant. *</label>
+                                                        <input
+                                                            type="number"
+                                                            step="0.1"
+                                                            min="0.1"
+                                                            required
+                                                            placeholder="Cant."
+                                                            value={mat.cantidad}
+                                                            onChange={(e) => handleMaterialUsadoChange(idx, 'cantidad', e.target.value)}
+                                                            className="w-full p-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs text-center focus:ring-2 focus:ring-purple-500 outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-1 text-center pt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                                        {mat.unidad_medida || '-'}
+                                                    </div>
+                                                    <div className="col-span-2 text-right pt-3 text-xs font-bold text-slate-700 dark:text-slate-200">
+                                                        S/ {(Number(mat.cantidad || 0) * Number(mat.costo_unitario || 0)).toFixed(2)}
+                                                    </div>
+                                                    <div className="col-span-1 text-center pt-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveMaterialUsado(idx)}
+                                                            className="text-red-500 hover:text-red-700 text-sm font-bold"
+                                                            title="Quitar material"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <div className="text-right text-[11px] text-purple-700 dark:text-purple-300 font-semibold pt-1">
+                                                Costo Estimado de Materiales: S/ {materialesUsados.reduce((acc, m) => acc + ((Number(m.cantidad) || 0) * (Number(m.costo_unitario) || 0)), 0).toFixed(2)}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Servicio Solicitado */}
                             <div className="border border-slate-200 dark:border-slate-750 rounded-xl p-3 bg-slate-50 dark:bg-slate-800/40 space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <h4 className="font-bold text-slate-800 dark:text-slate-200">Ítems / Productos Solicitados</h4>
-                                    <button type="button" onClick={handleAddItem} className="text-[11px] bg-blue-600 text-white font-semibold px-2 py-1 rounded hover:bg-blue-700 shadow-sm cursor-pointer">+ Agregar Ítem</button>
+                                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-xs">Servicio Solicitado</h4>
+                                    <button type="button" onClick={handleAddItem} className="text-[11px] bg-blue-600 text-white font-semibold px-2 py-1 rounded hover:bg-blue-700 shadow-sm cursor-pointer">+ Agregar Servicio</button>
                                 </div>
 
                                 {items.map((it, idx) => (
                                     <div key={idx} className="p-2.5 bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-lg space-y-2">
                                         <div className="grid grid-cols-12 gap-2">
                                             <div className="col-span-6">
-                                                <input type="text" required placeholder="Descripción del producto o servicio" value={it.descripcion_producto} onChange={(e) => handleItemChange(idx, 'descripcion_producto', e.target.value)} className="w-full p-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs focus:ring-2 focus:ring-blue-500 outline-none" />
+                                                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">Nombre del Servicio / Producto a fabricar *</label>
+                                                <input type="text" required placeholder="Ej. Fabricación de Tolva, Bastidor, Barandas..." value={it.descripcion_producto} onChange={(e) => handleItemChange(idx, 'descripcion_producto', e.target.value)} className="w-full p-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs focus:ring-2 focus:ring-blue-500 outline-none" />
                                             </div>
                                             <div className="col-span-2">
+                                                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5 text-center">Cantidad *</label>
                                                 <input type="number" min="1" required placeholder="Cant." value={it.cantidad} onChange={(e) => handleItemChange(idx, 'cantidad', e.target.value)} className="w-full p-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs text-center focus:ring-2 focus:ring-blue-500 outline-none" />
                                             </div>
                                             <div className="col-span-3">
+                                                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5 text-right">Cuánto se va a cobrar (S/) *</label>
                                                 <input type="number" step="0.01" min="0" required placeholder="P. Unitario (S/)" value={it.precio_unitario} onChange={(e) => handleItemChange(idx, 'precio_unitario', e.target.value)} className="w-full p-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs text-right focus:ring-2 focus:ring-blue-500 outline-none" />
                                             </div>
-                                            <div className="col-span-1 text-center">
+                                            <div className="col-span-1 text-center pt-3">
                                                 {items.length > 1 && (
                                                     <button type="button" onClick={() => handleRemoveItem(idx)} className="text-red-500 hover:text-red-700 text-base">✕</button>
                                                 )}
                                             </div>
                                         </div>
                                         <div>
-                                            <input type="text" placeholder="Especificaciones técnicas (medidas, material, norma)" value={it.especificaciones} onChange={(e) => handleItemChange(idx, 'especificaciones', e.target.value)} className="w-full p-1.5 border border-slate-200 dark:border-slate-700 rounded text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none" />
+                                            <input type="text" placeholder="Especificaciones adicionales (dimensiones, planos, acabados)" value={it.especificaciones} onChange={(e) => handleItemChange(idx, 'especificaciones', e.target.value)} className="w-full p-1.5 border border-slate-200 dark:border-slate-700 rounded text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none" />
                                         </div>
                                     </div>
                                 ))}
@@ -551,7 +690,7 @@ export default function Pedidos({ setActiveTab }) {
                                 <div className="text-right space-y-0.5 pt-2 text-xs text-slate-700 dark:text-slate-300">
                                     <div>Subtotal: <span className="font-semibold text-slate-900 dark:text-slate-100">S/ {subtotal.toFixed(2)}</span></div>
                                     <div>I.G.V. (18%): <span className="font-semibold text-slate-900 dark:text-slate-100">S/ {igv.toFixed(2)}</span></div>
-                                    <div className="text-sm font-bold text-slate-900 dark:text-slate-100">Total: S/ {total.toFixed(2)}</div>
+                                    <div className="text-sm font-bold text-slate-900 dark:text-slate-100">Total a Cobrar: S/ {total.toFixed(2)}</div>
                                 </div>
                             </div>
 
@@ -560,88 +699,134 @@ export default function Pedidos({ setActiveTab }) {
                                 <textarea rows="2" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} placeholder="Condiciones especiales, lugar de despacho..." className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                             </div>
 
-                            <div className="pt-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium">Cancelar</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm">Guardar Pedido</button>
+                            </div>
+
+                            {/* FOOTER ACCIONES - SIEMPRE VISIBLE */}
+                            <div className="p-4 bg-slate-50 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
+                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 font-medium cursor-pointer">Cancelar</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm cursor-pointer">Guardar Pedido</button>
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
-            {detallePedido && (
-                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-100 dark:border-slate-800 p-6 space-y-4 text-xs transition-colors">
-                        <div className="flex justify-between items-start border-b border-slate-200 dark:border-slate-800 pb-3">
+            {detallePedido && createPortal(
+                <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-[999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800 text-xs transition-colors">
+                        {/* HEADER - FIJO */}
+                        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start shrink-0 bg-white dark:bg-slate-900">
                             <div>
                                 <span className="font-mono text-sm font-bold text-blue-700 dark:text-blue-400">{detallePedido.codigo_pedido}</span>
                                 <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">{detallePedido.cliente?.razon_social}</h3>
                                 <p className="text-slate-500 dark:text-slate-400 text-[11px]">{detallePedido.cliente?.tipo_documento}: {detallePedido.cliente?.numero_documento}</p>
                             </div>
-                            <button onClick={() => setDetallePedido(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg">✕</button>
+                            <button onClick={() => setDetallePedido(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg p-1 cursor-pointer">✕</button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-300">
-                            <div>Fecha Pedido: <span className="font-semibold text-slate-900 dark:text-slate-100">{detallePedido.fecha_pedido}</span></div>
-                            <div>Fecha Entrega: <span className="font-semibold text-slate-900 dark:text-slate-100">{detallePedido.fecha_entrega_prometida}</span></div>
-                            <div>Estado: <span className="font-bold text-blue-600 dark:text-blue-400">{detallePedido.estado}</span></div>
-                            <div>Prioridad: <span className="font-semibold text-slate-900 dark:text-slate-100">{detallePedido.prioridad}</span></div>
-                        </div>
+                        {/* CUERPO CON SCROLL INTERNO */}
+                        <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                            <div className="grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-300">
+                                <div>Fecha Pedido: <span className="font-semibold text-slate-900 dark:text-slate-100">{detallePedido.fecha_pedido}</span></div>
+                                <div>Fecha Entrega: <span className="font-semibold text-slate-900 dark:text-slate-100">{detallePedido.fecha_entrega_prometida}</span></div>
+                                <div>Estado: <span className="font-bold text-blue-600 dark:text-blue-400">{detallePedido.estado}</span></div>
+                                <div>Prioridad: <span className="font-semibold text-slate-900 dark:text-slate-100">{detallePedido.prioridad}</span></div>
+                            </div>
 
-                        {/* BANNER DE SUMINISTRO DE INSUMOS */}
-                        <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                {detallePedido.suministro_insumos === 'Empresa suministra' ? (
-                                    <ShoppingBag className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                                ) : (
-                                    <Boxes className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                )}
-                                <div>
-                                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block">
-                                        Suministro de Insumos
-                                    </span>
-                                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                                        {detallePedido.suministro_insumos === 'Empresa suministra'
-                                            ? 'Compra de insumos por nuestra parte (RV Vega)'
-                                            : 'Insumos provistos por el cliente (Ellos los traen)'}
-                                    </span>
+                            {/* BANNER DE SUMINISTRO DE INSUMOS */}
+                            <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    {detallePedido.suministro_insumos === 'Empresa suministra' ? (
+                                        <ShoppingBag className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                                    ) : (
+                                        <Boxes className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                    )}
+                                    <div>
+                                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block">
+                                            Suministro de Insumos
+                                        </span>
+                                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                            {detallePedido.suministro_insumos === 'Empresa suministra'
+                                                ? 'Nosotros (RV Vega suministra los materiales)'
+                                                : 'Clientes (El cliente provee los materiales)'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded border ${
+                                    detallePedido.suministro_insumos === 'Empresa suministra'
+                                        ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                        : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                }`}>
+                                    {detallePedido.suministro_insumos === 'Empresa suministra' ? 'Nosotros' : 'Clientes'}
+                                </span>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h4 className="font-bold text-slate-800 dark:text-slate-200 text-xs">Servicios Solicitados</h4>
+                                <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                                    {detallePedido.detalles?.map(d => (
+                                        <div key={d.id} className="p-2.5 flex justify-between items-center bg-white dark:bg-slate-850">
+                                            <div>
+                                                <div className="font-semibold text-slate-800 dark:text-slate-200">{d.descripcion_producto}</div>
+                                                <div className="text-[11px] text-slate-500 dark:text-slate-400">{d.especificaciones}</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-slate-600 dark:text-slate-300">{d.cantidad} unid. x S/ {Number(d.precio_unitario).toFixed(2)}</div>
+                                                <div className="font-bold text-slate-900 dark:text-slate-100">S/ {Number(d.total_linea).toFixed(2)}</div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${
-                                detallePedido.suministro_insumos === 'Empresa suministra'
-                                    ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
-                                    : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                            }`}>
-                                {detallePedido.suministro_insumos || 'Cliente los trae'}
-                            </span>
-                        </div>
 
-                        <div className="space-y-2">
-                            <h4 className="font-bold text-slate-800 dark:text-slate-200">Desglose de Ítems</h4>
-                            <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
-                                {detallePedido.detalles?.map(d => (
-                                    <div key={d.id} className="p-2.5 flex justify-between items-center bg-white dark:bg-slate-850">
-                                        <div>
-                                            <div className="font-semibold text-slate-800 dark:text-slate-200">{d.descripcion_producto}</div>
-                                            <div className="text-[11px] text-slate-500 dark:text-slate-400">{d.especificaciones}</div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-slate-600 dark:text-slate-300">{d.cantidad} unid. x S/ {Number(d.precio_unitario).toFixed(2)}</div>
-                                            <div className="font-bold text-slate-900 dark:text-slate-100">S/ {Number(d.total_linea).toFixed(2)}</div>
-                                        </div>
+                            {/* Desglose de Materiales si fueron seleccionados (Nosotros) */}
+                            {detallePedido.materiales_solicitados && detallePedido.materiales_solicitados.length > 0 && (
+                                <div className="space-y-2 pt-1">
+                                    <div className="flex items-center gap-1.5">
+                                        <Boxes className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                        <h4 className="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                                            Materiales a Utilizar (Suministrados por Nosotros)
+                                        </h4>
                                     </div>
-                                ))}
-                            </div>
+                                    <div className="border border-purple-200 dark:border-purple-900/40 rounded-lg overflow-hidden">
+                                        <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                                            <thead className="bg-purple-50 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200 font-semibold text-[10px] uppercase">
+                                                <tr>
+                                                    <th className="px-3 py-1.5">SKU</th>
+                                                    <th className="px-3 py-1.5">Insumo</th>
+                                                    <th className="px-3 py-1.5 text-center">Cant.</th>
+                                                    <th className="px-3 py-1.5 text-right">Costo Unit. Ref.</th>
+                                                    <th className="px-3 py-1.5 text-right">Total Est.</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-purple-100 dark:divide-slate-800 bg-white dark:bg-slate-850">
+                                                {detallePedido.materiales_solicitados.map((m, idx) => (
+                                                    <tr key={idx} className="hover:bg-purple-50/30 dark:hover:bg-slate-800/50">
+                                                        <td className="px-3 py-1.5 font-mono text-[10px] text-slate-500">{m.codigo_sku || '-'}</td>
+                                                        <td className="px-3 py-1.5 font-medium text-slate-800 dark:text-slate-200">{m.nombre}</td>
+                                                        <td className="px-3 py-1.5 text-center font-bold text-purple-700 dark:text-purple-300">{m.cantidad} {m.unidad_medida}</td>
+                                                        <td className="px-3 py-1.5 text-right text-slate-600 dark:text-slate-400">S/ {Number(m.costo_unitario || 0).toFixed(2)}</td>
+                                                        <td className="px-3 py-1.5 text-right font-bold text-slate-900 dark:text-slate-100">S/ {Number(m.costo_total || (m.cantidad * m.costo_unitario) || 0).toFixed(2)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-3">
+                        {/* FOOTER RESUMEN - FIJO */}
+                        <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-850 shrink-0">
                             <div className="text-slate-500 dark:text-slate-400 text-[11px]">RV Vega Servicios Generales E.I.R.L.</div>
                             <div className="text-right font-bold text-sm text-slate-900 dark:text-slate-100">
                                 Total Facturado: S/ {Number(detallePedido.total).toFixed(2)}
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Bot, 
   Send, 
@@ -1359,12 +1360,12 @@ export default function AsistenteIA() {
       {/* ============================================================== */}
       {/* MODAL: VERIFICACIÓN DE COMPRA E INGRESO AL ALMACÉN             */}
       {/* ============================================================== */}
-      {modalVerificarCompra && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 transition-all">
+      {modalVerificarCompra && createPortal(
+        <div className="fixed inset-0 z-[999] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 transition-all">
             
             {/* Cabecera del Modal */}
-            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white relative">
+            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white relative shrink-0">
               <button
                 type="button"
                 onClick={() => setModalVerificarCompra(null)}
@@ -1386,7 +1387,7 @@ export default function AsistenteIA() {
             </div>
 
             {/* Formulario de Verificación */}
-            <form onSubmit={handleConfirmarIngresoAlmacen} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleConfirmarIngresoAlmacen} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
               
               {/* Resumen del Material */}
               <div className="p-3.5 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
@@ -1501,7 +1502,8 @@ export default function AsistenteIA() {
             </form>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

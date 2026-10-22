@@ -93,7 +93,7 @@ export function getPedidoById(req, res) {
 
 export function createPedido(req, res) {
   try {
-    const { cliente_id, fecha_entrega_prometida, prioridad, observaciones, items, suministro_insumos } = req.body;
+    const { cliente_id, fecha_entrega_prometida, prioridad, observaciones, items, suministro_insumos, materiales_usados } = req.body;
 
     if (!cliente_id || !fecha_entrega_prometida || !items || !items.length) {
       return res.status(400).json({ error: 'Cliente, fecha prometida y al menos 1 ítem son requeridos' });
@@ -137,6 +137,27 @@ export function createPedido(req, res) {
       ? 'Empresa suministra'
       : 'Cliente los trae';
 
+    // Desglose de materiales seleccionados (si la empresa suministra)
+    let materialesGuardados = [];
+    if (modalidadInsumos === 'Empresa suministra' && Array.isArray(materiales_usados)) {
+      materialesGuardados = materiales_usados
+        .filter(m => m && (m.material_id || m.nombre))
+        .map(m => {
+          const matReal = db.materiales ? db.materiales.find(mat => mat.id === parseInt(m.material_id)) : null;
+          const cant = parseFloat(m.cantidad) || 1;
+          const costo = matReal ? Number(matReal.costo_unitario) : (parseFloat(m.costo_unitario) || 0);
+          return {
+            material_id: matReal ? matReal.id : (parseInt(m.material_id) || null),
+            codigo_sku: matReal ? matReal.codigo_sku : (m.codigo_sku || ''),
+            nombre: matReal ? matReal.nombre : (m.nombre || 'Insumo'),
+            unidad_medida: matReal ? matReal.unidad_medida : (m.unidad_medida || 'und'),
+            cantidad: cant,
+            costo_unitario: costo,
+            costo_total: Math.round(cant * costo * 100) / 100
+          };
+        });
+    }
+
     const nuevoPedido = {
       id: newId,
       codigo_pedido,
@@ -147,6 +168,7 @@ export function createPedido(req, res) {
       estado: 'Pendiente',
       prioridad: prioridad || 'Media',
       suministro_insumos: modalidadInsumos,
+      materiales_solicitados: materialesGuardados,
       subtotal,
       igv,
       total,

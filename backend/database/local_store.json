@@ -303,6 +303,23 @@
       "observaciones": "",
       "creado_por": 1,
       "creado_en": "2026-10-22T17:55:28.656Z"
+    },
+    {
+      "id": 8,
+      "codigo_pedido": "PED-2026-0008",
+      "cliente_id": 1,
+      "fecha_pedido": "2026-10-22",
+      "fecha_entrega_prometida": "2026-11-01",
+      "fecha_entrega_real": null,
+      "estado": "Pendiente",
+      "prioridad": "Media",
+      "suministro_insumos": "Empresa suministra",
+      "subtotal": 1200,
+      "igv": 216,
+      "total": 1416,
+      "observaciones": "",
+      "creado_por": 1,
+      "creado_en": "2026-10-22T20:12:01.472Z"
     }
   ],
   "pedido_detalles": [
@@ -368,6 +385,15 @@
       "cantidad": 1,
       "precio_unitario": 230,
       "total_linea": 230
+    },
+    {
+      "id": 8,
+      "pedido_id": 8,
+      "descripcion_producto": "Mesitas",
+      "especificaciones": "",
+      "cantidad": 2,
+      "precio_unitario": 600,
+      "total_linea": 1200
     }
   ],
   "ordenes_produccion": [
@@ -432,7 +458,7 @@
       "id": 4,
       "codigo_op": "OP-2026-004",
       "pedido_id": 4,
-      "estado": "Pendiente de Materiales",
+      "estado": "Planificada",
       "prioridad": "Media",
       "fecha_inicio_programada": "2026-10-20",
       "fecha_fin_programada": "2026-09-22",
@@ -444,8 +470,8 @@
       "responsable_id": 1,
       "observaciones": "Generada para atender PED-2026-0004",
       "creado_en": "2026-10-20T19:07:44.040Z",
-      "materiales_recibidos": false,
-      "fecha_recepcion_materiales": null,
+      "materiales_recibidos": true,
+      "fecha_recepcion_materiales": "2026-10-22T20:10:00.100Z",
       "observaciones_materiales": "En espera de que el almacén habilite los materiales comprados"
     },
     {

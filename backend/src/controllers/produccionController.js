@@ -77,6 +77,7 @@ export function getOrdenesProduccion(req, res) {
         codigo_pedido: pedido ? pedido.codigo_pedido : 'Sin Pedido',
         cliente_nombre: cliente ? cliente.razon_social : 'Sin Cliente',
         suministro_insumos: pedido ? (pedido.suministro_insumos || 'Cliente los trae') : 'Cliente los trae',
+        materiales_solicitados: pedido ? (pedido.materiales_solicitados || []) : [],
         materiales_recibidos: Boolean(op.materiales_recibidos),
         fecha_recepcion_materiales: op.fecha_recepcion_materiales || null,
         observaciones_materiales: op.observaciones_materiales || '',
