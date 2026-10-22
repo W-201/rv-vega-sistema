@@ -270,6 +270,22 @@
       "total": 5782,
       "observaciones": "Mantenimiento preventivo y repuestos para cerco perimétrico",
       "creado_por": 1
+    },
+    {
+      "id": 6,
+      "codigo_pedido": "PED-2026-0006",
+      "cliente_id": 1,
+      "fecha_pedido": "2026-10-22",
+      "fecha_entrega_prometida": "2026-10-30",
+      "fecha_entrega_real": null,
+      "estado": "En Planificación",
+      "prioridad": "Media",
+      "subtotal": 0,
+      "igv": 0,
+      "total": 0,
+      "observaciones": "",
+      "creado_por": 1,
+      "creado_en": "2026-10-22T17:29:11.869Z"
     }
   ],
   "pedido_detalles": [
@@ -317,6 +333,15 @@
       "cantidad": 20,
       "precio_unitario": 245,
       "total_linea": 4900
+    },
+    {
+      "id": 6,
+      "pedido_id": 6,
+      "descripcion_producto": "una banquitqa",
+      "especificaciones": "",
+      "cantidad": 1,
+      "precio_unitario": 0,
+      "total_linea": 0
     }
   ],
   "ordenes_produccion": [
@@ -384,6 +409,23 @@
       "responsable_id": 1,
       "observaciones": "Generada para atender PED-2026-0004",
       "creado_en": "2026-10-20T19:07:44.040Z"
+    },
+    {
+      "id": 5,
+      "codigo_op": "OP-2026-005",
+      "pedido_id": 6,
+      "estado": "Planificada",
+      "prioridad": "Media",
+      "fecha_inicio_programada": "2026-10-22",
+      "fecha_fin_programada": "2026-10-30",
+      "fecha_inicio_real": null,
+      "fecha_fin_real": null,
+      "porcentaje_avance": 0,
+      "costo_estimado": 0,
+      "costo_real": 0,
+      "responsable_id": 1,
+      "observaciones": "Generada para atender PED-2026-0006",
+      "creado_en": "2026-10-22T17:29:19.734Z"
     }
   ],
   "etapas_produccion": [
@@ -507,6 +549,71 @@
     {
       "id": 10,
       "orden_produccion_id": 4,
+      "numero_fase": 5,
+      "nombre_etapa": "Control de Calidad y Despacho",
+      "descripcion": "Verificación dimensional, pruebas de soldadura y embalaje",
+      "operario_asignado": "Carlos Mendoza",
+      "horas_estimadas": 6,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
+    },
+    {
+      "id": 11,
+      "orden_produccion_id": 5,
+      "numero_fase": 1,
+      "nombre_etapa": "Habilitado y Corte",
+      "descripcion": "Corte, dimensionamiento y preparación de perfiles / planchas",
+      "operario_asignado": "Juan Pérez T.",
+      "horas_estimadas": 14,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
+    },
+    {
+      "id": 12,
+      "orden_produccion_id": 5,
+      "numero_fase": 2,
+      "nombre_etapa": "Mecanizado y Perforado",
+      "descripcion": "Taladrado, biselado y preparación de uniones mecánicas",
+      "operario_asignado": "Marcos Quispe",
+      "horas_estimadas": 10,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
+    },
+    {
+      "id": 13,
+      "orden_produccion_id": 5,
+      "numero_fase": 3,
+      "nombre_etapa": "Armado y Soldadura",
+      "descripcion": "Fijación, apuntalado y cordones continuos estructurales",
+      "operario_asignado": "Juan Pérez T.",
+      "horas_estimadas": 24,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
+    },
+    {
+      "id": 14,
+      "orden_produccion_id": 5,
+      "numero_fase": 4,
+      "nombre_etapa": "Tratamiento, Pintura y Acabado",
+      "descripcion": "Desengrase, base anticorrosiva y esmalte de terminación",
+      "operario_asignado": "Raúl Gómez",
+      "horas_estimadas": 16,
+      "horas_reales": 0,
+      "estado": "Pendiente",
+      "fecha_inicio": null,
+      "fecha_fin": null
+    },
+    {
+      "id": 15,
+      "orden_produccion_id": 5,
       "numero_fase": 5,
       "nombre_etapa": "Control de Calidad y Despacho",
       "descripcion": "Verificación dimensional, pruebas de soldadura y embalaje",

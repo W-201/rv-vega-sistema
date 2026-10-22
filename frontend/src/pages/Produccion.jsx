@@ -313,9 +313,16 @@ export default function Produccion() {
                                                         <h4 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1">
                                                             {op.cliente_nombre}
                                                         </h4>
-                                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                                                            Pedido: {op.codigo_pedido}
-                                                        </p>
+                                                        <div className="flex items-center justify-between gap-1 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                                            <span className="font-mono">Pedido: {op.codigo_pedido}</span>
+                                                            <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded border ${
+                                                                op.suministro_insumos === 'Empresa suministra'
+                                                                    ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                                                    : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                                            }`} title={op.suministro_insumos === 'Empresa suministra' ? 'Insumos suministrados por la empresa' : 'El cliente trae sus insumos'}>
+                                                                {op.suministro_insumos === 'Empresa suministra' ? 'Insumos Taller' : 'Insumos Cliente'}
+                                                            </span>
+                                                        </div>
                                                     </div>
 
                                                     {etapaActual && op.estado !== 'Completada' && (
@@ -473,6 +480,13 @@ export default function Produccion() {
                                                 <span className="font-mono text-base font-extrabold text-blue-700 dark:text-blue-400">{selectedOp.codigo_op}</span>
                                                 <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                                                     {selectedOp.codigo_pedido}
+                                                </span>
+                                                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
+                                                    selectedOp.suministro_insumos === 'Empresa suministra'
+                                                        ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                                        : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                                }`}>
+                                                    {selectedOp.suministro_insumos === 'Empresa suministra' ? 'Insumos Taller' : 'Insumos Cliente'}
                                                 </span>
                                             </div>
                                             <h2 className="font-bold text-sm text-slate-900 dark:text-slate-100">{selectedOp.cliente_nombre}</h2>
@@ -684,7 +698,7 @@ export default function Produccion() {
                                     >
                                         {pedidosDisponibles.map(p => (
                                             <option key={p.id} value={p.id}>
-                                                {p.codigo_pedido} - {p.cliente_nombre} (Entrega: {p.fecha_entrega_prometida})
+                                                {p.codigo_pedido} - {p.cliente_nombre} ({p.suministro_insumos === 'Empresa suministra' ? 'Insumos Taller' : 'Insumos Cliente'})
                                             </option>
                                         ))}
                                     </select>

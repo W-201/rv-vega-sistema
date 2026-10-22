@@ -166,7 +166,28 @@ server.listen(PORT, async () => {
       assert.strictEqual(nuevoPed.subtotal, 3000);
       assert.strictEqual(nuevoPed.igv, 540);
       assert.strictEqual(nuevoPed.total, 3540);
+      assert.strictEqual(nuevoPed.suministro_insumos, 'Cliente los trae', 'Por defecto los insumos deben ser provistos por el cliente');
       testPedidoId = nuevoPed.id;
+    });
+
+    await runTest('3.3.1.4-C', 'Unitaria Pedidos: Especificación explícita de suministro de insumos por la empresa', async () => {
+      const resPedidoInsumos = await fetch(`${baseUrl}/pedidos`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          cliente_id: 1,
+          fecha_entrega_prometida: '2026-10-30',
+          prioridad: 'Media',
+          suministro_insumos: 'Empresa suministra',
+          observaciones: 'Prueba de pedido con compra de insumos incluida',
+          items: [
+            { descripcion_producto: 'Portón corredizo con perfiles incluidos', especificaciones: 'Tubo 2x2', cantidad: 1, precio_unitario: 1200 }
+          ]
+        })
+      });
+      const pedInsumos = await resPedidoInsumos.json();
+      assert.strictEqual(resPedidoInsumos.status, 201);
+      assert.strictEqual(pedInsumos.suministro_insumos, 'Empresa suministra');
     });
 
     await runTest('3.3.1.4-B', 'Unitaria Pedidos: Servicio de búsqueda multicriterio (texto, estado y prioridad - 3.3.1.3)', async () => {

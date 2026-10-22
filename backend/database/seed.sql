@@ -27,12 +27,12 @@ INSERT INTO materiales (codigo_sku, nombre, categoria, unidad_medida, stock_actu
 ('MP-DIS-001', 'Disco de Corte 7\" x 1/8\" Dewalt', 'Soldadura/Consumibles', 'und', 45.00, 20.00, 8.50, 'Gaveta C-05');
 
 -- 4. Pedidos Registrados
-INSERT INTO pedidos (codigo_pedido, cliente_id, fecha_pedido, fecha_entrega_prometida, fecha_entrega_real, estado, prioridad, subtotal, igv, total, observaciones, creado_por) VALUES
-('PED-2026-0001', 1, '2026-08-10', '2026-08-25', '2026-08-25', 'Entregado', 'Alta', 8500.00, 1530.00, 10030.00, 'Fabricación de 10 barandas metálicas de seguridad para obra San Borja', 1),
-('PED-2026-0002', 2, '2026-08-15', '2026-09-02', '2026-09-03', 'Entregado', 'Media', 12400.00, 2232.00, 14632.00, 'Tolva metálica para descarga de granos con recubrimiento epóxico', 1),
-('PED-2026-0003', 3, '2026-09-01', '2026-09-18', NULL, 'En Producción', 'Urgente', 15800.00, 2844.00, 18644.00, 'Estructura soporte para faja transportadora de 12 metros', 1),
-('PED-2026-0004', 4, '2026-09-05', '2026-09-22', NULL, 'En Planificación', 'Media', 6200.00, 1116.00, 7316.00, 'Fabricación de 4 portones corredizos industriales con malla electro-soldada', 1),
-('PED-2026-0005', 1, '2026-09-10', '2026-09-30', NULL, 'Pendiente', 'Baja', 4900.00, 882.00, 5782.00, 'Mantenimiento preventivo y repuestos para cerco perimétrico', 1);
+INSERT INTO pedidos (codigo_pedido, cliente_id, fecha_pedido, fecha_entrega_prometida, fecha_entrega_real, estado, prioridad, suministro_insumos, subtotal, igv, total, observaciones, creado_por) VALUES
+('PED-2026-0001', 1, '2026-08-10', '2026-08-25', '2026-08-25', 'Entregado', 'Alta', 'Cliente los trae', 8500.00, 1530.00, 10030.00, 'Fabricación de 10 barandas metálicas de seguridad para obra San Borja', 1),
+('PED-2026-0002', 2, '2026-08-15', '2026-09-02', '2026-09-03', 'Entregado', 'Media', 'Empresa suministra', 12400.00, 2232.00, 14632.00, 'Tolva metálica para descarga de granos con recubrimiento epóxico', 1),
+('PED-2026-0003', 3, '2026-09-01', '2026-09-18', NULL, 'En Producción', 'Urgente', 'Cliente los trae', 15800.00, 2844.00, 18644.00, 'Estructura soporte para faja transportadora de 12 metros', 1),
+('PED-2026-0004', 4, '2026-09-05', '2026-09-22', NULL, 'En Planificación', 'Media', 'Empresa suministra', 6200.00, 1116.00, 7316.00, 'Fabricación de 4 portones corredizos industriales con malla electro-soldada', 1),
+('PED-2026-0005', 1, '2026-09-10', '2026-09-30', NULL, 'Pendiente', 'Baja', 'Cliente los trae', 4900.00, 882.00, 5782.00, 'Mantenimiento preventivo y repuestos para cerco perimétrico', 1);
 
 -- 5. Detalles de Pedidos
 INSERT INTO pedido_detalles (pedido_id, descripcion_producto, especificaciones, cantidad, precio_unitario, total_linea) VALUES

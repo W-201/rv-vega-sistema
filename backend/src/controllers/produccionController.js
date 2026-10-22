@@ -76,6 +76,7 @@ export function getOrdenesProduccion(req, res) {
         ...op,
         codigo_pedido: pedido ? pedido.codigo_pedido : 'Sin Pedido',
         cliente_nombre: cliente ? cliente.razon_social : 'Sin Cliente',
+        suministro_insumos: pedido ? (pedido.suministro_insumos || 'Cliente los trae') : 'Cliente los trae',
         fecha_entrega_prometida: pedido ? pedido.fecha_entrega_prometida : null,
         responsable_nombre: responsable ? responsable.nombre : 'Por asignar',
         total_etapas: etapas.length,

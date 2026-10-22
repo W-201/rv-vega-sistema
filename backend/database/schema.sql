@@ -53,6 +53,7 @@ CREATE TABLE pedidos (
     fecha_entrega_real DATE,
     estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'En Planificación', 'En Producción', 'Control de Calidad', 'Listo para Entrega', 'Entregado', 'Cancelado')),
     prioridad VARCHAR(20) NOT NULL DEFAULT 'Media' CHECK (prioridad IN ('Baja', 'Media', 'Alta', 'Urgente')),
+    suministro_insumos VARCHAR(40) NOT NULL DEFAULT 'Cliente los trae' CHECK (suministro_insumos IN ('Cliente los trae', 'Empresa suministra')),
     subtotal NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (subtotal >= 0),
     igv NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (igv >= 0),
     total NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (total >= 0),

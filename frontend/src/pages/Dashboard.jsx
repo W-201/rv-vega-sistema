@@ -39,6 +39,7 @@ export default function Dashboard({ setActiveTab }) {
         const pedidosExcel = data.pedidos.map(p => ({
             'Código': p.codigo_pedido,
             'Cliente': p.cliente_nombre,
+            'Suministro Insumos': p.suministro_insumos || 'Cliente los trae',
             'Estado': p.estado,
             'Prioridad': p.prioridad,
             'Fecha Entrega': p.fecha_entrega_prometida,
@@ -63,10 +64,11 @@ export default function Dashboard({ setActiveTab }) {
         doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-PE')}`, 14, 28);
         doc.text(`OEE Global: ${data.bi?.oee?.global || 83.6}%`, 14, 34);
 
-        const tableColumn = ["Código", "Cliente", "Estado", "Prioridad", "Total (S/)"];
+        const tableColumn = ["Código", "Cliente", "Insumos", "Estado", "Prioridad", "Total (S/)"];
         const tableRows = data.pedidos.map(p => [
             p.codigo_pedido,
             p.cliente_nombre,
+            p.suministro_insumos || 'Cliente los trae',
             p.estado,
             p.prioridad,
             `S/ ${p.total}`
@@ -369,7 +371,16 @@ export default function Dashboard({ setActiveTab }) {
                             pedidosRecientes.map((p) => (
                                 <div key={p.id} className="py-2.5 flex items-center justify-between text-xs hover:bg-slate-50/50 dark:hover:bg-slate-800/30 px-1 rounded transition">
                                     <div>
-                                        <div className="font-bold text-slate-900 dark:text-white">{p.codigo_pedido}</div>
+                                        <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                            <span>{p.codigo_pedido}</span>
+                                            <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded border ${
+                                                p.suministro_insumos === 'Empresa suministra'
+                                                    ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                                    : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                            }`}>
+                                                {p.suministro_insumos === 'Empresa suministra' ? 'Insumos Taller' : 'Insumos Cliente'}
+                                            </span>
+                                        </div>
                                         <div className="text-slate-500 dark:text-slate-400 text-[11px]">{p.cliente_nombre}</div>
                                     </div>
                                     <div className="text-right">

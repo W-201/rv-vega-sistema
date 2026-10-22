@@ -3,7 +3,7 @@ import { getDb, saveStore } from '../config/db.js';
 export function getPedidos(req, res) {
   try {
     const db = getDb();
-    const { estado, prioridad, cliente_id, busqueda, fecha_desde, fecha_hasta } = req.query;
+    const { estado, prioridad, suministro_insumos, cliente_id, busqueda, fecha_desde, fecha_hasta } = req.query;
 
     let list = db.pedidos.map(p => {
       const cliente = db.clientes.find(c => c.id === p.cliente_id);
@@ -11,6 +11,7 @@ export function getPedidos(req, res) {
       const op = db.ordenes_produccion.find(o => o.pedido_id === p.id);
       return {
         ...p,
+        suministro_insumos: p.suministro_insumos || 'Cliente los trae',
         cliente_nombre: cliente ? cliente.razon_social : 'Desconocido',
         cliente_doc: cliente ? cliente.numero_documento : '',
         detalles_count: detalles.length,
@@ -28,6 +29,9 @@ export function getPedidos(req, res) {
     if (prioridad && prioridad !== 'Todos') {
       list = list.filter(p => p.prioridad === prioridad);
     }
+    if (suministro_insumos && suministro_insumos !== 'Todos') {
+      list = list.filter(p => p.suministro_insumos === suministro_insumos);
+    }
     if (cliente_id) {
       list = list.filter(p => p.cliente_id === parseInt(cliente_id));
     }
@@ -43,6 +47,7 @@ export function getPedidos(req, res) {
         p.codigo_pedido.toLowerCase().includes(q) ||
         p.cliente_nombre.toLowerCase().includes(q) ||
         p.cliente_doc.toLowerCase().includes(q) ||
+        (p.suministro_insumos && p.suministro_insumos.toLowerCase().includes(q)) ||
         (p.codigo_op && p.codigo_op.toLowerCase().includes(q)) ||
         (p.observaciones && p.observaciones.toLowerCase().includes(q)) ||
         p.detalles.some(d => d.descripcion_producto.toLowerCase().includes(q))
@@ -76,6 +81,7 @@ export function getPedidoById(req, res) {
 
     res.json({
       ...pedido,
+      suministro_insumos: pedido.suministro_insumos || 'Cliente los trae',
       cliente,
       detalles,
       orden_produccion: op ? { ...op, etapas } : null
@@ -87,7 +93,7 @@ export function getPedidoById(req, res) {
 
 export function createPedido(req, res) {
   try {
-    const { cliente_id, fecha_entrega_prometida, prioridad, observaciones, items } = req.body;
+    const { cliente_id, fecha_entrega_prometida, prioridad, observaciones, items, suministro_insumos } = req.body;
 
     if (!cliente_id || !fecha_entrega_prometida || !items || !items.length) {
       return res.status(400).json({ error: 'Cliente, fecha prometida y al menos 1 ítem son requeridos' });
@@ -126,6 +132,11 @@ export function createPedido(req, res) {
     const igv = Math.round(subtotal * 0.18 * 100) / 100;
     const total = Math.round((subtotal + igv) * 100) / 100;
 
+    // Normalizar suministro_insumos: por defecto 'Cliente los trae'
+    const modalidadInsumos = (suministro_insumos === 'Empresa suministra' || suministro_insumos === 'Compra por nuestra parte' || (typeof suministro_insumos === 'string' && suministro_insumos.toLowerCase().includes('empresa')))
+      ? 'Empresa suministra'
+      : 'Cliente los trae';
+
     const nuevoPedido = {
       id: newId,
       codigo_pedido,
@@ -135,6 +146,7 @@ export function createPedido(req, res) {
       fecha_entrega_real: null,
       estado: 'Pendiente',
       prioridad: prioridad || 'Media',
+      suministro_insumos: modalidadInsumos,
       subtotal,
       igv,
       total,
