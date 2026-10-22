@@ -43,10 +43,10 @@ INSERT INTO pedido_detalles (pedido_id, descripcion_producto, especificaciones, 
 (5, 'Paquete de postes y refuerzos de anclaje', 'Acero galvanizado con platina base', 20, 245.00, 4900.00);
 
 -- 6. Órdenes de Producción (OP)
-INSERT INTO ordenes_produccion (codigo_op, pedido_id, estado, prioridad, fecha_inicio_programada, fecha_fin_programada, fecha_inicio_real, fecha_fin_real, porcentaje_avance, costo_estimado, costo_real, responsable_id, observaciones) VALUES
-('OP-2026-001', 1, 'Completada', 'Alta', '2026-08-11', '2026-08-24', '2026-08-11 08:30:00', '2026-08-24 17:00:00', 100, 5200.00, 5350.00, 1, 'Entregado a tiempo sin no conformidades'),
-('OP-2026-002', 2, 'Completada', 'Media', '2026-08-16', '2026-09-01', '2026-08-16 08:00:00', '2026-09-02 11:30:00', 100, 7800.00, 8100.00, 1, 'Ligero retraso por secado de pintura epóxica'),
-('OP-2026-003', 3, 'En Proceso', 'Urgente', '2026-09-02', '2026-09-17', '2026-09-02 08:15:00', NULL, 70, 9400.00, 6800.00, 1, 'Fase de soldadura completada; en proceso de arenado y pintura');
+INSERT INTO ordenes_produccion (codigo_op, pedido_id, estado, prioridad, fecha_inicio_programada, fecha_fin_programada, fecha_inicio_real, fecha_fin_real, porcentaje_avance, costo_estimado, costo_real, responsable_id, materiales_recibidos, fecha_recepcion_materiales, observaciones_materiales, observaciones) VALUES
+('OP-2026-001', 1, 'Completada', 'Alta', '2026-08-11', '2026-08-24', '2026-08-11 08:30:00', '2026-08-24 17:00:00', 100, 5200.00, 5350.00, 1, TRUE, '2026-08-11 08:00:00', 'Insumos de cliente recibidos conformes', 'Entregado a tiempo sin no conformidades'),
+('OP-2026-002', 2, 'Completada', 'Media', '2026-08-16', '2026-09-01', '2026-08-16 08:00:00', '2026-09-02 11:30:00', 100, 7800.00, 8100.00, 1, TRUE, '2026-08-16 07:45:00', 'Insumos de almacén listos para producción', 'Ligero retraso por secado de pintura epóxica'),
+('OP-2026-003', 3, 'En Proceso', 'Urgente', '2026-09-02', '2026-09-17', '2026-09-02 08:15:00', NULL, 70, 9400.00, 6800.00, 1, TRUE, '2026-09-02 08:00:00', 'Perfiles y platinas recibidos del cliente', 'Fase de soldadura completada; en proceso de arenado y pintura');
 
 -- 7. Etapas de Producción para OP-2026-003 (En Proceso)
 INSERT INTO etapas_produccion (orden_produccion_id, numero_fase, nombre_etapa, descripcion, operario_asignado, horas_estimadas, horas_reales, estado, fecha_inicio, fecha_fin) VALUES

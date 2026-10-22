@@ -286,6 +286,23 @@
       "observaciones": "",
       "creado_por": 1,
       "creado_en": "2026-10-22T17:29:11.869Z"
+    },
+    {
+      "id": 7,
+      "codigo_pedido": "PED-2026-0007",
+      "cliente_id": 1,
+      "fecha_pedido": "2026-10-22",
+      "fecha_entrega_prometida": "2026-10-24",
+      "fecha_entrega_real": null,
+      "estado": "Pendiente",
+      "prioridad": "Media",
+      "suministro_insumos": "Empresa suministra",
+      "subtotal": 230,
+      "igv": 41.4,
+      "total": 271.4,
+      "observaciones": "",
+      "creado_por": 1,
+      "creado_en": "2026-10-22T17:55:28.656Z"
     }
   ],
   "pedido_detalles": [
@@ -342,6 +359,15 @@
       "cantidad": 1,
       "precio_unitario": 0,
       "total_linea": 0
+    },
+    {
+      "id": 7,
+      "pedido_id": 7,
+      "descripcion_producto": "un trapito",
+      "especificaciones": "",
+      "cantidad": 1,
+      "precio_unitario": 230,
+      "total_linea": 230
     }
   ],
   "ordenes_produccion": [
@@ -359,7 +385,10 @@
       "costo_estimado": 5200,
       "costo_real": 5350,
       "responsable_id": 1,
-      "observaciones": "Entregado a tiempo sin no conformidades"
+      "observaciones": "Entregado a tiempo sin no conformidades",
+      "materiales_recibidos": true,
+      "fecha_recepcion_materiales": "2026-08-11 08:30:00",
+      "observaciones_materiales": "Materiales conformes"
     },
     {
       "id": 2,
@@ -375,7 +404,10 @@
       "costo_estimado": 7800,
       "costo_real": 8100,
       "responsable_id": 1,
-      "observaciones": "Ligero retraso por secado de pintura epóxica"
+      "observaciones": "Ligero retraso por secado de pintura epóxica",
+      "materiales_recibidos": true,
+      "fecha_recepcion_materiales": "2026-08-16 08:00:00",
+      "observaciones_materiales": "Materiales conformes"
     },
     {
       "id": 3,
@@ -391,13 +423,16 @@
       "costo_estimado": 9400,
       "costo_real": 6800,
       "responsable_id": 1,
-      "observaciones": "Fase de soldadura completada; en proceso de tratamiento y pintura"
+      "observaciones": "Fase de soldadura completada; en proceso de tratamiento y pintura",
+      "materiales_recibidos": true,
+      "fecha_recepcion_materiales": "2026-09-02 08:15:00",
+      "observaciones_materiales": "Materiales conformes"
     },
     {
       "id": 4,
       "codigo_op": "OP-2026-004",
       "pedido_id": 4,
-      "estado": "Planificada",
+      "estado": "Pendiente de Materiales",
       "prioridad": "Media",
       "fecha_inicio_programada": "2026-10-20",
       "fecha_fin_programada": "2026-09-22",
@@ -408,7 +443,10 @@
       "costo_real": 0,
       "responsable_id": 1,
       "observaciones": "Generada para atender PED-2026-0004",
-      "creado_en": "2026-10-20T19:07:44.040Z"
+      "creado_en": "2026-10-20T19:07:44.040Z",
+      "materiales_recibidos": false,
+      "fecha_recepcion_materiales": null,
+      "observaciones_materiales": "En espera de que el almacén habilite los materiales comprados"
     },
     {
       "id": 5,
@@ -425,7 +463,10 @@
       "costo_real": 0,
       "responsable_id": 1,
       "observaciones": "Generada para atender PED-2026-0006",
-      "creado_en": "2026-10-22T17:29:19.734Z"
+      "creado_en": "2026-10-22T17:29:19.734Z",
+      "materiales_recibidos": true,
+      "fecha_recepcion_materiales": "2026-10-22T17:55:43.535Z",
+      "observaciones_materiales": "Materiales entregados por el cliente en taller."
     }
   ],
   "etapas_produccion": [

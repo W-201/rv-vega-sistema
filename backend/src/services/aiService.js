@@ -6,7 +6,7 @@ import { getDb, saveStore } from '../config/db.js';
 export async function predecirRiesgosProduccion() {
   const db = getDb();
   // Evaluamos órdenes activas o en planificación
-  const ops = db.ordenes_produccion.filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente');
+  const ops = db.ordenes_produccion.filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente de Materiales' || o.estado === 'Pendiente');
   const now = new Date();
 
   const analisis = ops.map(op => {
@@ -68,7 +68,7 @@ export async function predecirRiesgosProduccion() {
     // 3. Evaluación de insumos críticos de almacén
     const insumosCriticos = (db.materiales || []).filter(m => Number(m.stock_actual) <= Number(m.stock_minimo));
     if (insumosCriticos.length > 0) {
-      if (op.estado === 'Planificada' || op.estado === 'En Proceso') {
+      if (op.estado === 'Planificada' || op.estado === 'En Proceso' || op.estado === 'Pendiente de Materiales') {
         probRetraso = Math.min(98, probRetraso + 10);
         factores.push(`Vulnerabilidad de suministro: Existen ${insumosCriticos.length} insumos con stock por debajo del mínimo de seguridad.`);
       }
@@ -158,7 +158,7 @@ export async function predecirRiesgosProduccion() {
 export function sugerirComprasInteligentes() {
   const db = getDb();
   const materiales = db.materiales || [];
-  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada');
+  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente de Materiales');
 
   const sugerencias = materiales
     .filter(m => Number(m.stock_actual) <= Number(m.stock_minimo) * 1.35)
@@ -320,7 +320,7 @@ export function registrarRequerimientoCompra(material_id, cantidad, justificacio
  */
 export function obtenerSugerenciasDinamicas() {
   const db = getDb();
-  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada');
+  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente de Materiales');
   const materialesCriticos = (db.materiales || []).filter(m => Number(m.stock_actual) <= Number(m.stock_minimo));
   const paradas = db.paradas_produccion || [];
 
@@ -396,7 +396,7 @@ export async function responderChatAdvisor(mensajeUsuario) {
   const totalPedidos = (db.pedidos || []).length;
   const pedidosEnProduccion = (db.pedidos || []).filter(p => p.estado === 'En Producción').length;
   const pedidosPendientes = (db.pedidos || []).filter(p => p.estado === 'Pendiente').length;
-  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada');
+  const opsActivas = (db.ordenes_produccion || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente de Materiales');
   const materialesCriticos = (db.materiales || []).filter(m => Number(m.stock_actual) <= Number(m.stock_minimo));
   const paradas = db.paradas_produccion || [];
   const etapas = db.etapas_produccion || [];

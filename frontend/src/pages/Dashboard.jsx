@@ -96,7 +96,7 @@ export default function Dashboard({ setActiveTab }) {
     const oee = data?.bi?.oee;
     const kpis = data?.bi?.resumen_kpis;
     const pedidosRecientes = (data?.pedidos || []).slice(0, 5);
-    const opsActivas = (data?.ops || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada');
+    const opsActivas = (data?.ops || []).filter(o => o.estado === 'En Proceso' || o.estado === 'Planificada' || o.estado === 'Pendiente de Materiales');
 
     // Datos procesados para gráficos (OE4)
     const pedidosPorEstado = [
