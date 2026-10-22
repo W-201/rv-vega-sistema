@@ -631,7 +631,7 @@ export default function AsistenteIA() {
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/20 text-blue-300 border border-blue-400/30 uppercase tracking-wider">
-              3.6.3 Copiloto de Planta y Motor de Diagnósticos (IA)
+              Copiloto de Planta y Motor de Diagnósticos (IA)
             </span>
             <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
               <Activity className="w-3 h-3 animate-pulse" />
@@ -712,16 +712,6 @@ export default function AsistenteIA() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleMostrarMenuCategorias}
-                className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition cursor-pointer text-xs flex items-center gap-1.5 font-bold shadow-xs"
-                title="Mostrar menú de opciones y preguntas sugeridas en el chat"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span className="text-[11px]">Menú de Opciones</span>
-              </button>
-
               <button
                 onClick={loadData}
                 title="Actualizar datos de planta"
