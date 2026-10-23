@@ -2,9 +2,9 @@
 -- Contraseña por defecto para todos los usuarios: Admin123* (hash bcrypt generado)
 -- Hash: /qQYw0Q7p/.gMhI5vWjZt59k7b9a5Wj7YjU7P2fV6q (o generado dinámicamente)
 
--- 1. Usuarios Iniciales
+-- 1. Usuarios Iniciales (Contraseña: Admin123*)
 INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES
-('Ing. Roberto Vega', 'admin@rvvega.com', '/qQYw0Q7p/.gMhI5vWjZt59k7b9a5Wj7YjU7P2fV6q', 'admin');
+('Ing. Roberto Vega', 'admin@rvvega.com', '$2a$10$diInk1mJ4ejhxzciXqdnp.88xpa4GGccKzAczJ0YYZTJSvlj58sB.', 'admin');
 
 -- 2. Clientes
 INSERT INTO clientes (tipo_documento, numero_documento, razon_social, contacto, telefono, email, direccion, ciudad) VALUES

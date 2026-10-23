@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ShoppingBag, Plus, Filter, Calendar, Hammer, Eye, FileText, CheckCircle2, Search, Truck, Boxes } from 'lucide-react';
+import { ShoppingBag, Plus, Filter, Calendar, Hammer, Eye, Search, Truck, Boxes } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function Pedidos({ setActiveTab }) {

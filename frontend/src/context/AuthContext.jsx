@@ -26,6 +26,22 @@ export function AuthProvider({ children }) {
     if (data.token && data.usuario) {
       localStorage.setItem('rv_token', data.token);
       localStorage.setItem('rv_user', JSON.stringify(data.usuario));
+
+      // Credential Management API (Estándar W3C para navegadores Chrome, Edge, Safari, Firefox)
+      // Dispara la ventana nativa "¿Quieres guardar la contraseña?" del navegador
+      if (typeof window !== 'undefined' && window.PasswordCredential && navigator.credentials?.store) {
+        try {
+          const cred = new window.PasswordCredential({
+            id: email,
+            password: password,
+            name: data.usuario.nombre || email
+          });
+          await navigator.credentials.store(cred);
+        } catch (credErr) {
+          // Ignorar si el usuario canceló previamente o el navegador tiene desactivado el gestor
+        }
+      }
+
       setUser(data.usuario);
       return data.usuario;
     }

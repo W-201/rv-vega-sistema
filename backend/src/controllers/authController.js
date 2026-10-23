@@ -1,30 +1,35 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { getDb, saveStore } from '../config/db.js';
+import { getDb } from '../config/db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'rv-vega-super-secret-key-2026-production';
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.warn('⚠️ ADVERTENCIA DE SEGURIDAD: JWT_SECRET no está definido en las variables de entorno de producción.');
+}
 
 export async function login(req, res) {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email y contraseña requeridos' });
+    const { email, username, password } = req.body;
+    const identifier = (email || username || '').trim();
+    if (!identifier || !password) {
+      return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
     }
 
     const db = getDb();
-    const user = db.usuarios.find(u => u.email.toLowerCase() === email.toLowerCase() && u.activo);
+    const cleanId = identifier.toLowerCase();
+    const user = db.usuarios.find(u => 
+      (u.email.toLowerCase() === cleanId || 
+       u.email.toLowerCase().split('@')[0] === cleanId ||
+       (u.nombre && u.nombre.toLowerCase() === cleanId)) && 
+      u.activo
+    );
 
     if (!user) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    // Permitir clave por defecto 'Admin123*' o comparar con bcrypt
-    let isMatch = false;
-    if (password === 'Admin123*') {
-      isMatch = true;
-    } else {
-      isMatch = await bcrypt.compare(password, user.password_hash);
-    }
+    // Verificación segura con hash bcrypt (sin contraseñas maestras o puertas traseras)
+    const isMatch = user.password_hash ? await bcrypt.compare(password, user.password_hash) : false;
 
     if (!isMatch) {
       return res.status(401).json({ error: 'Credenciales inválidas' });

@@ -30,11 +30,34 @@ if (connectionString) {
     });
     usePostgres = true;
     console.log('✅ Base de datos configurada para PostgreSQL 16.0 (Cloud / Local)');
+    // Auto-inicializar tablas si aún no existen en el entorno desplegado
+    initPostgresIfNeeded();
   } catch (err) {
     console.warn('⚠️ No se pudo inicializar el pool de PostgreSQL:', err.message);
   }
 } else {
   console.log('ℹ️ DATABASE_URL no encontrada. Iniciando almacenamiento relacional local persistente.');
+}
+
+async function initPostgresIfNeeded() {
+  if (!pool) return;
+  try {
+    const res = await pool.query("SELECT 1 FROM information_schema.tables WHERE table_name = 'usuarios'");
+    if (res.rowCount === 0) {
+      console.log('🌱 Inicializando esquema y datos iniciales en PostgreSQL...');
+      const schemaPath = path.resolve(__dirname, '../../database/schema.sql');
+      const seedPath = path.resolve(__dirname, '../../database/seed.sql');
+      if (fs.existsSync(schemaPath)) {
+        await pool.query(fs.readFileSync(schemaPath, 'utf8'));
+      }
+      if (fs.existsSync(seedPath)) {
+        await pool.query(fs.readFileSync(seedPath, 'utf8'));
+      }
+      console.log('✅ Esquema y datos semilla creados en PostgreSQL exitosamente.');
+    }
+  } catch (err) {
+    console.warn('⚠️ No se pudo auto-inicializar tablas en PostgreSQL:', err.message);
+  }
 }
 
 // Fallback / Store local estructurado para desarrollo ágil en Windows
@@ -43,7 +66,7 @@ const localStorePath = path.resolve(__dirname, '../../database/local_store.json'
 function getInitialStore() {
   return {
     usuarios: [
-      { id: 1, nombre: 'Ing. Roberto Vega', email: 'admin@rvvega.com', password_hash: '', rol: 'admin', activo: true, creado_en: '2026-08-01' }
+      { id: 1, nombre: 'Ing. Roberto Vega', email: 'admin@rvvega.com', password_hash: '$2a$10$diInk1mJ4ejhxzciXqdnp.88xpa4GGccKzAczJ0YYZTJSvlj58sB.', rol: 'admin', activo: true, creado_en: '2026-08-01' }
     ],
     clientes: [
       { id: 1, tipo_documento: 'RUC', numero_documento: '20518923411', razon_social: 'CONSTRUCTORA E INMOBILIARIA DEL SUR S.A.C.', contacto: 'Arq. Miguel Ángel Torres', telefono: '987654321', email: 'compras@inmodelsur.pe', direccion: 'Av. Javier Prado Este 2450, San Borja', ciudad: 'Lima', activo: true },
@@ -128,7 +151,14 @@ export function loadStore() {
 
 export function saveStore() {
   if (localStore) {
-    fs.writeFileSync(localStorePath, JSON.stringify(localStore, null, 2), 'utf8');
+    const dir = path.dirname(localStorePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const jsonStr = process.env.NODE_ENV === 'production'
+      ? JSON.stringify(localStore)
+      : JSON.stringify(localStore, null, 2);
+    fs.writeFileSync(localStorePath, jsonStr, 'utf8');
   }
 }
 

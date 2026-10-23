@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     FileSpreadsheet, CheckCircle2, Users, DollarSign, FileText,
-    BarChart3, PieChart as PieChartIcon, TrendingUp, AlertTriangle, Clock
+    BarChart3, PieChart as PieChartIcon, TrendingUp, Clock
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,

@@ -1,30 +1,46 @@
 import React, { useState } from 'react';
-import { Building2, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
+import { Building2, Lock, User, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Login() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('admin@rvvega.com');
-  const [password, setPassword] = useState('Admin123*');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const cleanUsername = username.trim();
+    if (!cleanUsername || !password) {
+      setError('Por favor complete su usuario y contraseña');
+      return;
+    }
+
     setLoading(true);
     try {
-      await login(email, password);
+      await login(cleanUsername, password);
     } catch (err) {
       setError(err.message || 'Error al iniciar sesión');
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 flex items-center justify-center p-4 relative">
+      {/* Pantalla de carga superpuesta cuando el backend tarda en responder (Render Cold-Start) */}
+      {loading && (
+        <LoadingScreen 
+          message="Autenticando credenciales e iniciando sesión..." 
+          onRetry={() => setLoading(false)}
+        />
+      )}
+
       {/* Botón flotante de cambio de tema */}
       <div className="absolute top-5 right-5 z-20">
         <ThemeToggle />
@@ -41,47 +57,77 @@ export default function Login() {
         </div>
 
         {error && (
-          <div className="mb-6 p-3 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-xs flex items-center gap-2">
+          <div className="mb-6 p-3 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-xs flex items-center gap-2 animate-fadeIn">
             <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form 
+          id="login-form"
+          method="POST" 
+          action="#" 
+          onSubmit={handleSubmit} 
+          className="space-y-4"
+        >
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Correo Corporativo</label>
+            <label htmlFor="username" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Usuario
+            </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <User className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
               <input
-                type="email"
+                id="username"
+                name="username"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="ejemplo@rvvega.com"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Usuario"
                 className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Contraseña</label>
+            <label htmlFor="password" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Contraseña
+            </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
               <input
-                type="password"
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                placeholder="Contraseña"
+                className="w-full pl-9 pr-10 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 
           <button
             type="submit"
+            id="login-submit-btn"
             disabled={loading}
-            className="w-full py-2.5 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-600/30 transition flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
+            className="w-full mt-2 py-2.5 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-600/30 transition flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
           >
             {loading ? (
               <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>

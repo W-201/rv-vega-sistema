@@ -59,6 +59,9 @@ export async function chatAdvisor(req, res) {
       fecha: new Date().toISOString()
     };
     db.ai_logs.push(newLog);
+    if (db.ai_logs.length > 100) {
+      db.ai_logs = db.ai_logs.slice(-100);
+    }
     saveStore();
 
     res.json({ 

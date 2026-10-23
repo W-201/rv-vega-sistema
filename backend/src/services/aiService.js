@@ -514,7 +514,7 @@ INSTRUCCIONES DE RESPUESTA:
 - Utiliza formato Markdown con títulos destacados (###), negritas (**texto**) y viñetas (-).
 - Termina con una 'Acción Operativa / Comercial Recomendada'.`;
 
-      const candidateModels = ['gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-2.5-flash-lite'];
+      const candidateModels = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'];
       for (const model of candidateModels) {
         try {
           const controller = new AbortController();

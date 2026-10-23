@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  AreaChart, Area, PieChart, Pie, Cell
+  AreaChart, Area
 } from 'recharts';
-import { LineChart as ChartIcon, Activity, TrendingUp, AlertOctagon, CheckCircle2 } from 'lucide-react';
+import { Activity, TrendingUp, AlertOctagon, CheckCircle2 } from 'lucide-react';
 import { api } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
-
-const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#f59e0b'];
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function BusinessIntelligence() {
   const { isDark } = useTheme();
@@ -31,8 +30,8 @@ export default function BusinessIntelligence() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center justify-center h-64 text-slate-500 dark:text-slate-400">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="p-8">
+        <LoadingScreen fullScreen={false} message="Calculando OEE y analítica de planta..." />
       </div>
     );
   }

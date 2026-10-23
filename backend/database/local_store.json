@@ -4,7 +4,7 @@
       "id": 1,
       "nombre": "Ing. Roberto Vega",
       "email": "admin@rvvega.com",
-      "password_hash": "",
+      "password_hash": "$2a$10$diInk1mJ4ejhxzciXqdnp.88xpa4GGccKzAczJ0YYZTJSvlj58sB.",
       "rol": "admin",
       "activo": true,
       "creado_en": "2026-08-01"
