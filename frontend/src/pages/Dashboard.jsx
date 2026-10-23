@@ -11,6 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Dashboard({ setActiveTab }) {
     const { isDark } = useTheme();
@@ -87,8 +88,8 @@ export default function Dashboard({ setActiveTab }) {
 
     if (loading) {
         return (
-            <div className="p-8 flex items-center justify-center h-64 text-slate-500 dark:text-slate-400">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="p-8">
+                <LoadingScreen fullScreen={false} message="Cargando indicadores ejecutivos y operaciones de planta..." />
             </div>
         );
     }

@@ -12,17 +12,14 @@ import Inventario from './pages/Inventario';
 import Reportes from './pages/Reportes';
 import BusinessIntelligence from './pages/BusinessIntelligence';
 import AsistenteIA from './pages/AsistenteIA';
+import LoadingScreen from './components/LoadingScreen';
 
 function MainLayout() {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <LoadingScreen message="Verificando sesión del sistema..." />;
   }
 
   if (!user) {
@@ -77,4 +74,3 @@ export default function App() {
     </ThemeProvider>
   );
 }
-

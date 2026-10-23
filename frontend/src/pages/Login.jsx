@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Building2, Lock, User, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Login() {
   const { login } = useAuth();
@@ -32,6 +33,14 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-950 flex items-center justify-center p-4 relative">
+      {/* Pantalla de carga superpuesta cuando el backend tarda en responder (Render Cold-Start) */}
+      {loading && (
+        <LoadingScreen 
+          message="Autenticando credenciales e iniciando sesión..." 
+          onRetry={() => setLoading(false)}
+        />
+      )}
+
       {/* Botón flotante de cambio de tema */}
       <div className="absolute top-5 right-5 z-20">
         <ThemeToggle />
