@@ -15,7 +15,18 @@ export async function apiRequest(endpoint, options = {}) {
       headers
     });
 
-    const data = await response.json();
+    let data;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch (e) {
+        data = { error: 'Error al interpretar la respuesta del servidor' };
+      }
+    } else {
+      const text = await response.text();
+      data = { error: text || response.statusText || 'Error en la respuesta del servidor' };
+    }
 
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
@@ -26,7 +37,7 @@ export async function apiRequest(endpoint, options = {}) {
           window.location.reload();
         }
       }
-      throw new Error(data.error || 'Error al comunicarse con el servidor');
+      throw new Error(data.error || `Error ${response.status}: ${response.statusText || 'Error al comunicarse con el servidor'}`);
     }
 
     return data;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Users, ShoppingBag, Hammer, Boxes, TrendingUp, Clock, AlertTriangle,
-    ArrowUpRight, Bot, Download, FileText, FileSpreadsheet
+    ShoppingBag, Hammer, TrendingUp, AlertTriangle,
+    ArrowUpRight, Bot, FileText, FileSpreadsheet
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useTheme } from '../context/ThemeContext';

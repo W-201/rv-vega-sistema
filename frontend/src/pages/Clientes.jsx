@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Users, Plus, Search, Phone, Mail, MapPin, Building, Trash2, Edit, CheckCircle, ChevronDown, Check } from 'lucide-react';
+import { Plus, Search, Phone, Mail, MapPin, Trash2, Edit, ChevronDown, Check } from 'lucide-react';
 import { api } from '../services/api';
 
 // Lista oficial de los 24 departamentos del Perú y la Provincia Constitucional del Callao

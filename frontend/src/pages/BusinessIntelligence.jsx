@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  AreaChart, Area, PieChart, Pie, Cell
+  AreaChart, Area
 } from 'recharts';
-import { LineChart as ChartIcon, Activity, TrendingUp, AlertOctagon, CheckCircle2 } from 'lucide-react';
+import { Activity, TrendingUp, AlertOctagon, CheckCircle2 } from 'lucide-react';
 import { api } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
-
-const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#f59e0b'];
 
 export default function BusinessIntelligence() {
   const { isDark } = useTheme();

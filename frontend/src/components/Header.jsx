@@ -1,10 +1,8 @@
 import React from 'react';
-import { Calendar, Activity, CheckCircle2, Clock } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Calendar } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 export default function Header({ title, subtitle }) {
-  const { user } = useAuth();
   const today = new Date().toLocaleDateString('es-PE', {
     weekday: 'long',
     year: 'numeric',

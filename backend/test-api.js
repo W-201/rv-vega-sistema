@@ -66,6 +66,14 @@ server.listen(PORT, async () => {
       assert.strictEqual(resLogin.status, 200);
       assert.ok(loginData.token, 'Token JWT debe existir');
       token = loginData.token;
+
+      // Verificar que credenciales inválidas sean rechazadas
+      const resBadLogin = await fetch(`${baseUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'admin@rvvega.com', password: 'PasswordErroneo123' })
+      });
+      assert.strictEqual(resBadLogin.status, 401, 'Debe retornar 401 ante contraseña incorrecta');
     });
 
     const authHeaders = {
