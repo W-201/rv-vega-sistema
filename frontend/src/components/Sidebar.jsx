@@ -31,7 +31,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
     ];
 
     return (
-        <aside className="w-72 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 flex flex-col flex-shrink-0 shadow-lg dark:shadow-2xl z-20 h-screen sticky top-0 border-r border-slate-200 dark:border-slate-800 transition-colors duration-200">
+        <aside className="w-72 max-w-full bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 flex flex-col flex-shrink-0 shadow-lg dark:shadow-2xl z-20 h-[100dvh] sticky top-0 border-r border-slate-200 dark:border-slate-800 transition-colors duration-200">
             {/* Brand Header */}
             <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 flex-shrink-0">
                 <div className="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">

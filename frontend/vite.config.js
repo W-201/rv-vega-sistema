@@ -7,22 +7,12 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5001',
         changeOrigin: true
       }
     }
   },
   build: {
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-charts': ['recharts'],
-          'vendor-export': ['jspdf', 'jspdf-autotable', 'xlsx'],
-          'vendor-icons': ['lucide-react']
-        }
-      }
-    }
+    chunkSizeWarningLimit: 1000
   }
 });

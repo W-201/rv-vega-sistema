@@ -1,3 +1,5 @@
+import { useNotifications } from '../context/NotificationContext';
+import AsyncForm from '../components/AsyncForm';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -48,7 +50,9 @@ const COLUMNAS_KANBAN = [
     }
 ];
 
-export default function Produccion() {
+export default function Produccion({ initialFilter }) {
+    const [soloSinMateriales, setSoloSinMateriales] = useState(initialFilter === 'materiales');
+    const notify = useNotifications();
     const [ordenes, setOrdenes] = useState([]);
     const [pedidosDisponibles, setPedidosDisponibles] = useState([]);
     const [selectedOp, setSelectedOp] = useState(null);
@@ -128,7 +132,7 @@ export default function Produccion() {
     const handleCreateOrdenProduccion = async (e) => {
         e.preventDefault();
         if (!nuevaOpForm.pedido_id) {
-            alert('Seleccione un pedido para generar la Orden de Producción.');
+            throw new Error('Seleccione un pedido para generar la Orden de Producción.');
             return;
         }
         try {
@@ -138,7 +142,7 @@ export default function Produccion() {
             setSelectedOp(nueva);
             setVistaModo('detalle');
         } catch (err) {
-            alert('Error al registrar OP: ' + err.message);
+            throw new Error('Error al registrar OP: ' + err.message);
         }
     };
 
@@ -147,7 +151,7 @@ export default function Produccion() {
             await api.patch(`/produccion/${opId}/estado`, { estado: nuevoEstado });
             loadOps();
         } catch (err) {
-            alert('Error al cambiar estado de la OP: ' + err.message);
+            notify('Error al cambiar estado de la OP: ' + err.message, 'error');
         }
     };
 
@@ -179,7 +183,7 @@ export default function Produccion() {
             setOpParaVerificar(null);
             await loadOps();
         } catch (err) {
-            alert('Error al verificar insumos: ' + err.message);
+            throw new Error('Error al verificar insumos: ' + err.message);
         }
     };
 
@@ -199,7 +203,7 @@ export default function Produccion() {
                 });
                 await loadOps();
             } catch (err) {
-                alert('Error al verificar insumos: ' + err.message);
+                notify('Error al verificar insumos: ' + err.message, 'error');
             }
         }
     };
@@ -213,7 +217,7 @@ export default function Produccion() {
             });
             loadOps();
         } catch (err) {
-            alert('Error al actualizar etapa: ' + err.message);
+            notify('Error al actualizar etapa: ' + err.message, 'error');
         }
     };
 
@@ -240,7 +244,7 @@ export default function Produccion() {
             setEtapaActiva(null);
             loadOps();
         } catch (err) {
-            alert('Error al registrar tiempos de etapa: ' + err.message);
+            throw new Error('Error al registrar tiempos de etapa: ' + err.message);
         }
     };
 
@@ -254,9 +258,9 @@ export default function Produccion() {
             setShowParadaModal(false);
             setParadaForm({ motivo: 'Falta de Material', minutos_parada: 30, descripcion: '' });
             loadOps();
-            alert('Parada de producción registrada correctamente');
+            notify('Parada de producción registrada correctamente', 'success');
         } catch (err) {
-            alert('Error: ' + err.message);
+            throw new Error('Error: ' + err.message);
         }
     };
 
@@ -269,19 +273,21 @@ export default function Produccion() {
             });
             setShowCalidadModal(false);
             loadOps();
-            alert('Inspección de control de calidad registrada');
+            notify('Inspección de control de calidad registrada', 'success');
         } catch (err) {
-            alert('Error: ' + err.message);
+            throw new Error('Error: ' + err.message);
         }
     };
 
     // Resumen global de tiempos de producción (3.4.1.3)
-    const totalHorasEstimadas = Math.round(ordenes.reduce((acc, o) => acc + Number(o.horas_estimadas_totales || 0), 0) * 10) / 10;
-    const totalHorasReales = Math.round(ordenes.reduce((acc, o) => acc + Number(o.horas_reales_totales || 0), 0) * 10) / 10;
-    const totalMinutosParada = ordenes.reduce((acc, o) => acc + Number(o.minutos_parada_totales || 0), 0);
+    const ordenesVisibles = soloSinMateriales ? ordenes.filter(o => o.estado === 'Pendiente de Materiales') : ordenes;
+    const totalHorasEstimadas = Math.round(ordenesVisibles.reduce((acc, o) => acc + Number(o.horas_estimadas_totales || 0), 0) * 10) / 10;
+    const totalHorasReales = Math.round(ordenesVisibles.reduce((acc, o) => acc + Number(o.horas_reales_totales || 0), 0) * 10) / 10;
+    const totalMinutosParada = ordenesVisibles.reduce((acc, o) => acc + Number(o.minutos_parada_totales || 0), 0);
 
     return (
-        <div className="p-8 space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+{soloSinMateriales && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 p-4 text-sm text-blue-800 dark:text-blue-200"><span>Órdenes pendientes de materiales</span><button type="button" onClick={() => setSoloSinMateriales(false)} className="font-semibold underline px-2 py-1">Quitar filtro</button></div>}
             {/* Barra Superior: Conmutador Tablero Kanban vs Seguimiento por Etapas + Botón Nueva OP */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
                 <div className="flex flex-wrap items-center gap-2">
@@ -332,7 +338,7 @@ export default function Produccion() {
             {vistaModo === 'kanban' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                     {COLUMNAS_KANBAN.map((col) => {
-                        const opsColumna = ordenes.filter(o => o.estado === col.id);
+                        const opsColumna = ordenesVisibles.filter(o => o.estado === col.id);
                         return (
                             <div
                                 key={col.id}
@@ -571,12 +577,12 @@ export default function Produccion() {
                         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                             <h3 className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">Órdenes de Producción</h3>
                             <span className="text-[11px] bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900/40">
-                                {ordenes.length} OPs
+                                {ordenesVisibles.length} OPs
                             </span>
                         </div>
 
                         <div className="space-y-2.5 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
-                            {ordenes.map((op) => {
+                            {ordenesVisibles.map((op) => {
                                 const isSelected = selectedOp?.id === op.id;
                                 return (
                                     <div
@@ -751,7 +757,7 @@ export default function Produccion() {
                                             </span>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                                                 {selectedOp.materiales_solicitados.map((m, idx) => (
-                                                    <div key={idx} className="p-2 bg-white dark:bg-slate-850 rounded-lg border border-purple-200 dark:border-purple-900/50 shadow-xs flex justify-between items-center text-xs">
+                                                    <div key={idx} className="p-2 bg-white dark:bg-[#151e2f] rounded-lg border border-purple-200 dark:border-purple-900/50 shadow-xs flex justify-between items-center text-xs">
                                                         <div>
                                                             <div className="font-semibold text-slate-800 dark:text-slate-100">{m.nombre}</div>
                                                             <div className="text-[10px] text-slate-400 font-mono">{m.codigo_sku}</div>
@@ -824,7 +830,7 @@ export default function Produccion() {
                                                             </div>
                                                             <p className="text-xs text-slate-500 dark:text-slate-400">{etapa.descripcion}</p>
 
-                                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-850 p-2 rounded border border-slate-100 dark:border-slate-750 w-fit mt-1">
+                                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-slate-600 dark:text-slate-300 bg-white dark:bg-[#151e2f] p-2 rounded border border-slate-100 dark:border-slate-700 w-fit mt-1">
                                                                 <span className="flex items-center gap-1">
                                                                     <User className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                                                                     Operario: <b className="text-slate-800 dark:text-slate-200">{etapa.operario_asignado || 'Pendiente de asignación'}</b>
@@ -902,7 +908,7 @@ export default function Produccion() {
                             <button onClick={() => setShowNuevaOpModal(false)} className="text-slate-400 hover:text-white text-lg cursor-pointer">✕</button>
                         </div>
 
-                        <form onSubmit={handleCreateOrdenProduccion} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+                        <AsyncForm onSubmit={handleCreateOrdenProduccion} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
                             <div>
                                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pedido Asociado *</label>
                                 {pedidosDisponibles.length === 0 ? (
@@ -933,7 +939,7 @@ export default function Produccion() {
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Fecha Inicio Programada *</label>
                                     <input
@@ -956,7 +962,7 @@ export default function Produccion() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Prioridad de Fabricación</label>
                                     <select
@@ -1022,7 +1028,7 @@ export default function Produccion() {
                                     Generar Orden y 5 Etapas
                                 </button>
                             </div>
-                        </form>
+                        </AsyncForm>
                     </div>
                 </div>,
                 document.body
@@ -1039,7 +1045,7 @@ export default function Produccion() {
                             Registro de Producción: {etapaActiva.nombre_etapa}
                         </h3>
 
-                        <form onSubmit={handleSaveEtapaModal} className="space-y-3">
+                        <AsyncForm onSubmit={handleSaveEtapaModal} className="space-y-3">
                             <div>
                                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Estado de la Fase</label>
                                 <select
@@ -1053,7 +1059,7 @@ export default function Produccion() {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-semibold text-slate-500 dark:text-slate-400 mb-1">Horas Estándar</label>
                                     <input
@@ -1094,7 +1100,7 @@ export default function Produccion() {
                                 <button type="button" onClick={() => setShowEtapaModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Cancelar</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm cursor-pointer">Guardar Registro</button>
                             </div>
-                        </form>
+                        </AsyncForm>
                     </div>
                 </div>,
                 document.body
@@ -1109,7 +1115,7 @@ export default function Produccion() {
                             Registrar Parada / Incidencia en Taller
                         </h3>
 
-                        <form onSubmit={handleSaveParada} className="space-y-3">
+                        <AsyncForm onSubmit={handleSaveParada} className="space-y-3">
                             <div>
                                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Motivo de la Parada</label>
                                 <select
@@ -1153,7 +1159,7 @@ export default function Produccion() {
                                 <button type="button" onClick={() => setShowParadaModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Cancelar</button>
                                 <button type="submit" className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-sm">Guardar Parada</button>
                             </div>
-                        </form>
+                        </AsyncForm>
                     </div>
                 </div>,
                 document.body
@@ -1168,7 +1174,7 @@ export default function Produccion() {
                             Inspección de Control de Calidad
                         </h3>
 
-                        <form onSubmit={handleSaveCalidad} className="space-y-3">
+                        <AsyncForm onSubmit={handleSaveCalidad} className="space-y-3">
                             <div>
                                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Resultado de la Inspección</label>
                                 <select
@@ -1209,7 +1215,7 @@ export default function Produccion() {
                                 <button type="button" onClick={() => setShowCalidadModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Cancelar</button>
                                 <button type="submit" className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm">Registrar Calidad</button>
                             </div>
-                        </form>
+                        </AsyncForm>
                     </div>
                 </div>,
                 document.body
@@ -1239,7 +1245,7 @@ export default function Produccion() {
                             </button>
                         </div>
 
-                        <form onSubmit={handleConfirmarMaterialesModal} className="p-6 space-y-4 text-xs">
+                        <AsyncForm onSubmit={handleConfirmarMaterialesModal} className="p-6 space-y-4 text-xs">
                             {/* Card con Modo de Suministro */}
                             <div className={`p-3 rounded-xl border flex items-center gap-3 ${
                                 opParaVerificar.suministro_insumos === 'Empresa suministra'
@@ -1315,7 +1321,7 @@ export default function Produccion() {
                                     <span>Aprobar Materiales y Pasar a Planificada</span>
                                 </button>
                             </div>
-                        </form>
+                        </AsyncForm>
                     </div>
                 </div>,
                 document.body

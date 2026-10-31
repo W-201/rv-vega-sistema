@@ -1,9 +1,13 @@
+import { useNotifications } from '../context/NotificationContext';
+import AsyncForm from '../components/AsyncForm';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ShoppingBag, Plus, Filter, Calendar, Hammer, Eye, Search, Truck, Boxes } from 'lucide-react';
 import { api } from '../services/api';
 
-export default function Pedidos({ setActiveTab }) {
+export default function Pedidos({ setActiveTab, initialFilter }) {
+    const [filtroEntrega, setFiltroEntrega] = useState(initialFilter);
+    const notify = useNotifications();
     const [pedidos, setPedidos] = useState([]);
     const [clientes, setClientes] = useState([]);
     const [filtroEstado, setFiltroEstado] = useState('Todos');
@@ -130,7 +134,7 @@ export default function Pedidos({ setActiveTab }) {
     const handleCreatePedido = async (e) => {
         e.preventDefault();
         if (!clienteId) {
-            alert('Por favor, seleccione un cliente de la lista.');
+            throw new Error('Por favor, seleccione un cliente de la lista.');
             return;
         }
         try {
@@ -143,6 +147,7 @@ export default function Pedidos({ setActiveTab }) {
                 observaciones,
                 items
             });
+            notify('Pedido registrado correctamente.', 'success');
             setShowModal(false);
             setItems([{ descripcion_producto: '', especificaciones: '', cantidad: 1, precio_unitario: 0 }]);
             setMaterialesUsados([]);
@@ -150,17 +155,17 @@ export default function Pedidos({ setActiveTab }) {
             setSuministroInsumos('Cliente los trae');
             loadPedidos();
         } catch (err) {
-            alert('Error al crear pedido: ' + err.message);
+            throw new Error('Error al crear pedido: ' + err.message);
         }
     };
 
     const handleCrearOP = async (pedidoId) => {
         try {
             await api.post('/produccion', { pedido_id: pedidoId });
-            alert('¡Orden de Producción generada con éxito!');
+            notify('¡Orden de Producción generada con éxito!', 'success');
             loadPedidos();
         } catch (err) {
-            alert('Error al generar OP: ' + err.message);
+            notify('Error al generar OP: ' + err.message, 'error');
         }
     };
 
@@ -173,7 +178,7 @@ export default function Pedidos({ setActiveTab }) {
                 });
                 loadPedidos();
             } catch (err) {
-                alert('Error al actualizar estado del pedido: ' + err.message);
+                notify('Error al actualizar estado del pedido: ' + err.message, 'error');
             }
         }
     };
@@ -196,8 +201,23 @@ export default function Pedidos({ setActiveTab }) {
 
     const { subtotal, igv, total } = calcularTotales();
 
+    const day = value => {
+        const match = String(value ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (!match) return null;
+        const date = new Date(Date.UTC(+match[1], +match[2] - 1, +match[3]));
+        return date.toISOString().slice(0, 10) === match[0] ? date.getTime() / 86400000 : null;
+    };
+    const today = day(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()));
+    const pedidosVisibles = pedidos.filter(p => {
+        if (!filtroEntrega) return true;
+        const due = day(p.fecha_entrega_prometida);
+        if (due == null || ['Entregado', 'Cancelado', 'Anulado'].includes(p.estado)) return false;
+        return filtroEntrega === 'vencidos' ? due < today : due >= today && due <= today + 7;
+    });
+
     return (
-        <div className="p-8 space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+{filtroEntrega && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 p-4 text-sm text-blue-800 dark:text-blue-200"><span>{filtroEntrega === 'vencidos' ? 'Pedidos vencidos' : 'Entregas desde hoy hasta los próximos 7 días'} · Horario de Perú</span><button type="button" onClick={() => setFiltroEntrega(null)} className="font-semibold underline px-2 py-1">Quitar filtro</button></div>}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
                 <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                     <div className="relative flex-1 sm:w-64">
@@ -287,12 +307,12 @@ export default function Pedidos({ setActiveTab }) {
                                 <tr>
                                     <td colSpan="9" className="text-center py-8 text-slate-400 dark:text-slate-500">Cargando pedidos...</td>
                                 </tr>
-                            ) : pedidos.length === 0 ? (
+                            ) : pedidosVisibles.length === 0 ? (
                                 <tr>
                                     <td colSpan="9" className="text-center py-8 text-slate-400 dark:text-slate-500">No se encontraron pedidos</td>
                                 </tr>
                             ) : (
-                                pedidos.map((p) => {
+                                pedidosVisibles.map((p) => {
                                     const alerta = obtenerAlertaVencimiento(p.fecha_entrega_prometida);
                                     return (
                                         <tr key={p.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition">
@@ -410,7 +430,7 @@ export default function Pedidos({ setActiveTab }) {
                             <button type="button" onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white text-lg p-1 cursor-pointer">✕</button>
                         </div>
 
-                        <form onSubmit={handleCreatePedido} className="flex-1 flex flex-col overflow-hidden min-h-0">
+                        <AsyncForm onSubmit={handleCreatePedido} className="flex-1 flex flex-col overflow-hidden min-h-0">
                             <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
 
                             {/* BLOQUE OE1: CÓDIGO AUTOGENERADO Y FECHA */}
@@ -702,11 +722,11 @@ export default function Pedidos({ setActiveTab }) {
                             </div>
 
                             {/* FOOTER ACCIONES - SIEMPRE VISIBLE */}
-                            <div className="p-4 bg-slate-50 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 font-medium cursor-pointer">Cancelar</button>
+                            <div className="p-4 bg-slate-50 dark:bg-[#151e2f] border-t border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 transition-colors flex justify-end gap-2 shrink-0">
+                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 font-medium cursor-pointer transition-colors">Cancelar</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm cursor-pointer">Guardar Pedido</button>
                             </div>
-                        </form>
+                        </AsyncForm>
                     </div>
                 </div>,
                 document.body
@@ -818,7 +838,7 @@ export default function Pedidos({ setActiveTab }) {
                         </div>
 
                         {/* FOOTER RESUMEN - FIJO */}
-                        <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-850 shrink-0">
+                        <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-[#151e2f] shrink-0">
                             <div className="text-slate-500 dark:text-slate-400 text-[11px]">RV Vega Servicios Generales E.I.R.L.</div>
                             <div className="text-right font-bold text-sm text-slate-900 dark:text-slate-100">
                                 Total Facturado: S/ {Number(detallePedido.total).toFixed(2)}

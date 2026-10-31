@@ -30,7 +30,7 @@ export default function BusinessIntelligence() {
 
   if (loading) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <LoadingScreen fullScreen={false} message="Calculando OEE y analítica de planta..." />
       </div>
     );
@@ -63,7 +63,7 @@ export default function BusinessIntelligence() {
   const axisColor = isDark ? '#94a3b8' : '#64748b';
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       {/* OEE Highlight Banner */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-4 transition">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">

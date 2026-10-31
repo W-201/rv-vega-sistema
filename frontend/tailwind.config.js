@@ -7,6 +7,9 @@ export default {
   theme: {
     extend: {
       colors: {
+        slate: {
+          850: '#172033',
+        },
         
         dark: {
           bg: '#0a0f1d',        

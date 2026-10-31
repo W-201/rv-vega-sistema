@@ -1,3 +1,4 @@
+import { useNotifications } from '../context/NotificationContext';
 import React, { useState, useEffect } from 'react';
 import {
     FileSpreadsheet, CheckCircle2, Users, DollarSign, FileText,
@@ -15,6 +16,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export default function Reportes() {
+    const notify = useNotifications();
     const { isDark } = useTheme();
     const [tipoReporte, setTipoReporte] = useState('otif'); // 'otif' | 'costos' | 'operarios'
     const [dataOtif, setDataOtif] = useState(null);
@@ -86,7 +88,7 @@ export default function Reportes() {
         }
 
         if (data.length === 0) {
-            alert('No hay datos disponibles para exportar.');
+            notify('No hay datos disponibles para exportar.', 'info');
             return;
         }
 
@@ -141,7 +143,7 @@ export default function Reportes() {
             }
 
             if (body.length === 0) {
-                alert('No hay datos suficientes para generar el PDF.');
+                notify('No hay datos suficientes para generar el PDF.', 'info');
                 return;
             }
 
@@ -158,13 +160,13 @@ export default function Reportes() {
             doc.save(`Reporte_${tipoReporte.toUpperCase()}_RV_Vega_${new Date().toISOString().split('T')[0]}.pdf`);
         } catch (err) {
             console.error("Error al generar PDF:", err);
-            alert("Hubo un error al generar el archivo PDF.");
+            notify("Hubo un error al generar el archivo PDF.", 'error');
         }
     };
 
     if (loading) {
         return (
-            <div className="p-8 flex items-center justify-center h-64 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+            <div className="p-4 sm:p-6 lg:p-8 flex items-center justify-center h-64 text-slate-500 dark:text-slate-400 text-xs font-semibold">
                 <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -247,7 +249,7 @@ export default function Reportes() {
         : 100;
 
     return (
-        <div className="p-8 space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
             {/* Selector & Actions */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
                 <div className="flex items-center gap-2">

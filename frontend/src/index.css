@@ -91,3 +91,27 @@ html:not(.dark) .recharts-tooltip-label {
   color: #0f172a !important;
 }
 
+
+/* Shared form ergonomics, including dialogs rendered outside the main layout. */
+.comfortable-form input:not([type="checkbox"]):not([type="radio"]),
+.comfortable-form select,
+.comfortable-form textarea {
+  min-height: 44px;
+}
+.comfortable-form button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.comfortable-form [aria-invalid="true"] {
+  border-color: #dc2626;
+}
+@media (max-width: 639px) {
+  .comfortable-form input,
+  .comfortable-form select,
+  .comfortable-form textarea {
+    font-size: 16px;
+  }
+  .comfortable-form button[type="submit"] {
+    min-height: 44px;
+  }
+}

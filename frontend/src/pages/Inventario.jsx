@@ -1,14 +1,17 @@
+import { useNotifications } from '../context/NotificationContext';
+import AsyncForm from '../components/AsyncForm';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Boxes, Plus, AlertTriangle, ArrowDownLeft, ArrowUpRight, History, Search, CheckCircle, Edit2, Trash2 } from 'lucide-react';
 import { api } from '../services/api';
 
-export default function Inventario() {
+export default function Inventario({ initialFilter }) {
+    const notify = useNotifications();
     const [materiales, setMateriales] = useState([]);
     const [kardex, setKardex] = useState([]);
     const [tab, setTab] = useState('materiales'); // 'materiales' | 'kardex'
     const [categoria, setCategoria] = useState('Todas');
-    const [soloAlertas, setSoloAlertas] = useState(false);
+    const [soloAlertas, setSoloAlertas] = useState(initialFilter === 'stock');
     const [busqueda, setBusqueda] = useState('');
     const [loading, setLoading] = useState(true);
 
@@ -77,6 +80,7 @@ export default function Inventario() {
         e.preventDefault();
         try {
             await api.post('/inventario', materialForm);
+            notify('Insumo registrado correctamente.', 'success');
             setShowMaterialModal(false);
             setMaterialForm({
                 codigo_sku: '',
@@ -90,7 +94,7 @@ export default function Inventario() {
             });
             loadData();
         } catch (err) {
-            alert('Error: ' + err.message);
+            throw new Error('Error: ' + err.message);
         }
     };
 
@@ -117,9 +121,9 @@ export default function Inventario() {
             setShowEditModal(false);
             setEditingMaterial(null);
             await loadData();
-            alert(res.mensaje || 'Insumo actualizado exitosamente');
+            notify(res.mensaje || 'Insumo actualizado exitosamente', 'success');
         } catch (err) {
-            alert('Error al actualizar insumo: ' + err.message);
+            throw new Error('Error al actualizar insumo: ' + err.message);
         }
     };
 
@@ -130,10 +134,10 @@ export default function Inventario() {
         try {
             setDeletingId(m.id);
             const res = await api.delete(`/inventario/${m.id}`);
-            alert(res.mensaje || 'Insumo procesado con éxito');
+            notify(res.mensaje || 'Insumo procesado con éxito', 'success');
             await loadData();
         } catch (err) {
-            alert('Error al eliminar material: ' + err.message);
+            notify('Error al eliminar material: ' + err.message, 'error');
         } finally {
             setDeletingId(null);
         }
@@ -145,9 +149,9 @@ export default function Inventario() {
             await api.post('/inventario/movimiento', movimientoForm);
             setShowMovimientoModal(false);
             loadData();
-            alert('Movimiento de almacén registrado con éxito');
+            notify('Movimiento de almacén registrado con éxito', 'success');
         } catch (err) {
-            alert('Error: ' + err.message);
+            throw new Error('Error: ' + err.message);
         }
     };
 
@@ -200,7 +204,7 @@ export default function Inventario() {
         : materiales;
 
     return (
-        <div className="p-8 space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
             {/* Tab Switcher & Action Bar */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
                 <div className="flex items-center gap-2">
@@ -442,8 +446,8 @@ export default function Inventario() {
                             <button onClick={() => setShowMaterialModal(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
                         </div>
 
-                        <form onSubmit={handleCreateMaterial} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
-                            <div className="grid grid-cols-2 gap-3">
+                        <AsyncForm onSubmit={handleCreateMaterial} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Código SKU *</label>
                                     <input type="text" required value={materialForm.codigo_sku} onChange={(e) => setMaterialForm({ ...materialForm, codigo_sku: e.target.value })} placeholder="MP-XXX-001" className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
@@ -464,7 +468,7 @@ export default function Inventario() {
                                 <input type="text" required value={materialForm.nombre} onChange={(e) => setMaterialForm({ ...materialForm, nombre: e.target.value })} placeholder="Ej. Plancha LAC 1/4 x 1.20 x 2.40m" className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
                             </div>
 
-                            <div className="grid grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
                                 <div>
                                     <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Und. Medida</label>
                                     <input type="text" required value={materialForm.unidad_medida} onChange={(e) => setMaterialForm({ ...materialForm, unidad_medida: e.target.value })} placeholder="kg, m, und" className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
@@ -479,7 +483,7 @@ export default function Inventario() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Costo Unitario (S/)</label>
                                     <input type="number" step="0.01" value={materialForm.costo_unitario} onChange={(e) => setMaterialForm({ ...materialForm, costo_unitario: e.target.value })} className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
@@ -494,7 +498,7 @@ export default function Inventario() {
                                 <button type="button" onClick={() => setShowMaterialModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Cancelar</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">Guardar Insumo</button>
                             </div>
-                        </form>
+                        </AsyncForm>
                     </div>
                 </div>,
                 document.body
@@ -512,8 +516,8 @@ export default function Inventario() {
                             <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
                         </div>
 
-                        <form onSubmit={handleUpdateMaterial} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
-                            <div className="grid grid-cols-2 gap-3">
+                        <AsyncForm onSubmit={handleUpdateMaterial} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Código SKU *</label>
                                     <input
@@ -550,7 +554,7 @@ export default function Inventario() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60">
                                 <div>
                                     <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Und. Medida</label>
                                     <input
@@ -583,7 +587,7 @@ export default function Inventario() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Costo Unitario (S/)</label>
                                     <input
@@ -620,7 +624,7 @@ export default function Inventario() {
                                     Guardar Cambios
                                 </button>
                             </div>
-                        </form>
+                        </AsyncForm>
                     </div>
                 </div>,
                 document.body
@@ -639,7 +643,7 @@ export default function Inventario() {
                             <span className="font-bold text-sm text-slate-900 dark:text-white">{selectedMaterial.stock_actual} {selectedMaterial.unidad_medida}</span>
                         </div>
 
-                        <form onSubmit={handleCreateMovimiento} className="space-y-3">
+                        <AsyncForm onSubmit={handleCreateMovimiento} className="space-y-3">
                             <div>
                                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Tipo de Movimiento</label>
                                 <select
@@ -693,7 +697,7 @@ export default function Inventario() {
                                 <button type="button" onClick={() => setShowMovimientoModal(false)} className="px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Cancelar</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm">Confirmar Operación</button>
                             </div>
-                        </form>
+                        </AsyncForm>
                     </div>
                 </div>,
                 document.body

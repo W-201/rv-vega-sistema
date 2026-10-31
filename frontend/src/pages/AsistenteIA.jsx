@@ -1,3 +1,4 @@
+import { useNotifications } from '../context/NotificationContext';
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -44,7 +45,7 @@ function FormattedMessage({ text }) {
   const flushTable = (key) => {
     if (tableRows.length > 0) {
       elements.push(
-        <div key={`table-${key}`} className="my-2.5 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-850">
+        <div key={`table-${key}`} className="my-2.5 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#151e2f]">
           <table className="min-w-full text-[11px] divide-y divide-slate-200 dark:divide-slate-700">
             <thead className="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold">
               <tr>
@@ -55,7 +56,7 @@ function FormattedMessage({ text }) {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {tableRows.slice(1).map((row, rIdx) => (
-                <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white dark:bg-slate-850' : 'bg-slate-50/50 dark:bg-slate-800/50'}>
+                <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white dark:bg-[#151e2f]' : 'bg-slate-50/50 dark:bg-slate-800/50'}>
                   {row.map((td, cIdx) => (
                     <td key={cIdx} className="px-3 py-1.5 text-slate-800 dark:text-slate-200">{td}</td>
                   ))}
@@ -217,6 +218,7 @@ Estoy monitoreando en tiempo real las operaciones en taller, los 5 pedidos en ca
 ¿En qué área de la planta necesitas soporte o diagnóstico ahora mismo?`;
 
 export default function AsistenteIA() {
+    const notify = useNotifications();
   const [tab, setTab] = useState('chat'); // 'chat' | 'riesgos' | 'compras'
   const [riesgos, setRiesgos] = useState([]);
   const [compras, setCompras] = useState([]);
@@ -496,7 +498,7 @@ export default function AsistenteIA() {
       }
     } catch (err) {
       console.error("Error al generar PDF de la Orden de Compra:", err);
-      alert("Error al generar PDF: " + err.message);
+      notify("Error al generar PDF: " + err.message, 'error');
     }
   };
 
@@ -520,7 +522,7 @@ export default function AsistenteIA() {
 
       await loadData();
     } catch (err) {
-      alert('Error al generar Orden de Compra: ' + err.message);
+      notify('Error al generar Orden de Compra: ' + err.message, 'error');
     } finally {
       setProcesandoCompraId(null);
     }
@@ -542,11 +544,11 @@ export default function AsistenteIA() {
     try {
       setGuardandoIngreso(true);
       await api.post(`/ai/compras/requerimientos/${modalVerificarCompra.req.id}/ingresar`, verificarForm);
-      alert(`¡Compra verificada con éxito!\nSe ingresaron ${verificarForm.cantidad_recibida} unidades al catálogo de inventario y se registró la entrada en el Kardex.`);
+      notify(`¡Compra verificada con éxito!\nSe ingresaron ${verificarForm.cantidad_recibida} unidades al catálogo de inventario y se registró la entrada en el Kardex.`, 'success');
       setModalVerificarCompra(null);
       await loadData();
     } catch (err) {
-      alert('Error al verificar e ingresar compra: ' + err.message);
+      notify('Error al verificar e ingresar compra: ' + err.message, 'error');
     } finally {
       setGuardandoIngreso(false);
     }
@@ -618,7 +620,7 @@ export default function AsistenteIA() {
   });
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
       
       {/* 3.6.3 Encabezado del Módulo con Identificación de la Especificación */}
       <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex flex-col lg:flex-row justify-between lg:items-center gap-5">
@@ -742,7 +744,7 @@ export default function AsistenteIA() {
                   {/* Burbuja */}
                   <div className={`max-w-3xl rounded-2xl p-4 text-xs leading-relaxed shadow-sm ${
                     isIa
-                      ? 'bg-white dark:bg-slate-850 text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-slate-750'
+                      ? 'bg-white dark:bg-[#151e2f] text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700'
                       : 'bg-blue-600 text-white shadow-blue-500/10'
                   }`}>
                     {isIa ? (
@@ -764,7 +766,7 @@ export default function AsistenteIA() {
                                     key={cat.id}
                                     type="button"
                                     onClick={() => handleSeleccionarCategoria(cat)}
-                                    className="text-left p-3 rounded-xl border border-slate-200 dark:border-slate-750 bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-150 flex items-center justify-between group cursor-pointer shadow-xs"
+                                    className="text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-150 flex items-center justify-between group cursor-pointer shadow-xs"
                                   >
                                     <div className="flex items-center gap-2.5 min-w-0">
                                       <div className="p-2 rounded-lg bg-white dark:bg-slate-700 shadow-xs text-blue-600 dark:text-blue-400 shrink-0 group-hover:scale-105 transition-transform">
@@ -800,7 +802,7 @@ export default function AsistenteIA() {
                                   key={idx}
                                   type="button"
                                   onClick={() => handleSendMessage(q)}
-                                  className="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-750 bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 hover:border-blue-400 dark:hover:border-blue-500 text-slate-800 dark:text-slate-200 text-xs font-medium transition flex items-center justify-between group cursor-pointer"
+                                  className="w-full text-left p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 hover:border-blue-400 dark:hover:border-blue-500 text-slate-800 dark:text-slate-200 text-xs font-medium transition flex items-center justify-between group cursor-pointer"
                                 >
                                   <span className="line-clamp-2">{q}</span>
                                   <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
@@ -853,7 +855,7 @@ export default function AsistenteIA() {
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-slate-900 to-blue-700 text-amber-300 flex items-center justify-center flex-shrink-0 text-xs shadow-sm">
                   <Bot className="w-4 h-4" />
                 </div>
-                <div className="bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-2xl px-4 py-3 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 shadow-sm">
+                <div className="bg-white dark:bg-[#151e2f] border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 shadow-sm">
                   <div className="flex gap-1">
                     <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '0ms' }}></span>
                     <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '150ms' }}></span>
@@ -1027,7 +1029,7 @@ export default function AsistenteIA() {
                   </div>
 
                   {/* Barra de Avance y Métricas de Taller */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs bg-slate-50 dark:bg-slate-850 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs bg-slate-50 dark:bg-[#151e2f] p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
                     <div>
                       <span className="text-slate-400 dark:text-slate-500 text-[10px] block">Avance Físico</span>
                       <div className="flex items-center gap-2 mt-0.5">
@@ -1193,7 +1195,7 @@ export default function AsistenteIA() {
           {/* Cuadrícula de Insumos Sugeridos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {comprasFiltradas.length === 0 ? (
-              <div className="col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-8 text-center text-slate-500 dark:text-slate-400 text-xs">
+              <div className="md:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-8 text-center text-slate-500 dark:text-slate-400 text-xs">
                 No hay insumos pendientes de compra con el filtro seleccionado.
               </div>
             ) : (
@@ -1246,7 +1248,7 @@ export default function AsistenteIA() {
                       </div>
 
                       {/* Cuadrícula cuantitativa de Stock */}
-                      <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-[#151e2f] p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                         <div>Stock Actual: <b className={c.stock_actual <= c.stock_minimo ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}>{c.stock_actual} {c.unidad_medida}</b></div>
                         <div>Stock Mínimo: <b className="text-slate-900 dark:text-slate-100">{c.stock_minimo} {c.unidad_medida}</b></div>
                         <div>Lote a Comprar: <b className="text-blue-700 dark:text-blue-400 font-extrabold">{c.cantidad_sugerida} {c.unidad_medida}</b></div>
@@ -1383,7 +1385,7 @@ export default function AsistenteIA() {
             <form onSubmit={handleConfirmarIngresoAlmacen} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
               
               {/* Resumen del Material */}
-              <div className="p-3.5 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
+              <div className="p-3.5 bg-slate-50 dark:bg-[#151e2f] rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
                     {modalVerificarCompra.item.sku || modalVerificarCompra.req.material_sku}
@@ -1400,7 +1402,7 @@ export default function AsistenteIA() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Cantidad Recibida *

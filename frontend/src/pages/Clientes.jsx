@@ -1,3 +1,5 @@
+import { useNotifications } from '../context/NotificationContext';
+import AsyncForm from '../components/AsyncForm';
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Search, Phone, Mail, MapPin, Trash2, Edit, ChevronDown, Check } from 'lucide-react';
@@ -36,6 +38,7 @@ const normalizeText = (text) =>
   (text || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 export default function Clientes() {
+    const notify = useNotifications();
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
@@ -110,10 +113,6 @@ export default function Clientes() {
 
   const handleTelefonoChange = (e) => {
     const cleanNumbers = e.target.value.replace(/\D/g, '');
-    // Solo permitir si está vacío (al borrar) o si empieza estrictamente con el número 9
-    if (cleanNumbers.length > 0 && cleanNumbers[0] !== '9') {
-      return; // Bloquea cualquier número que no inicie con 9
-    }
     setFormData(prev => ({
       ...prev,
       telefono: cleanNumbers.slice(0, 9)
@@ -136,31 +135,31 @@ export default function Clientes() {
       !direccion?.trim() ||
       !ciudad?.trim()
     ) {
-      alert('Todos los campos son obligatorios. Por favor, complete todos los campos del formulario.');
+      throw new Error('Todos los campos son obligatorios. Por favor, complete todos los campos del formulario.');
       return;
     }
 
     // Validación estricta de longitud de documento
     if (tipo_documento === 'RUC' && numero_documento.trim().length !== 11) {
-      alert('El RUC debe tener exactamente 11 dígitos numéricos.');
+      throw new Error('El RUC debe tener exactamente 11 dígitos numéricos.');
       return;
     }
 
     if (tipo_documento === 'DNI' && numero_documento.trim().length !== 8) {
-      alert('El DNI debe tener exactamente 8 dígitos numéricos.');
+      throw new Error('El DNI debe tener exactamente 8 dígitos numéricos.');
       return;
     }
 
     // Validación estricta de teléfono móvil (9 dígitos y debe iniciar con 9)
     if (!/^9\d{8}$/.test(telefono.trim())) {
-      alert('El teléfono móvil debe tener exactamente 9 dígitos y comenzar obligatoriamente con el número 9 (ejemplo: 987654321).');
+      throw new Error('El teléfono móvil debe tener exactamente 9 dígitos y comenzar obligatoriamente con el número 9 (ejemplo: 987654321).');
       return;
     }
 
     // Validación de formato de correo
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      alert('Por favor, ingrese un correo electrónico válido (ejemplo: contacto@empresa.pe).');
+      throw new Error('Por favor, ingrese un correo electrónico válido (ejemplo: contacto@empresa.pe).');
       return;
     }
 
@@ -170,6 +169,7 @@ export default function Clientes() {
       } else {
         await api.post('/clientes', formData);
       }
+      notify(editingCliente ? 'Cliente actualizado correctamente.' : 'Cliente registrado correctamente.', 'success');
       setShowModal(false);
       setEditingCliente(null);
       setFormData({
@@ -184,7 +184,7 @@ export default function Clientes() {
       });
       loadClientes();
     } catch (err) {
-      alert('Error: ' + err.message);
+      throw new Error('Error: ' + err.message);
     }
   };
 
@@ -209,13 +209,13 @@ export default function Clientes() {
         await api.delete(`/clientes/${id}`);
         loadClientes();
       } catch (err) {
-        alert('Error: ' + err.message);
+        notify('Error: ' + err.message, 'error');
       }
     }
   };
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -323,8 +323,8 @@ export default function Clientes() {
               <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
-              <div className="grid grid-cols-3 gap-3">
+            <AsyncForm onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Tipo Doc. *</label>
                   <select
@@ -337,7 +337,7 @@ export default function Clientes() {
                     <option value="DNI">DNI</option>
                   </select>
                 </div>
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                   <div className="flex justify-between items-center mb-1">
                     <label className="block font-semibold text-slate-700 dark:text-slate-300">Número de Documento *</label>
                     <span className={`text-[10px] font-medium ${formData.numero_documento.length === (formData.tipo_documento === 'RUC' ? 11 : 8) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
@@ -348,6 +348,8 @@ export default function Clientes() {
                     type="text"
                     inputMode="numeric"
                     required
+                    pattern={formData.tipo_documento === 'RUC' ? '[0-9]{11}' : '[0-9]{8}'}
+                    title="Completa todos los dígitos del documento"
                     maxLength={formData.tipo_documento === 'RUC' ? 11 : 8}
                     value={formData.numero_documento}
                     onChange={handleNumeroDocChange}
@@ -369,7 +371,7 @@ export default function Clientes() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Persona de Contacto *</label>
                   <input
@@ -392,7 +394,7 @@ export default function Clientes() {
                     type="text"
                     inputMode="numeric"
                     required
-                    maxLength={9}
+                    pattern="9[0-9]{8}" title="Ingresa 9 dígitos, empezando con 9" autoComplete="tel-national" maxLength={9}
                     value={formData.telefono}
                     onChange={handleTelefonoChange}
                     placeholder="9XXXXXXXX (9 dígitos)"
@@ -401,11 +403,11 @@ export default function Clientes() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico *</label>
                   <input
-                    type="email"
+                    type="email" autoComplete="email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -418,7 +420,7 @@ export default function Clientes() {
                     <label className="block font-semibold text-slate-700 dark:text-slate-300">Ciudad / Región *</label>
                     <button
                       type="button"
-                      tabIndex={-1}
+
                       onClick={() => setShowCiudadDropdown(prev => !prev)}
                       className="text-[10px] text-blue-600 dark:text-blue-400 font-medium hover:underline cursor-pointer flex items-center gap-0.5"
                     >
@@ -441,7 +443,7 @@ export default function Clientes() {
                     />
                     <button
                       type="button"
-                      tabIndex={-1}
+
                       onClick={() => setShowCiudadDropdown(prev => !prev)}
                       className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                       title="Desplegar lista de regiones"
@@ -495,7 +497,7 @@ export default function Clientes() {
                   {editingCliente ? 'Actualizar Cliente' : 'Guardar Cliente'}
                 </button>
               </div>
-            </form>
+            </AsyncForm>
           </div>
         </div>
 ,
